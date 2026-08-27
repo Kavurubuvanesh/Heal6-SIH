@@ -1,0 +1,244 @@
+/* ==========================================================================
+   COMPONENT: TOOL SHOWCASE CARDS
+   High-fidelity cards with embedded interactive clinical preview widgets
+   ========================================================================== */
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.tool-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: 
+    transform var(--transition-smooth),
+    box-shadow var(--transition-smooth),
+    border-color var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.tool-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: #BDECDD;
+}
+
+/* Tool Header */
+.tool-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--space-5);
+  font-size: var(--font-lg);
+  border: 1px solid rgba(22, 184, 137, 0.2);
+}
+
+.tool-card-title {
+  font-size: var(--font-xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.tool-card-description {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--space-6);
+  min-height: 44px;
+}
+
+/* --------------------------------------------------------------------------
+   EMBEDDED TOOL UI MOCKUPS (Inside Cards)
+   -------------------------------------------------------------------------- */
+.tool-mockup-frame {
+  background-color: #FAFCFB;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  margin-top: auto;
+}
+
+.mockup-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid #EDF3F0;
+}
+
+.mockup-header-title {
+  font-size: var(--font-2xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mockup-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  color: var(--primary-dark);
+  background-color: var(--primary-light);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* Mockup Widget 1: Score Circle & Checkbox Filters */
+.mockup-score-split {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.mockup-score-gauge {
+  width: 90px;
+  height: 90px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.mockup-score-gauge svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.mockup-score-gauge circle {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.mockup-score-gauge .score-track {
+  stroke: #E2ECE7;
+}
+
+.mockup-score-gauge .score-fill {
+  stroke: var(--primary);
+  stroke-dasharray: 226;
+  stroke-dashoffset: 27; /* 88% fill */
+}
+
+.mockup-score-gauge .score-text {
+  position: absolute;
+  font-size: var(--font-md);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text-primary);
+}
+
+.mockup-filter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mockup-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-2xs);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.mockup-checkbox-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background-color: var(--primary-light);
+  border: 1px solid var(--primary);
+  display: grid;
+  place-items: center;
+  color: var(--primary-dark);
+}
+
+.mockup-checkbox-box.unchecked {
+  background-color: #FFFFFF;
+  border-color: var(--border-strong);
+}
+
+/* Mockup Widget 2: AI Clinical Assistant Chat Preview */
+.mockup-chat-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mockup-chat-bubble {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-2xs);
+  line-height: 1.45;
+}
+
+.chat-ai {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.chat-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.chat-tag {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background-color: #EDF7F3;
+  color: var(--primary-dark);
+  font-weight: var(--font-weight-bold);
+}
+
+.mockup-typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  padding: 4px 8px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  width: fit-content;
+}
+
+.typing-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-circle);
+  background-color: var(--primary);
+  animation: pulse-dot 1.2s infinite;
+}
+
+@media (max-width: 860px) {
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Foot AI — AI-Powered Foot Detection & Clinical Monitoring</title>
+  <meta name="description" content="AI-powered diabetic foot ulcer screening, thermal hotspot mapping, plantar pressure tracking, and digital healthcare monitoring platform." />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Modular Master Stylesheet -->
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. NAVIGATION HEADER
+       ======================================================================== -->
+  <header class="nav-header">
+    <div class="container">
+      <nav class="nav-container" aria-label="Main Navigation">
+        <!-- Logo -->
+        <a href="#" class="nav-logo" aria-label="Medical Foot AI Home">
+          <div class="nav-logo-icon">
+            <i data-lucide="activity" style="width: 18px; height: 18px;"></i>
+          </div>
+          <div class="nav-logo-text">
+            <span>Medical Foot AI</span>
+            <span>Clinical Intelligence</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <div class="nav-links">
+          <a href="#home" class="nav-link active">Home</a>
+          <a href="#tools" class="nav-link">Feature</a>
+          <a href="#smart-tools" class="nav-link">Tools</a>
+          <a href="#testimonials" class="nav-link">Testimonials</a>
+          <a href="#pricing" class="nav-link">Pricing</a>
+          <a href="#faq" class="nav-link">FAQ</a>
+        </div>
+
+        <!-- Right Action Buttons -->
+        <div class="nav-actions">
+          <button class="btn btn-signup js-open-scan-modal" aria-label="Launch AI Scanner">Sign up</button>
+          <button class="nav-mobile-toggle" aria-label="Toggle Navigation Menu">
+            <i data-lucide="menu" style="width: 20px; height: 20px;"></i>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div id="mobile-drawer" class="mobile-menu-drawer">
+    <div class="mobile-menu-header">
+      <div class="nav-logo">
+        <div class="nav-logo-icon">
+          <i data-lucide="activity" style="width: 18px; height: 18px;"></i>
+        </div>
+        <div class="nav-logo-text">
+          <span>Medical Foot AI</span>
+        </div>
+      </div>
+      <button class="nav-mobile-toggle js-close-mobile-menu" aria-label="Close Navigation Menu">
+        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+      </button>
+    </div>
+    <div class="mobile-menu-links">
+      <a href="#home">Home</a>
+      <a href="#tools">Feature & Tools</a>
+      <a href="#smart-tools">Smart AI Monitoring</a>
+      <a href="#testimonials">Testimonials</a>
+      <a href="#pricing">Pricing & Plans</a>
+      <a href="#faq">Frequently Asked Questions</a>
+    </div>
+    <div>
+      <button class="btn btn-primary btn-full js-open-scan-modal">Launch AI Foot Scanner</button>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================
+       2. HERO SECTION
+       ======================================================================== -->
+  <main id="main-content">
+    <section id="home" class="hero-section">
+      <div class="hero-glow-orb"></div>
+      <div class="container">
+        <div class="hero-content reveal-on-scroll">
+          
+          <!-- Pill Eyebrow Badge -->
+          <div class="hero-badge-container">
+            <div class="badge-pill badge-pill-dark">
+              <span class="badge-dot"></span>
+              AI-Powered Foot Detection & Screening
+            </div>
+          </div>
+
+          <!-- Hero Headline -->
+          <h1 class="hero-title">
+            Empowering medical foot health with <span class="highlight-text">AI-powered detection</span>
+          </h1>
+
+          <!-- Hero Description -->
+          <p class="hero-description">
+            Revolutionize diabetic ulcer screening, thermal mapping, plantar pressure tracking, and clinical guidance with intelligent computer vision.
+          </p>
+
+          <!-- Hero CTA Actions -->
+          <div class="hero-actions">
+            <button class="btn btn-white js-open-scan-modal">
+              Get started for free
+            </button>
+            <button class="btn btn-outline js-open-scan-modal">
+              <i data-lucide="play-circle" style="width: 16px; height: 16px;"></i>
+              Get a demo
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         3. HERO FLOATING DASHBOARD PREVIEW
+         ======================================================================== -->
+    <section class="container" style="position: relative; z-index: 10;">
+      <div class="dashboard-wrapper reveal-on-scroll">
+        <div class="dashboard-container">
+          
+          <!-- Dashboard Sidebar -->
+          <aside class="dashboard-sidebar">
+            <div>
+              <div class="dashboard-sidebar-header">
+                <div class="sidebar-logo-icon">
+                  <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
+                </div>
+                <span class="sidebar-brand-name">Medical Foot AI</span>
+              </div>
+
+              <div class="dashboard-nav-list">
+                <div class="dashboard-nav-item active">
+                  <i data-lucide="layout-dashboard" style="width: 13px; height: 13px;"></i>
+                  <span>Dashboard</span>
+                </div>
+                <div class="dashboard-nav-item" data-toast="Switched to Foot Scans module">
+                  <i data-lucide="scan" style="width: 13px; height: 13px;"></i>
+                  <span>Foot Scans</span>
+                </div>
+                <div class="dashboard-nav-item" data-toast="Ulcer grading active">
+                  <i data-lucide="crosshair" style="width: 13px; height: 13px;"></i>
+                  <span>Ulcer Grading</span>
+                </div>
+                <div class="dashboard-nav-item" data-toast="Patient list synchronized">
+                  <i data-lucide="users" style="width: 13px; height: 13px;"></i>
+                  <span>Patients</span>
+                </div>
+                <div class="dashboard-nav-item" data-toast="AI Assistant ready">
+                  <i data-lucide="bot" style="width: 13px; height: 13px;"></i>
+                  <span>AI Assistant</span>
+                </div>
+                <div class="dashboard-nav-item" data-toast="EHR Report generated">
+                  <i data-lucide="file-text" style="width: 13px; height: 13px;"></i>
+                  <span>Clinical Reports</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Doctor Profile in Sidebar -->
+            <div class="dashboard-sidebar-user">
+              <div class="sidebar-avatar">KV</div>
+              <div class="sidebar-user-meta">
+                <div class="sidebar-user-name">Dr. Kevin Vance</div>
+                <div class="sidebar-user-role">Diabetologist</div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Dashboard Main Area -->
+          <div class="dashboard-main">
+            <!-- Topbar Greeting -->
+            <div class="dashboard-topbar">
+              <div class="dashboard-greeting">
+                <h2>Welcome! Dr.Kevin</h2>
+                <p>Let's see what we are monitoring today!</p>
+              </div>
+              <div class="dashboard-live-badge">
+                <span class="badge-dot"></span>
+                Live Clinical AI Stream
+              </div>
+            </div>
+
+            <!-- Top Gauge KPI Row -->
+            <div class="dashboard-gauges-row">
+              <!-- Gauge 1 -->
+              <div class="gauge-card">
+                <div class="gauge-circle">
+                  <svg viewBox="0 0 36 36">
+                    <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="gauge-progress-1" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <span class="gauge-value">17%</span>
+                </div>
+                <div class="gauge-details">
+                  <h4>Ulcer Risk Index</h4>
+                  <p>Low probability & healthy tissue perfusion</p>
+                </div>
+              </div>
+
+              <!-- Gauge 2 -->
+              <div class="gauge-card">
+                <div class="gauge-circle">
+                  <svg viewBox="0 0 36 36">
+                    <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="gauge-progress-2" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <span class="gauge-value">84%</span>
+                </div>
+                <div class="gauge-details">
+                  <h4>Healing Performance</h4>
+                  <p>Plantar tissue regeneration on track</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Split: Topics & Schedule -->
+            <div class="dashboard-content-split">
+              <!-- Left: Topic / Diagnostics List -->
+              <div class="dashboard-card-panel">
+                <div class="panel-title-row">
+                  <h3>All Diagnostic Tiers</h3>
+                  <i data-lucide="more-horizontal" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+                </div>
+                <table class="topic-list-table">
+                  <thead>
+                    <tr>
+                      <th>Region / Topic</th>
+                      <th>Target Score (%)</th>
+                      <th>Status Visualizer</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Plantar Metatarsal</td>
+                      <td>92%</td>
+                      <td>
+                        <div class="topic-bar-wrap">
+                          <div class="progress-bar-track">
+                            <div class="progress-bar-fill progress-fill-green"></div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Heel Calcaneus</td>
+                      <td>64%</td>
+                      <td>
+                        <div class="topic-bar-wrap">
+                          <div class="progress-bar-track">
+                            <div class="progress-bar-fill progress-fill-coral"></div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Hallux & Digits</td>
+                      <td>88%</td>
+                      <td>
+                        <div class="topic-bar-wrap">
+                          <div class="progress-bar-track">
+                            <div class="progress-bar-fill progress-fill-teal"></div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Thermal Neuropathy</td>
+                      <td>45%</td>
+                      <td>
+                        <div class="topic-bar-wrap">
+                          <div class="progress-bar-track">
+                            <div class="progress-bar-fill progress-fill-purple"></div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Right: Today Schedule -->
+              <div class="dashboard-card-panel">
+                <div class="panel-title-row">
+                  <h3>Today Study Schedule</h3>
+                  <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+                </div>
+                <div class="schedule-list">
+                  <div class="schedule-item">
+                    <div class="schedule-dot"></div>
+                    <div class="schedule-meta">
+                      <div class="schedule-time">09:00 AM</div>
+                      <div class="schedule-patient">Patient #4821 (Diabetic Scan)</div>
+                      <div class="schedule-type">Wagner Staging Screen</div>
+                    </div>
+                  </div>
+                  <div class="schedule-item">
+                    <div class="schedule-dot" style="background-color: var(--warning);"></div>
+                    <div class="schedule-meta">
+                      <div class="schedule-time">11:30 AM</div>
+                      <div class="schedule-patient">Patient #3904 (Thermal Check)</div>
+                      <div class="schedule-type">Neuropathic Hotspot Check</div>
+                    </div>
+                  </div>
+                  <div class="schedule-item">
+                    <div class="schedule-dot" style="background-color: #20C997;"></div>
+                    <div class="schedule-meta">
+                      <div class="schedule-time">02:15 PM</div>
+                      <div class="schedule-patient">Patient #7119 (Gait Track)</div>
+                      <div class="schedule-type">Plantar Pressure Analysis</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Centered Pulsing Play/Scan Trigger Button -->
+          <div class="dashboard-center-action">
+            <button class="btn-play-pulse js-open-scan-modal" aria-label="Start Live AI Foot Scanner" title="Start Live AI Scanner">
+              <i data-lucide="play" style="width: 22px; height: 22px; margin-left: 2px;"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         4. EXPLORE LEARNING & DETECTION TOOLS SECTION
+         ======================================================================== -->
+    <section id="tools" class="section">
+      <div class="container">
+        
+        <div class="section-header reveal-on-scroll">
+          <div class="badge-pill">Clinical Tool Suite</div>
+          <h2 class="section-title">Explore Learning & Detection Tools</h2>
+          <p class="section-subtitle">
+            Due to recent clinical updates, models continuously synchronize with hospital EHRs, mobile sensor arrays, and podiatric guidance.
+          </p>
+        </div>
+
+        <div class="tools-grid">
+          
+          <!-- Tool Card 1: Question Bank / Lesion Detection Engine -->
+          <div class="tool-card reveal-on-scroll">
+            <div class="tool-icon-box">
+              <i data-lucide="book-open" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h3 class="tool-card-title">Question Bank & Lesion Bank</h3>
+            <p class="tool-card-description">
+              Comprehensive lesion reference bank and diagnostic training suite for clinical ulcer grading success and exam preparation.
+            </p>
+
+            <!-- Embedded UI Widget inside Card 1 -->
+            <div class="tool-mockup-frame">
+              <div class="mockup-header-bar">
+                <span class="mockup-header-title">Diagnostic Test #12 - Podiatry Module</span>
+                <span class="mockup-toggle-pill">
+                  <i data-lucide="check" style="width: 10px; height: 10px;"></i>
+                  Test Mode: Tutor
+                </span>
+              </div>
+
+              <div class="mockup-score-split">
+                <!-- Circular Score Gauge -->
+                <div class="mockup-score-gauge">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="score-track" cx="50" cy="50" r="36"></circle>
+                    <circle class="score-fill" cx="50" cy="50" r="36"></circle>
+                  </svg>
+                  <span class="score-text">88%</span>
+                </div>
+
+                <!-- Checkbox Filters -->
+                <div class="mockup-filter-list">
+                  <div class="mockup-checkbox-item">
+                    <div class="mockup-checkbox-box"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                    <span>Plantar Metatarsal System</span>
+                  </div>
+                  <div class="mockup-checkbox-item">
+                    <div class="mockup-checkbox-box"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                    <span>Microvascular Perfusion Check</span>
+                  </div>
+                  <div class="mockup-checkbox-item">
+                    <div class="mockup-checkbox-box unchecked"></div>
+                    <span>Neuropathic Ulcer Depth (Wagner 1)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool Card 2: Medical AI Assistant -->
+          <div class="tool-card reveal-on-scroll">
+            <div class="tool-icon-box">
+              <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h3 class="tool-card-title">Podiatric Medical AI</h3>
+            <p class="tool-card-description">
+              AI clinical tutor and diagnostic assistant provides real-time tissue risk explanations, differentials, and wound staging support.
+            </p>
+
+            <!-- Embedded UI Widget inside Card 2 -->
+            <div class="tool-mockup-frame">
+              <div class="mockup-header-bar">
+                <span class="mockup-header-title">AI Clinical Copilot</span>
+                <span class="mockup-toggle-pill">
+                  <span class="typing-dot"></span>
+                  Active Session
+                </span>
+              </div>
+
+              <div class="mockup-chat-preview">
+                <div class="mockup-chat-bubble chat-ai">
+                  <strong>AI Diagnostic Note:</strong> High dermal integrity preserved. Marginal erythema observed near lateral 1st metatarsal. Recommend daily thermal delta check.
+                  <div class="chat-tags-row">
+                    <span class="chat-tag">Erythema: Low</span>
+                    <span class="chat-tag">Perfusion: 96%</span>
+                    <span class="chat-tag">ADA Guideline</span>
+                  </div>
+                </div>
+
+                <div class="mockup-typing-indicator">
+                  <span class="typing-dot"></span>
+                  <span>Synthesizing differential diagnosis...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         5. DARK SECTION: SMART AI-POWERED MONITORING TOOLS
+         ======================================================================== -->
+    <section id="smart-tools" class="feature-dark-section">
+      <div class="container">
+        
+        <div class="feature-dark-topbar reveal-on-scroll">
+          <div>
+            <div class="badge-pill badge-pill-dark">
+              <span class="badge-dot"></span>
+              Real-time Neural Analysis
+            </div>
+            <h2 class="feature-dark-title">Enhancing learning & clinical monitoring with smart AI tools</h2>
+          </div>
+          <div>
+            <button class="btn btn-white btn-pill js-open-scan-modal">Start free trial</button>
+          </div>
+        </div>
+
+        <div class="feature-dark-grid">
+          
+          <!-- Left: Vertical Tab Menu -->
+          <div class="feature-tabs-menu reveal-on-scroll">
+            
+            <div class="feature-tab-item active" data-feature="thermal">
+              <div class="feature-tab-icon">
+                <i data-lucide="flame" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div class="feature-tab-text">
+                <h4>Thermal Asymmetry Aid</h4>
+                <p>Detects subtle sub-surface inflammatory heat differentials before skin breaks down.</p>
+              </div>
+            </div>
+
+            <div class="feature-tab-item" data-feature="ulcer">
+              <div class="feature-tab-icon">
+                <i data-lucide="crosshair" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div class="feature-tab-text">
+                <h4>Wagner Ulcer Grading Engine</h4>
+                <p>Automated clinical categorization from Grade 0 to Grade 5 with confidence metrics.</p>
+              </div>
+            </div>
+
+            <div class="feature-tab-item" data-feature="gait">
+              <div class="feature-tab-icon">
+                <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div class="feature-tab-text">
+                <h4>Plantar Pressure & Gait Tracking</h4>
+                <p>Continuous dynamic force mapping to prevent high-pressure shear breakdown.</p>
+              </div>
+            </div>
+
+            <div class="feature-tab-item" data-feature="explanations">
+              <div class="feature-tab-icon">
+                <i data-lucide="file-check-2" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div class="feature-tab-text">
+                <h4>In-depth Pathophysiology Explanations</h4>
+                <p>Step-by-step biomechanical root causes explained for clinical learners.</p>
+              </div>
+            </div>
+
+            <div class="feature-tab-item" data-feature="citations">
+              <div class="feature-tab-icon">
+                <i data-lucide="book-marked" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div class="feature-tab-text">
+                <h4>Clinical Context & PubMed Citations</h4>
+                <p>Peer-reviewed references directly attached to every AI recommendation.</p>
+              </div>
+            </div>
+
+            <div class="feature-tab-item" data-feature="cases">
+              <div class="feature-tab-icon">
+                <i data-lucide="award" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div class="feature-tab-text">
+                <h4>USMLE & Board Style Case Studies</h4>
+                <p>Interactive patient cases to practice diagnostic decision-making.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right: 3D Laptop Mockup Preview -->
+          <div class="laptop-mockup-wrapper reveal-on-scroll">
+            <div class="laptop-frame">
+              <div class="laptop-camera-notch"></div>
+              
+              <div class="laptop-screen">
+                <!-- App Header -->
+                <div class="screen-app-nav">
+                  <div class="screen-app-dots">
+                    <span class="screen-dot-red"></span>
+                    <span class="screen-dot-yellow"></span>
+                    <span class="screen-dot-green"></span>
+                  </div>
+                  <span class="screen-live-tag">
+                    <i data-lucide="wifi" style="width: 10px; height: 10px; display: inline-block; vertical-align: middle;"></i>
+                    NEURAL LINK 60FPS
+                  </span>
+                </div>
+
+                <!-- Screen Split -->
+                <div class="screen-content-split">
+                  <!-- Foot Scan Visualizer -->
+                  <div class="screen-scan-visual">
+                    <div class="screen-foot-silhouette">
+                      <div class="screen-laser-beam"></div>
+                      <div class="screen-thermal-hotspot"></div>
+                    </div>
+                    <div class="screen-hud-badge" id="screen-hud-tag">THERMAL_MAP: LIVE</div>
+                  </div>
+
+                  <!-- Telemetry Metrics -->
+                  <div class="screen-metrics-panel">
+                    <div class="screen-metric-box">
+                      <h5>SELECTED MODALITY</h5>
+                      <div class="metric-num" id="screen-metric-title">Plantar Surface Temp</div>
+                      <div class="metric-status status-ok" id="screen-metric-status">Normal Balance</div>
+                    </div>
+
+                    <div class="screen-metric-box">
+                      <h5>ACTIVE READOUT</h5>
+                      <div class="metric-num" id="screen-metric-val" style="color: #20C997;">34.2 °C (Δ 0.4°C)</div>
+                      <div style="font-size: 9px; color: rgba(255,255,255,0.5);">Confidence: 99.2%</div>
+                    </div>
+
+                    <div class="screen-metric-box">
+                      <h5>CLINICAL ACTION</h5>
+                      <div style="font-size: 11px; font-weight: 700; color: #FFFFFF;">Routine Bi-Weekly Follow-up</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              
+              <div class="laptop-base-stand"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         6. TESTIMONIALS SECTION
+         ======================================================================== -->
+    <section id="testimonials" class="testimonials-section">
+      <div class="container">
+        
+        <!-- Hospital Partner Logos -->
+        <div class="partners-strip reveal-on-scroll">
+          <div class="partner-logo-item">
+            <i data-lucide="building-2"></i>
+            <span>Boston Children's Hospital</span>
+          </div>
+          <div class="partner-logo-item">
+            <i data-lucide="cross"></i>
+            <span>Pacific Neuropsychiatric Specialists</span>
+          </div>
+          <div class="partner-logo-item">
+            <i data-lucide="heart-pulse"></i>
+            <span>NHS Healthcare Trust</span>
+          </div>
+          <div class="partner-logo-item">
+            <i data-lucide="shield-plus"></i>
+            <span>Mayo Podiatric Clinic</span>
+          </div>
+        </div>
+
+        <div class="section-header reveal-on-scroll">
+          <div class="badge-pill">Verified Feedback</div>
+          <h2 class="section-title">Our Testimonials</h2>
+          <p class="section-subtitle">
+            Our testimonials showcase real success stories from medical professionals and students who excelled using our AI-powered learning tools.
+          </p>
+        </div>
+
+        <div class="testimonials-grid">
+          
+          <!-- Testimonial 1 -->
+          <div class="testimonial-card reveal-on-scroll">
+            <div>
+              <div class="testimonial-stars">
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+              </div>
+              <p class="testimonial-quote">
+                "MedicalFoot AI has transformed exam prep and daily clinical triage for our residents, offering personalized tutoring, practice questions, and precise ulcer risk tracking with incredible results."
+              </p>
+            </div>
+            <div class="testimonial-author-row">
+              <div class="author-avatar">JW</div>
+              <div class="author-meta">
+                <h4>Dr. Jenny Wilson</h4>
+                <p>Chief Podiatrist, Boston Clinic</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 2 -->
+          <div class="testimonial-card reveal-on-scroll">
+            <div>
+              <div class="testimonial-stars">
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+              </div>
+              <p class="testimonial-quote">
+                "The thermal asymmetry mapping caught a pre-ulcerative hotspot 3 weeks before visible clinical presentation. Truly state of the art technology."
+              </p>
+            </div>
+            <div class="testimonial-author-row">
+              <div class="author-avatar">MC</div>
+              <div class="author-meta">
+                <h4>Dr. Marcus Chen</h4>
+                <p>Diabetic Wound Specialist</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 3 -->
+          <div class="testimonial-card reveal-on-scroll">
+            <div>
+              <div class="testimonial-stars">
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+                <i data-lucide="star" style="fill: currentColor; width: 14px; height: 14px;"></i>
+              </div>
+              <p class="testimonial-quote">
+                "Our medical students mastered Wagner ulcer grading in days. The structured explanations with PubMed citations give immense confidence."
+              </p>
+            </div>
+            <div class="testimonial-author-row">
+              <div class="author-avatar">SL</div>
+              <div class="author-meta">
+                <h4>Dr. Sarah Lindqvist</h4>
+                <p>Clinical Associate Professor</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         7. PRICING & PAYMENT ACCESS SECTION
+         ======================================================================== -->
+    <section id="pricing" class="pricing-section">
+      <div class="container">
+        
+        <div class="section-header reveal-on-scroll">
+          <div class="badge-pill">Flexible Access</div>
+          <h2 class="section-title">Payment & Free Trial Access</h2>
+          <p class="section-subtitle">
+            Due to recent updates, tutorials may vary slightly from the actual functionality of the tools. Please see our User Manual for further information on how to best use the tools.
+          </p>
+        </div>
+
+        <div class="pricing-grid">
+          
+          <!-- Plan 1: Free -->
+          <div class="pricing-card reveal-on-scroll">
+            <div class="pricing-header-row">
+              <div class="pricing-icon">
+                <i data-lucide="zap" style="width: 16px; height: 16px;"></i>
+              </div>
+              <h3 class="pricing-plan-name">Free</h3>
+            </div>
+            <p class="pricing-plan-desc">
+              Our Basic Plan is perfect for those getting started with AI-powered medical foot screening.
+            </p>
+            <div class="pricing-price-wrap">
+              <span class="pricing-amount">$0.00</span>
+              <span class="pricing-period">/ month</span>
+            </div>
+            <div class="pricing-btn-wrap">
+              <button class="btn btn-outline btn-dark js-open-scan-modal">Get Started Free</button>
+            </div>
+            <div class="pricing-features-list">
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>20 free practice scans every day</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Standard Wagner Ulcer grading</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Community case discussions</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Mobile web scanner access</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plan 2: Pro (Featured) -->
+          <div class="pricing-card featured reveal-on-scroll">
+            <div class="pricing-header-row">
+              <div class="pricing-icon" style="background-color: var(--primary); color: #FFFFFF;">
+                <i data-lucide="star" style="width: 16px; height: 16px;"></i>
+              </div>
+              <h3 class="pricing-plan-name">Pro</h3>
+            </div>
+            <p class="pricing-plan-desc">
+              Our Pro Plan is tailored for clinical practitioners, residents, and active wound specialists.
+            </p>
+            <div class="pricing-price-wrap">
+              <span class="pricing-amount">$20.00</span>
+              <span class="pricing-period">/ month</span>
+            </div>
+            <div class="pricing-btn-wrap">
+              <button class="btn btn-primary js-open-scan-modal">Start 14-Day Free Trial</button>
+            </div>
+            <div class="pricing-features-list">
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Unlimited thermal & ulcer AI scans</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Real-time thermal hotspot mapping</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Instant PDF & EHR clinical export</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>PubMed clinical citation links</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Priority 24/7 specialist AI support</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plan 3: Enterprise -->
+          <div class="pricing-card reveal-on-scroll">
+            <div class="pricing-header-row">
+              <div class="pricing-icon">
+                <i data-lucide="building" style="width: 16px; height: 16px;"></i>
+              </div>
+              <h3 class="pricing-plan-name">Enterprise</h3>
+            </div>
+            <p class="pricing-plan-desc">
+              Tailored for hospitals, university medical centers, and multi-location podiatry practices.
+            </p>
+            <div class="pricing-price-wrap">
+              <span class="pricing-amount">$75.00</span>
+              <span class="pricing-period">/ user / month</span>
+            </div>
+            <div class="pricing-btn-wrap">
+              <button class="btn btn-outline btn-dark js-open-scan-modal">Contact Hospital Sales</button>
+            </div>
+            <div class="pricing-features-list">
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Full clinic & hospital seat licensing</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Epic & Cerner HL7/FHIR EHR Sync</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>Custom trained neural models</span>
+              </div>
+              <div class="pricing-feature-item">
+                <div class="feature-check-icon"><i data-lucide="check" style="width: 10px; height: 10px;"></i></div>
+                <span>HIPAA & BAA enterprise compliance</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ========================================================================
+         8. FREQUENTLY ASKED QUESTIONS SECTION
+         ======================================================================== -->
+    <section id="faq" class="faq-section">
+      <div class="container">
+        
+        <div class="section-header reveal-on-scroll">
+          <div class="badge-pill">Knowledge Base</div>
+          <h2 class="section-title">Frequently asked questions</h2>
+          <p class="section-subtitle">
+            Our Frequently Asked Questions section provides clear answers to common queries, ensuring a smooth and informed experience.
+          </p>
+        </div>
+
+        <div class="faq-container reveal-on-scroll">
+          
+          <!-- FAQ 1 -->
+          <div class="faq-item is-open">
+            <button class="faq-trigger" aria-expanded="true">
+              <span>How is Medical Foot AI different from general LLMs like GPT?</span>
+              <div class="faq-icon-toggle">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+              </div>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                Unlike general LLMs, Medical Foot AI utilizes calibrated computer vision neural networks trained on over 250,000 clinically validated podiatric images, paired with real-time thermal gradient algorithms and strict adherence to ADA/Wagner grading standards.
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 2 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span>Can the scanner detect pre-ulcerative diabetic hotspots?</span>
+              <div class="faq-icon-toggle">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+              </div>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                Yes. Our dual-spectrum thermal AI algorithm calculates contralateral temperature asymmetry (&Delta;T &gt; 2.2&deg;C). Clinical trials have demonstrated up to a 70% reduction in preventable diabetic foot amputations through early hotspot detection.
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 3 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span>Is patient health information (PHI) HIPAA compliant?</span>
+              <div class="faq-icon-toggle">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+              </div>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                Yes. All imaging streams and clinical reports are encrypted with AES-256 at rest and TLS 1.3 in transit. Our cloud infrastructure is fully HIPAA, GDPR, and SOC 2 Type II compliant with optional on-premise hospital deployment.
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 4 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span>Can I integrate the platform with existing hospital EHR systems?</span>
+              <div class="faq-icon-toggle">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+              </div>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                Enterprise plans support direct bidirectional HL7 and FHIR API integrations with major electronic health record platforms including Epic Systems, Cerner, Allscripts, and Athenahealth.
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 5 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false">
+              <span>What hardware or smartphone cameras are supported?</span>
+              <div class="faq-icon-toggle">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+              </div>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                The visual lesion detection works with any standard smartphone camera (iOS & Android) with 12MP+. For high-precision thermal mapping, we support plug-and-play FLIR ONE and Seek Thermal mobile accessories as well as dedicated clinic thermal kiosks.
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+
+  <!-- ========================================================================
+       9. FOOTER
+       ======================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      
+      <div class="footer-grid">
+        <!-- Brand Info -->
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <div class="footer-logo-icon">
+              <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
+            </div>
+            <span>Medical Foot AI</span>
+          </div>
+          <p class="footer-tagline">
+            Empowering healthcare providers and students with state-of-the-art computer vision for diabetic foot detection, thermal analysis, and ulcer prevention.
+          </p>
+          <div class="footer-badges">
+            <span class="footer-badge">HIPAA Compliant</span>
+            <span class="footer-badge">FDA Class II Ready</span>
+            <span class="footer-badge">CE Mark</span>
+          </div>
+        </div>
+
+        <!-- Col 1: Platform -->
+        <div class="footer-nav-col">
+          <h4>Clinical Suite</h4>
+          <ul class="footer-links-list">
+            <li><a href="#tools" class="footer-link">Ulcer Detection Bank</a></li>
+            <li><a href="#smart-tools" class="footer-link">Thermal Asymmetry AI</a></li>
+            <li><a href="#smart-tools" class="footer-link">Plantar Pressure Map</a></li>
+            <li><a href="#smart-tools" class="footer-link">Wagner Staging</a></li>
+            <li><a href="#pricing" class="footer-link">EHR Integration</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 2: Education -->
+        <div class="footer-nav-col">
+          <h4>Medical Education</h4>
+          <ul class="footer-links-list">
+            <li><a href="#tools" class="footer-link">USMLE Question Bank</a></li>
+            <li><a href="#tools" class="footer-link">Podiatry Board Prep</a></li>
+            <li><a href="#testimonials" class="footer-link">Clinical Case Studies</a></li>
+            <li><a href="#faq" class="footer-link">PubMed Citations</a></li>
+            <li><a href="#faq" class="footer-link">User Manual & Guides</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Newsletter -->
+        <div class="footer-newsletter">
+          <h4>Clinical Updates</h4>
+          <p>Get monthly peer-reviewed clinical research updates and new AI model release notes.</p>
+          <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Thank you for subscribing to Clinical AI updates!');">
+            <input type="email" class="newsletter-input" placeholder="doctor@hospital.org" required />
+            <button type="submit" class="btn btn-primary btn-sm btn-pill">Subscribe</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="footer-bottom-bar">
+        <div class="footer-disclaimer">
+          &copy; 2026 Medical Foot AI Inc. All rights reserved. Clinical decision support system intended to assist healthcare professionals.
+        </div>
+        <div>
+          <a href="#" class="footer-link" style="margin-right: 14px;">Privacy Policy</a>
+          <a href="#" class="footer-link" style="margin-right: 14px;">Terms of Service</a>
+          <a href="#" class="footer-link">Security Whitepaper</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+
+  <!-- ========================================================================
+       10. INTERACTIVE AI SCANNER SIMULATION MODAL
+       ======================================================================== -->
+  <div id="scan-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="scan-modal">
+      
+      <!-- Modal Header -->
+      <div class="scan-modal-header">
+        <div class="scan-modal-title">
+          <i data-lucide="scan" style="width: 18px; height: 18px; color: var(--hero-green);"></i>
+          <span id="modal-title">Live AI Foot Diagnostic Scanner</span>
+        </div>
+        <button class="scan-modal-close js-close-scan-modal" aria-label="Close Scanner Modal">
+          <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (CLEANED UP API VERSION) -->
+      <div class="scan-modal-body">
+
+        <!-- Left Side: Image Uploader & Live Preview -->
+        <div class="scan-viewfinder" id="modal-viewfinder" style="cursor: pointer;" onclick="document.getElementById('wound-file-input').click()">
+          <div class="viewfinder-corner corner-tl"></div>
+          <div class="viewfinder-corner corner-tr"></div>
+          <div class="viewfinder-corner corner-bl"></div>
+          <div class="viewfinder-corner corner-br"></div>
+
+          <div class="hud-tag" id="hud-status">CAMERA: READY // CLICK TO UPLOAD</div>
+
+          <input type="file" id="wound-file-input" accept="image/*" style="display: none;" />
+
+          <div id="viewfinder-placeholder" class="viewfinder-silhouette">
+            <div class="viewfinder-laser"></div>
+          </div>
+          <img id="image-preview" src="" alt="Wound Preview" style="display: none; width: 100%; height: 100%; object-fit: contain; border-radius: 8px; position: relative; z-index: 10;" />
+        </div>
+
+        <!-- Right Side: Clinical Toggles & Real Diagnostic Output -->
+        <div class="scan-diagnostics">
+          <div id="scan-input-controls">
+            <div style="font-size: var(--font-xs); font-weight: 700; color: var(--text-white); margin-bottom: var(--space-3);">
+              Clinical Doctor Overrides (SINBAD Protocol)
+            </div>
+
+            <div class="diag-card-group" style="gap: 8px;">
+              <label class="diag-metric-row" style="cursor: pointer;">
+                <span>Probe-to-Bone Test (Deep)</span>
+                <input type="checkbox" id="chk-is-deep" style="accent-color: var(--primary);" />
+              </label>
+              <label class="diag-metric-row" style="cursor: pointer;">
+                <span>Reduced Pedal Pulses (Ischemia)</span>
+                <input type="checkbox" id="chk-has-ischemia" style="accent-color: var(--primary);" />
+              </label>
+              <label class="diag-metric-row" style="cursor: pointer;">
+                <span>Loss of Sensation (Neuropathy)</span>
+                <input type="checkbox" id="chk-has-neuropathy" style="accent-color: var(--primary);" />
+              </label>
+              <label class="diag-metric-row" style="cursor: pointer;">
+                <span>Ulcer Site: Hindfoot Location</span>
+                <input type="checkbox" id="chk-is-hindfoot" style="accent-color: var(--primary);" />
+              </label>
+            </div>
+
+            <div class="scan-action-bar">
+              <button id="btn-run-ai-scan" class="btn btn-primary btn-full btn-sm">
+                <i data-lucide="activity" style="width: 14px; height: 14px;"></i>
+                Analyze with AI Engine
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic AI Results View (Initially Hidden) -->
+          <div id="scan-results-panel" style="display: none;">
+            <div style="font-size: var(--font-xs); font-weight: 700; color: var(--text-white); margin-bottom: var(--space-2);">
+              AI Pipeline Diagnostics
+            </div>
+
+            <div class="diag-card-group">
+              <div class="diag-metric-row">
+                <span>SINBAD Severity Score:</span>
+                <span id="res-sinbad-score" class="diag-val-warn" style="font-size: 14px;">- / 6</span>
+              </div>
+              <div class="diag-metric-row">
+                <span>Calculated Wound Area:</span>
+                <span id="res-wound-area" class="diag-val-success">- cm²</span>
+              </div>
+              <div class="diag-metric-row">
+                <span>Infection (ConvNeXt):</span>
+                <span id="res-infection-status" class="diag-val-success">-</span>
+              </div>
+              <div class="diag-metric-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                <span style="color: var(--text-white-subtle); font-size: 10px;">Clinical Action:</span>
+                <span id="res-clinical-rec" style="color: #FFFFFF; font-weight: 600; font-size: 11px;">-</span>
+              </div>
+            </div>
+
+            <div class="scan-action-bar" style="margin-top: 12px;">
+              <button id="btn-reset-scan" class="btn btn-outline btn-sm btn-full">
+                New Scan
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- JavaScript Client Logic -->
+  <script src="./js/main.js"></script>
+
+</body>
+</html>

@@ -13,13 +13,13 @@ secrets.json
 # Blocks the massive datasets from freezing your repo
 ml_training/data/task1_wound_detect/*
 ml_training/data/task2_area_segment/*
-ml_training/data/task3_xray_bone/*
+ml_training/data/task2_advancement/*
 ml_training/data/task3_tissue_analysis/*
 
 # Keep the folders in the repo, but ignore their contents
 !ml_training/data/task1_wound_detect/.gitkeep
 !ml_training/data/task2_area_segment/.gitkeep
-!ml_training/data/task3_xray_bone/.gitkeep
+!ml_training/data/task2_advancement/.gitkeep
 !ml_training/data/task3_tissue_analysis/.gitkeep
 
 # Block Jupyter Notebook checkpoints & Model Weights

@@ -1,0 +1,72 @@
+// Industrial clinical dataset for Heal6 Engine
+
+export const PATIENT_CASES = [
+  {
+    id: 'DFU-8842',
+    name: 'SUBJECT-REF: XA-9942',
+    age: 61,
+    gender: 'M',
+    diabetesType: 'Type 2 DM (14 yrs)',
+    hba1c: '9.2%',
+    locationLabel: 'Right Plantar Hindfoot',
+    siteScore: 1,
+    ischemiaScore: 1,
+    neuropathyScore: 1,
+    depthScore: 1,
+    aiInfectionScore: 1,
+    aiAreaScore: 1,
+    calculatedSinbad: 4,
+    woundAreaCm2: 2.45,
+    arucoCalibration: 42,
+    infectionRiskPercent: 78.4,
+    convnextConfidence: 62.0,
+    tissueBreakdown: { granulation: 45, slough: 35, necrotic: 20 },
+    healingEstimateWeeks: '12 - 16 Weeks',
+    triageLevel: 'CRITICAL: SURGICAL DEBRIDEMENT',
+    triageColor: 'text-[#ff3366] border-[#ff3366]/30',
+    triageBg: 'bg-[#ff3366]/10',
+    radarData: [],
+    trajectoryData: [],
+    actionPlan: {
+      headline: 'STAT Intervention Protocol.',
+      debridement: 'Operative excision of necrotic tissue required.',
+      offloading: 'Total Contact Cast (TCC) immediately.',
+      dressing: 'Silver impregnated hydrofiber.',
+      consultation: 'Vascular Surgery Consult dispatched.'
+    }
+  },
+  {
+    id: 'DFU-5104',
+    name: 'SUBJECT-REF: ZT-5104',
+    age: 54,
+    gender: 'F',
+    diabetesType: 'Type 1 DM (22 yrs)',
+    hba1c: '8.4%',
+    locationLabel: 'Left 1st Metatarsal',
+    siteScore: 0,
+    ischemiaScore: 0,
+    neuropathyScore: 1,
+    depthScore: 0,
+    aiInfectionScore: 0,
+    aiAreaScore: 1,
+    calculatedSinbad: 2,
+    woundAreaCm2: 1.20,
+    arucoCalibration: 42,
+    infectionRiskPercent: 34.2,
+    convnextConfidence: 89.5,
+    tissueBreakdown: { granulation: 75, slough: 20, necrotic: 5 },
+    healingEstimateWeeks: '6 - 8 Weeks',
+    triageLevel: 'MODERATE: CLOSE MONITORING',
+    triageColor: 'text-amber-400 border-amber-400/30',
+    triageBg: 'bg-amber-500/10',
+    radarData: [],
+    trajectoryData: [],
+    actionPlan: {
+      headline: 'Outpatient clinical management.',
+      debridement: 'Callus reduction.',
+      offloading: 'Neuropathic orthotics.',
+      dressing: 'Collagen matrix.',
+      consultation: '2-week follow-up.'
+    }
+  }
+]

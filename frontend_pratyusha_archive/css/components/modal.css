@@ -1,0 +1,227 @@
+/* ==========================================================================
+   COMPONENT: AI SCAN SIMULATOR MODAL & TOAST NOTIFICATIONS
+   Live interactive clinical scan HUD simulation overlay with diagnostics
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   MODAL BACKDROP & CONTAINER
+   -------------------------------------------------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(5, 18, 14, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.modal-backdrop.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scan-modal {
+  background-color: #0A1613;
+  border: 1px solid rgba(32, 201, 151, 0.35);
+  border-radius: var(--radius-2xl);
+  width: 100%;
+  max-width: 840px;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(22, 184, 137, 0.2);
+  color: var(--text-white);
+  transform: scale(0.95) translateY(15px);
+  transition: transform var(--transition-smooth);
+}
+
+.modal-backdrop.is-active .scan-modal {
+  transform: scale(1) translateY(0);
+}
+
+.scan-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.scan-modal-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-sm);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.scan-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-circle);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-white);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.scan-modal-close:hover {
+  background-color: rgba(229, 72, 77, 0.35);
+}
+
+/* Modal Body Layout */
+.scan-modal-body {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  padding: var(--space-6);
+  gap: var(--space-6);
+}
+
+/* Camera Viewfinder Screen */
+.scan-viewfinder {
+  background: #030807;
+  border: 1px solid rgba(32, 201, 151, 0.3);
+  border-radius: var(--radius-lg);
+  height: 340px;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+/* HUD Corner Reticles */
+.viewfinder-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: #20C997;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.corner-tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+.corner-tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+.corner-bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+.corner-br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+
+.viewfinder-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #20C997;
+  box-shadow: 0 0 12px #20C997, 0 0 24px #20C997;
+  animation: scan-laser 2.4s infinite ease-in-out;
+}
+
+.viewfinder-silhouette {
+  width: 90px;
+  height: 200px;
+  border-radius: 45% 45% 35% 35% / 15% 15% 70% 70%;
+  background: linear-gradient(180deg, rgba(32, 201, 151, 0.2), rgba(7, 150, 111, 0.08));
+  border: 2px dashed rgba(32, 201, 151, 0.6);
+  position: relative;
+}
+
+.hud-tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(32, 201, 151, 0.4);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #20C997;
+  font-family: var(--font-code);
+}
+
+/* Modal Right: Live Clinical Diagnostics */
+.scan-diagnostics {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.diag-card-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.diag-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+}
+
+.diag-val-success {
+  color: var(--hero-green);
+  font-weight: var(--font-weight-bold);
+}
+
+.diag-val-warn {
+  color: var(--warning);
+  font-weight: var(--font-weight-bold);
+}
+
+.scan-action-bar {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+/* --------------------------------------------------------------------------
+   TOAST NOTIFICATION COMPONENT
+   -------------------------------------------------------------------------- */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: #081C16;
+  border: 1px solid var(--primary);
+  color: #FFFFFF;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-xs);
+  font-weight: var(--font-weight-bold);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .scan-modal-body {
+    grid-template-columns: 1fr;
+  }
+}

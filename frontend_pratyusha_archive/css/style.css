@@ -1,0 +1,23 @@
+/* ==========================================================================
+   MASTER STYLESHEET
+   HealFoot AI — Modular Component Architecture
+   ========================================================================== */
+
+/* 1. Design System Tokens & Root Variables */
+@import url('./variables.css');
+
+/* 2. Global Resets, Typography & Utilities */
+@import url('./base.css');
+
+/* 3. Modular Components */
+@import url('./components/buttons.css');
+@import url('./components/navbar.css');
+@import url('./components/hero.css');
+@import url('./components/dashboard.css');
+@import url('./components/cards.css');
+@import url('./components/feature-dark.css');
+@import url('./components/testimonials.css');
+@import url('./components/pricing.css');
+@import url('./components/accordion.css');
+@import url('./components/modal.css');
+@import url('./components/footer.css');
