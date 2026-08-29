@@ -2,11 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>heal6-patient-app</title>
+
+    <!-- INDUSTRIAL UPGRADE: Official Brand Favicon -->
+    <link rel="icon" type="image/jpeg" href="/Heal6_LOGO.jpeg" />
+
+    <!-- NATIVE APP FEEL: Prevents awkward browser zooming on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- COMMAND CENTER TITLE -->
+    <title>Heal6 | Edge Telemetry Portal</title>
+
+    <!-- PREMIUM TYPOGRAPHY: Added 800 & 900 weights for High-Risk Alerts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- ARIBA'S TAILWIND ENGINE (Hackathon Fail-Safe) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        // Added for the Doctor's Signature in ReportFooter.jsx
+                        signature: ['"Brush Script MT"', 'cursive', 'sans-serif']
+                    },
+                    colors: {
+                        heal6: {
+                            teal: '#1A9382',
+                            dark: '#0F594E',
+                            light: '#E6F4F2',
+                            coral: '#FA756A',
+                            coralLight: '#FEE4E2'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
   </head>
-  <body>
+
+  <!-- PRISTINE RENDER BASE: Added text selection colors to match the brand -->
+  <body class="bg-[#f8fafc] antialiased text-slate-900 selection:bg-teal-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
