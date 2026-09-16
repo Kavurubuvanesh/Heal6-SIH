@@ -11,15 +11,15 @@ export default function SinbadTrajectoryCard({
   infectionRisk = 78.4
 }) {
   return (
-    <div className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden transition-all hover:shadow-md w-full">
+    <div className="spotlight-card glass-panel-luxury rounded-3xl overflow-hidden transition-all duration-300 w-full">
       {/* Header Bar */}
-      <div className="border-b border-slate-200/80 dark:border-slate-800 px-6 py-4 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/40">
+      <div className="border-b border-[#12464e]/10 dark:border-[#223229] px-6 py-4 flex items-center justify-between bg-[#12464e]/[0.02] dark:bg-[#15221b]/40">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-[#0d9488]/10 dark:bg-teal-950 text-[#0d9488] dark:text-teal-300 flex items-center justify-center font-bold">
+          <div className="w-8 h-8 rounded-xl bg-[#12464e]/10 dark:bg-[#aceba7]/15 text-[#12464e] dark:text-[#aceba7] flex items-center justify-center font-bold">
             <Activity className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white">
+            <h3 className="font-serif-luxury text-base md:text-lg font-normal text-[#12464e] dark:text-white">
               SINBAD Radar & 12-Week Healing Trajectory
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -28,8 +28,8 @@ export default function SinbadTrajectoryCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-bold text-[#0d9488] dark:text-teal-400 bg-[#0d9488]/10 dark:bg-teal-950/60 px-3.5 py-1.5 rounded-xl border border-[#0d9488]/20">
-          <Sparkles className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-2 text-xs font-bold text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/15 dark:bg-[#aceba7]/10 px-3.5 py-1.5 rounded-full border border-[#aceba7]/40 shadow-xs">
+          <Sparkles className="w-3.5 h-3.5 text-[#12464e] dark:text-[#aceba7]" />
           <span>IWGDF 2026 Telemetry</span>
         </div>
       </div>
@@ -37,10 +37,10 @@ export default function SinbadTrajectoryCard({
       {/* Content: 6-Axis Radar (Left) + 12-Wk Trajectory (Right) */}
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
         {/* 6-Axis SINBAD Radar Chart */}
-        <div className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between items-center shadow-2xs">
+        <div className="bg-white/60 dark:bg-[#141c17] border border-[#12464e]/10 dark:border-[#223229] rounded-2xl p-5 flex flex-col justify-between items-center shadow-2xs">
           <div className="w-full flex items-center justify-between mb-1">
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">6-Axis Risk Topology</span>
-            <span className="text-xs font-bold text-[#0d9488] dark:text-teal-400 bg-[#0d9488]/10 dark:bg-teal-950 px-2.5 py-0.5 rounded-md tracking-tight">
+            <span className="text-xs font-mono font-bold text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 dark:bg-[#aceba7]/10 px-2.5 py-0.5 rounded-lg border border-[#aceba7]/40 tracking-tight">
               Score: {sinbadScore}/6
             </span>
           </div>
@@ -57,81 +57,95 @@ export default function SinbadTrajectoryCard({
                   transform-origin="100 100"
                   fill="none"
                   stroke="#cbd5e1"
-                  className="dark:stroke-slate-700"
+                  className="dark:stroke-[#223229]"
                   strokeWidth="1"
                 />
               ))}
               {/* Axis lines */}
-              <line x1="100" y1="100" x2="100" y2="20" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-              <line x1="100" y1="100" x2="170" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-              <line x1="100" y1="100" x2="170" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-              <line x1="100" y1="100" x2="100" y2="180" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-              <line x1="100" y1="100" x2="30" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-              <line x1="100" y1="100" x2="30" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+              <line x1="100" y1="100" x2="100" y2="20" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" className="dark:stroke-slate-700" />
+              <line x1="100" y1="100" x2="170" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" className="dark:stroke-slate-700" />
+              <line x1="100" y1="100" x2="170" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" className="dark:stroke-slate-700" />
+              <line x1="100" y1="100" x2="100" y2="180" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" className="dark:stroke-slate-700" />
+              <line x1="100" y1="100" x2="30" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" className="dark:stroke-slate-700" />
+              <line x1="100" y1="100" x2="30" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" className="dark:stroke-slate-700" />
 
               {/* Patient SINBAD Radar Polygon */}
               <polygon
                 points="100,25 165,65 160,135 100,175 35,135 40,65"
-                fill="rgba(36, 149, 131, 0.35)"
-                stroke="#0d9488"
+                fill="rgba(172, 235, 167, 0.35)"
+                stroke="#12464e"
+                className="dark:stroke-[#aceba7]"
                 strokeWidth="2.5"
               />
 
               {/* Data Points */}
-              <circle cx="100" cy="25" r="4" fill="#0d9488" />
-              <circle cx="165" cy="65" r="4" fill="#0d9488" />
-              <circle cx="160" cy="135" r="4" fill="#0d9488" />
-              <circle cx="100" cy="175" r="4" fill="#0d9488" />
-              <circle cx="35" cy="135" r="4" fill="#0d9488" />
-              <circle cx="40" cy="65" r="4" fill="#0d9488" />
+              <circle cx="100" cy="25" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
+              <circle cx="165" cy="65" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
+              <circle cx="160" cy="135" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
+              <circle cx="100" cy="175" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
+              <circle cx="35" cy="135" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
+              <circle cx="40" cy="65" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
             </svg>
           </div>
 
           <div className="grid grid-cols-6 gap-1.5 text-[9.5px] text-slate-600 dark:text-slate-400 font-bold text-center w-full mt-1">
-            <span className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs" title="Site: Hindfoot / Midfoot (1 pt)">
+            <span className="bg-white dark:bg-[#1a251e] py-1.5 rounded-lg border border-slate-200 dark:border-[#223229] shadow-2xs" title="Site: Hindfoot / Midfoot (1 pt)">
               Site: {siteHindfoot ? '1' : '0'}
             </span>
-            <span className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs" title="Ischemia: Reduced pulses (1 pt)">
+            <span className="bg-white dark:bg-[#1a251e] py-1.5 rounded-lg border border-slate-200 dark:border-[#223229] shadow-2xs" title="Ischemia: Reduced pulses (1 pt)">
               Isch: {ischemia ? '1' : '0'}
             </span>
-            <span className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs" title="Neuropathy: Loss of sensation (1 pt)">
+            <span className="bg-white dark:bg-[#1a251e] py-1.5 rounded-lg border border-slate-200 dark:border-[#223229] shadow-2xs" title="Neuropathy: Loss of sensation (1 pt)">
               Neur: {neuropathy ? '1' : '0'}
             </span>
-            <span className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs" title="Bacterial: Infection present (1 pt)">
+            <span className="bg-white dark:bg-[#1a251e] py-1.5 rounded-lg border border-slate-200 dark:border-[#223229] shadow-2xs" title="Bacterial: Infection present (1 pt)">
               Bact: {infectionRisk > 50 ? '1' : '0'}
             </span>
-            <span className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs" title="Area: >= 1 cm² (1 pt)">
+            <span className="bg-white dark:bg-[#1a251e] py-1.5 rounded-lg border border-slate-200 dark:border-[#223229] shadow-2xs" title="Area: >= 1.0 cm2 (1 pt)">
               Area: {woundArea >= 1.0 ? '1' : '0'}
             </span>
-            <span className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs" title="Depth: Deep tissue/bone (1 pt)">
+            <span className="bg-white dark:bg-[#1a251e] py-1.5 rounded-lg border border-slate-200 dark:border-[#223229] shadow-2xs" title="Depth: Deep to bone (1 pt)">
               Depth: {depthDeep ? '1' : '0'}
             </span>
           </div>
         </div>
 
-        {/* Wound Area Healing Trajectory Line Chart */}
-        <div className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between shadow-2xs">
+        {/* Wound Area Healing Trajectory Line Chart (With Arounda Gradient Fill) */}
+        <div className="bg-white/60 dark:bg-[#141c17] border border-[#12464e]/10 dark:border-[#223229] rounded-2xl p-5 flex flex-col justify-between shadow-2xs">
           <div className="w-full flex items-center justify-between mb-1">
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Area Reduction Trajectory</span>
-            <span className="text-[10px] font-bold text-[#f43f5e] dark:text-rose-400 bg-rose-50 dark:bg-rose-950 px-2.5 py-0.5 rounded-md border border-rose-200 dark:border-rose-900">
+            <span className="text-[10px] font-bold text-[#f43f5e] dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-900">
               12-Wk Horizon
             </span>
           </div>
 
-          {/* Line Chart SVG */}
+          {/* Line Chart SVG with gradient area fill */}
           <div className="w-full h-44 relative my-1">
             <svg className="w-full h-full" viewBox="0 0 240 100" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="heal6AreaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#aceba7" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="#12464e" stopOpacity="0.02" />
+                </linearGradient>
+              </defs>
+
               {/* Grid Lines */}
-              <line x1="0" y1="20" x2="240" y2="20" stroke="#e2e8f0" className="dark:stroke-slate-700" strokeWidth="1" />
-              <line x1="0" y1="50" x2="240" y2="50" stroke="#e2e8f0" className="dark:stroke-slate-700" strokeWidth="1" />
-              <line x1="0" y1="80" x2="240" y2="80" stroke="#e2e8f0" className="dark:stroke-slate-700" strokeWidth="1" />
+              <line x1="0" y1="20" x2="240" y2="20" stroke="#e2e8f0" className="dark:stroke-[#223229]" strokeWidth="1" />
+              <line x1="0" y1="50" x2="240" y2="50" stroke="#e2e8f0" className="dark:stroke-[#223229]" strokeWidth="1" />
+              <line x1="0" y1="80" x2="240" y2="80" stroke="#e2e8f0" className="dark:stroke-[#223229]" strokeWidth="1" />
+
+              {/* Gradient Area under Heal6 Curve */}
+              <path
+                d="M 20,20 C 60,35 120,75 220,95 L 220,100 L 20,100 Z"
+                fill="url(#heal6AreaGradient)"
+              />
 
               {/* Standard of Care Curve */}
               <path
                 d="M 20,20 C 60,25 120,45 220,70"
                 fill="none"
                 stroke="#94a3b8"
-                strokeWidth="2"
+                strokeWidth="1.8"
                 strokeDasharray="3 3"
               />
 
@@ -139,7 +153,8 @@ export default function SinbadTrajectoryCard({
               <path
                 d="M 20,20 C 60,35 120,75 220,95"
                 fill="none"
-                stroke="#0d9488"
+                stroke="#12464e"
+                className="dark:stroke-[#aceba7]"
                 strokeWidth="3"
               />
 
@@ -148,14 +163,14 @@ export default function SinbadTrajectoryCard({
               <text x="25" y="16" fill="#f43f5e" fontSize="8" fontWeight="bold">W0: {woundArea}cm²</text>
 
               {/* 12-Week Target Point */}
-              <circle cx="220" cy="95" r="4" fill="#0d9488" />
-              <text x="180" y="90" fill="#0d9488" fontSize="8" fontWeight="bold">W12: Closed</text>
+              <circle cx="220" cy="95" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
+              <text x="180" y="90" fill="#12464e" className="dark:fill-[#aceba7]" fontSize="8" fontWeight="bold">W12: Closed</text>
             </svg>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2.5 border-t border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400">
-              <span className="w-3 h-1 bg-[#0d9488] rounded-full" />
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2.5 border-t border-slate-200 dark:border-[#223229]">
+            <div className="flex items-center gap-1.5 font-bold text-[#12464e] dark:text-[#aceba7]">
+              <span className="w-3 h-1 bg-[#12464e] dark:bg-[#aceba7] rounded-full" />
               <span>Heal6 Protocol</span>
             </div>
             <div className="flex items-center gap-1.5 font-medium text-slate-500">

@@ -85,28 +85,30 @@ export default function ClinicalFormCard({
   const clinicalTally = (siteHindfoot ? 1 : 0) + (ischemia ? 1 : 0) + (neuropathy ? 1 : 0) + (depthDeep ? 1 : 0)
 
   return (
-    <div className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-5 transition-all hover:shadow-md h-full w-full">
+    <div className="spotlight-card glass-panel-luxury rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-xl flex flex-col justify-between gap-5 transition-all h-full w-full relative overflow-hidden group">
       {/* Card Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <Stethoscope className="w-4 h-4 text-[#0d9488] dark:text-teal-400" />
+          <h3 className="text-base font-serif-luxury font-semibold text-slate-900 dark:text-white flex items-center gap-2.5 tracking-wide">
+            <div className="w-8 h-8 rounded-xl bg-[#aceba7]/15 text-[#12464e] dark:text-[#aceba7] flex items-center justify-center border border-[#aceba7]/30">
+              <Stethoscope className="w-4 h-4" />
+            </div>
             <span>Physician Clinical Parameters</span>
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400 mt-0.5">
             IWGDF 6-Factor SINBAD Classification Matrix
           </p>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold font-mono">
-          <span>Clinical Inputs:</span>
-          <span className="text-[#0d9488] dark:text-teal-400 font-bold">{clinicalTally} / 4 pts</span>
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#aceba7]/15 dark:bg-[#12464e]/50 border border-[#aceba7]/30 text-[#12464e] dark:text-[#aceba7] text-xs font-bold font-mono">
+          <span>Inputs:</span>
+          <span className="font-bold">{clinicalTally} / 4 pts</span>
         </div>
       </div>
 
       {/* Patient Demographics Intake Inputs */}
-      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-3">
-        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
-          Patient Demographics & Anatomical Target:
+      <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-black/40 border border-slate-200/70 dark:border-white/5 space-y-3 shadow-inner">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-slate-500 block font-bold">
+          Patient Profile & Target:
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <div>
@@ -116,7 +118,7 @@ export default function ClinicalFormCard({
               value={patientName}
               onChange={(e) => setPatientName && setPatientName(e.target.value)}
               placeholder="e.g. Carlos Mendez"
-              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:outline-hidden"
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-[#0e120f]/80 text-xs font-serif-luxury text-slate-800 dark:text-slate-100 focus:border-[#aceba7] focus:ring-1 focus:ring-[#aceba7] focus:outline-hidden transition-all"
             />
           </div>
           <div>
@@ -127,12 +129,12 @@ export default function ClinicalFormCard({
                 value={patientAge}
                 onChange={(e) => setPatientAge && setPatientAge(e.target.value)}
                 placeholder="Age"
-                className="w-1/2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:outline-hidden"
+                className="w-1/2 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-[#0e120f]/80 text-xs font-mono font-bold text-slate-800 dark:text-slate-100 focus:border-[#aceba7] focus:outline-hidden transition-all"
               />
               <select
                 value={patientGender}
                 onChange={(e) => setPatientGender && setPatientGender(e.target.value)}
-                className="w-1/2 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:outline-hidden"
+                className="w-1/2 px-2 py-2 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-[#0e120f]/80 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-[#aceba7] focus:outline-hidden transition-all"
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -147,7 +149,7 @@ export default function ClinicalFormCard({
               value={locationLabel}
               onChange={(e) => setLocationLabel && setLocationLabel(e.target.value)}
               placeholder="e.g. Right Plantar Hindfoot"
-              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-teal-500 focus:outline-hidden"
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-[#0e120f]/80 text-xs font-medium text-slate-800 dark:text-slate-100 focus:border-[#aceba7] focus:outline-hidden transition-all"
             />
           </div>
         </div>
@@ -162,10 +164,10 @@ export default function ClinicalFormCard({
             <div
               key={item.id}
               onClick={() => item.onChange(!item.checked)}
-              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2.5 shadow-2xs ${
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 shadow-xs ${
                 item.checked
-                  ? 'bg-[#0d9488]/5 dark:bg-teal-950/30 border-[#0d9488]/50 dark:border-teal-700'
-                  : 'bg-slate-50/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                  ? 'bg-[#aceba7]/10 dark:bg-[#12464e]/40 border-[#aceba7]/60 dark:border-[#aceba7]/40 shadow-sm'
+                  : 'bg-white/70 dark:bg-[#0e120f]/60 border-slate-200/80 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/15'
               }`}
             >
               {/* Top Row: Icon + Badge on Left, Toggle on Right */}
@@ -174,28 +176,28 @@ export default function ClinicalFormCard({
                   <div
                     className={`p-1.5 rounded-xl transition-colors ${
                       item.checked
-                        ? 'bg-[#0d9488] text-white shadow-xs'
-                        : 'bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                        ? 'bg-[#12464e] dark:bg-[#aceba7] text-[#aceba7] dark:text-[#0e120f] shadow-xs'
+                        : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
                   <span
-                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                    className={`text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full border ${
                       item.checked
-                        ? 'bg-[#0d9488] text-white'
-                        : 'bg-slate-200/80 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                        ? 'bg-[#aceba7]/20 border-[#aceba7]/40 text-[#12464e] dark:text-[#aceba7]'
+                        : 'bg-slate-200/80 dark:bg-slate-800/80 border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {item.checked ? item.badge : item.altLabel}
                   </span>
                 </div>
 
-                {/* Modern iOS Toggle Switch */}
+                {/* Modern iOS Toggle Switch with Arounda tones */}
                 <div className="relative inline-flex items-center shrink-0">
                   <div
                     className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out ${
-                      item.checked ? 'bg-[#0d9488]' : 'bg-slate-300 dark:bg-slate-700'
+                      item.checked ? 'bg-[#aceba7]' : 'bg-slate-300 dark:bg-slate-700'
                     }`}
                   >
                     <div
@@ -203,7 +205,7 @@ export default function ClinicalFormCard({
                         item.checked ? 'translate-x-4.5' : 'translate-x-0.5'
                       }`}
                     >
-                      {item.checked && <Check className="w-2.5 h-2.5 text-[#0d9488] stroke-[3]" />}
+                      {item.checked && <Check className="w-2.5 h-2.5 text-[#12464e] stroke-[3]" />}
                     </div>
                   </div>
                 </div>
@@ -211,7 +213,7 @@ export default function ClinicalFormCard({
 
               {/* Bottom Row: Clear Title & Crisp Subtitle */}
               <div>
-                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                <h4 className="text-xs font-serif-luxury font-bold text-slate-900 dark:text-slate-100 tracking-wide">
                   {item.label}
                 </h4>
                 <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
@@ -228,29 +230,29 @@ export default function ClinicalFormCard({
         <button
           onClick={onRunAnalysis}
           disabled={isAnalyzing}
-          className={`w-full py-3 px-6 rounded-2xl font-bold text-sm tracking-wide text-white transition-all duration-200 flex items-center justify-center gap-2.5 shadow-lg cursor-pointer ${
+          className={`w-full py-3.5 px-6 rounded-2xl font-serif-luxury text-sm tracking-wide text-[#0e120f] transition-all duration-200 flex items-center justify-center gap-2.5 shadow-xl cursor-pointer ${
             isAnalyzing
-              ? 'bg-[#0d9488]/80 cursor-wait'
-              : 'bg-gradient-to-r from-[#0d9488] to-[#0284c7] hover:from-[#0f766e] hover:to-[#0369a1] shadow-[#0d9488]/25 hover:shadow-xl hover:shadow-[#0d9488]/30 hover:scale-[1.01] active:scale-[0.99]'
+              ? 'bg-[#aceba7]/70 cursor-wait'
+              : 'bg-[#aceba7] hover:bg-[#bbf0b7] hover:shadow-2xl hover:shadow-[#aceba7]/30 hover:scale-[1.01] active:scale-[0.99] border border-[#aceba7]/40'
           }`}
         >
           {isAnalyzing ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin text-white" />
-              <span>{analysisStep || 'Executing PyTorch ConvNeXt & UNet++ Pipeline...'}</span>
+              <Loader2 className="w-4 h-4 animate-spin text-[#0e120f]" />
+              <span className="font-sans font-bold text-xs">{analysisStep || 'Executing PyTorch ConvNeXt & UNet++ Pipeline...'}</span>
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-teal-200" />
-              <span>Execute SOTA SINBAD Analysis</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
+              <Sparkles className="w-4 h-4 text-[#12464e]" />
+              <span className="font-bold text-[#12464e]">Execute SOTA SINBAD Analysis</span>
+              <ArrowRight className="w-4 h-4 ml-1 text-[#12464e]" />
             </>
           )}
         </button>
 
-        <div className="flex items-center justify-between text-[10.5px] text-slate-400 dark:text-slate-500 mt-2 px-1">
-          <span>Combines Physician Inputs + Calibrated Homography + Infection Gatekeeper</span>
-          <span className="font-bold text-emerald-600 dark:text-emerald-400">IWGDF Standard</span>
+        <div className="flex items-center justify-between text-[10.5px] text-slate-400 dark:text-slate-500 mt-2 px-1 font-mono">
+          <span>Physician Inputs + Homography + Infection Gatekeeper</span>
+          <span className="font-bold text-[#12464e] dark:text-[#aceba7]">IWGDF 2026 Standard</span>
         </div>
       </div>
     </div>

@@ -44,13 +44,23 @@ env/
 # ==========================================
 node_modules/
 .pnp.*
+dist/
+build/
 doctor_web/build/
 doctor_web/dist/
 doctor_web/.next/
+doctor_dashboard_next/
 .dart_tool/
 mobile_app/build/
 mobile_app/.flutter-plugins
 mobile_app/.pub-cache/
+
+# ==========================================
+# 🗄️ DATABASE & RUNTIME CACHES
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
 
 # OS GENERATED FILES
 .DS_Store

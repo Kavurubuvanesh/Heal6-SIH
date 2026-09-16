@@ -51,6 +51,8 @@ Heal6_dfu_project/
 │   │   │   ├── routes_sinbad.py    # Primary /analyze-wound pipeline endpoint
 │   │   │   ├── routes_patients.py  # In-memory triage queue & verification sign-off
 │   │   │   ├── routes_auth.py      # Physician identity / profile
+│   │   │   ├── routes_stream.py    # Real-time WebSocket & SSE event bus
+│   │   │   ├── routes_fhir.py      # HL7 FHIR R4 interoperability endpoints
 │   │   │   └── routes_xray.py      # Placeholder for LERA X-Ray expansion
 │   │   ├── ml_engine/        # Production ML inference modules
 │   │   │   ├── calibration.py            # ArUco fiducial marker detector (px/cm)
@@ -58,13 +60,16 @@ Heal6_dfu_project/
 │   │   │   ├── segmentation_inference.py # UNet++ 4-class sub-tissue segmentation
 │   │   │   ├── sinbad_engine.py          # Strict IWGDF SINBAD scoring & prognostics
 │   │   │   └── weights/                  # Trained PyTorch neural weights (.pth)
-│   │   └── core/             # App configuration utilities
+│   │   ├── core/             # App configuration, database engine & event bus
+│   │   ├── crud/             # Async repository CRUD operations
+│   │   ├── db/               # SQLAlchemy 2.0 async models
+│   │   └── fhir/             # HL7 FHIR R4 LOINC/SNOMED schemas & serializer
 │   └── models/               # Top-level SOTA model store (heal6_tissue_sota_best.pth)
 │
 ├── doctor_web/               # Physician Diagnostic & Command Center (React 19 + Vite)
 │   ├── src/
 │   │   ├── App.jsx           # Main controller (Landing vs Workstation)
-│   │   ├── components/       # 19 Clinical UI components
+│   │   ├── components/       # 21 Clinical UI components
 │   │   │   ├── LandingPage.jsx          # Interactive hero, live demo, feature overview
 │   │   │   ├── MasterTriageQueue.jsx    # Severity-sorted patient queue (SINBAD desc)
 │   │   │   ├── PatientCommandCenter.jsx # Deep-dive patient telemetry & inspection
@@ -72,12 +77,16 @@ Heal6_dfu_project/
 │   │   │   ├── AiResultsColumn.jsx      # Live AI segmentation overlays & metrics
 │   │   │   ├── ClinicalFormCard.jsx     # Physician clinical parameter toggles
 │   │   │   ├── SinbadTrajectoryCard.jsx # Longitudinal wound healing forecast curves
+│   │   │   ├── CriticalAlertBanner.jsx  # Floating emergency triage notification
+│   │   │   ├── FhirExportModal.jsx      # HL7 FHIR R4 clinical export gateway
 │   │   │   ├── AnalyticsView.jsx        # Cohort epidemiological & healing analytics
 │   │   │   ├── WoundRegistryView.jsx    # Searchable longitudinal wound database
 │   │   │   ├── ReportModal.jsx          # Printable/Exportable clinical diagnostic report
 │   │   │   └── ReferralModal.jsx        # Multidisciplinary referral slip generator
 │   │   ├── data/clinicalCases.js        # Baseline patient telemetry database
-│   │   └── services/api.js              # FastAPI client with offline telemetry fallback
+│   │   └── services/
+│   │       ├── api.js                   # FastAPI client with offline telemetry fallback
+│   │       └── websocket.js             # Real-time WebSocket streaming client
 │
 ├── heal6-patient-app/        # Patient / Point-of-Care Mobile Intake Portal (React 19 + Vite)
 │   ├── src/
@@ -149,6 +158,7 @@ npm run dev
 ## ⚕️ Clinical Standards & Compliance
 * **IWGDF 2023 Guidelines:** Fully aligned with the International Working Group on the Diabetic Foot recommendations for classification and triage.
 * **SINBAD Scoring System:** Implements the globally validated 6-point matrix (*Site, Ischemia, Neuropathy, Bacterial Infection, Area, Depth*).
+* **HL7® FHIR® R4:** Native Release 4 (v4.0.1) Document Bundle serialization with LOINC® and SNOMED CT® standard terminology.
 * **Data Security:** Follows zero-retention principles for PII on external models, utilizing AES-256 GCM encrypted telemetry transmission principles.
 
 ---

@@ -103,36 +103,60 @@ export default function PatientCommandCenter({
     necrotic: 20.0
   }
 
-  // Circular Gauge Component for AI Diagnostics Telemetry
+  // High-Tech Concentric Orbital Gauge Component (Inspired by Arounda 82% gauge, Screenshot 3)
   const CircularProgressGauge = ({ value = 0, color, label, subtitle }) => {
-    const radius = 32
+    const radius = 28
     const circumference = 2 * Math.PI * radius
     const safeVal = Math.min(Math.max(Number(value) || 0, 0), 100)
     const strokeDashoffset = circumference - (safeVal / 100) * circumference
 
     return (
-      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center shadow-2xs hover:shadow-xs transition-shadow">
-        <div className="relative w-18 h-18 flex items-center justify-center mb-1.5">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r={radius} stroke="#e2e8f0" className="dark:stroke-slate-700" strokeWidth="6" fill="none" />
+      <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#141c17] border border-[#12464e]/10 dark:border-[#223229] flex flex-col items-center justify-center text-center shadow-xs hover:border-[#aceba7]/40 transition-all group">
+        <div className="relative w-20 h-20 flex items-center justify-center mb-1.5">
+          {/* Concentric Rotating Outer Dashed Orbital Ring */}
+          <svg className="absolute inset-0 w-full h-full animate-orbit-slow pointer-events-none" viewBox="0 0 80 80">
             <circle
               cx="40"
               cy="40"
+              r="37"
+              stroke={color}
+              strokeWidth="1.2"
+              strokeDasharray="4 6"
+              fill="none"
+              opacity="0.45"
+            />
+          </svg>
+
+          {/* Primary Metric Ring with radiant glow */}
+          <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 70 70">
+            <circle
+              cx="35"
+              cy="35"
+              r={radius}
+              stroke="#e2e8f0"
+              className="dark:stroke-[#223229]"
+              strokeWidth="5"
+              fill="none"
+            />
+            <circle
+              cx="35"
+              cy="35"
               r={radius}
               stroke={color}
-              strokeWidth="6"
+              strokeWidth="5"
               fill="none"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               className="transition-all duration-1000 ease-out"
+              style={{ filter: `drop-shadow(0 0 5px ${color}80)` }}
             />
           </svg>
-          <span className="text-sm font-black text-slate-800 dark:text-white absolute tracking-tight">
+          <span className="text-xs font-black text-slate-900 dark:text-white absolute tracking-tight font-mono">
             {safeVal.toFixed(1)}%
           </span>
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+        <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 block">
           {label}
         </span>
         {subtitle && (
@@ -167,17 +191,17 @@ export default function PatientCommandCenter({
       {/* ========================================================= */}
       {/* PANEL 1: CLINICAL OVERRIDE & HUMAN VALIDATION MANDATE     */}
       {/* ========================================================= */}
-      <div className="w-full bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl rounded-2xl p-4 md:p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-3.5">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-          <div className="flex items-center gap-2.5">
-            <span className="text-[10.5px] font-black uppercase tracking-wider text-[#f43f5e] dark:text-rose-400 bg-[#fff1f2] dark:bg-rose-950/60 px-2.5 py-0.5 rounded-lg border border-[#f43f5e]/30 dark:border-rose-900">
+      <div className="w-full spotlight-card glass-panel-luxury rounded-3xl p-5 md:p-6 shadow-xs flex flex-col gap-4">
+        <div className="flex items-center justify-between border-b border-[#12464e]/10 dark:border-[#223229] pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/15 px-3 py-1 rounded-full border border-[#aceba7]/40">
               Panel 1
             </span>
-            <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white">
+            <h3 className="font-serif-luxury text-base md:text-lg font-normal text-[#12464e] dark:text-white">
               Clinical Override & Human Validation
             </h3>
           </div>
-          <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-extrabold bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+          <span className="text-[11px] font-mono text-emerald-600 dark:text-[#aceba7] font-extrabold bg-[#aceba7]/10 px-3 py-1 rounded-full border border-[#aceba7]/30">
             IWGDF Verified
           </span>
         </div>
@@ -191,61 +215,57 @@ export default function PatientCommandCenter({
 
             <div className="space-y-2">
               {/* Factor 1: Area */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+              <div className="p-3 rounded-2xl bg-white/70 dark:bg-[#15221b] border border-[#12464e]/10 dark:border-[#223229] flex items-center justify-between shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#0d9488]" />
+                  <span className="w-2 h-2 rounded-full bg-[#aceba7] shadow-[0_0_6px_#aceba7]" />
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Area ≥ 1.0 cm²</span>
                 </div>
-                <span className="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-lg bg-[#0d9488]/10 dark:bg-teal-950 text-[#0d9488] dark:text-teal-300">
+                <span className="text-[10.5px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-[#aceba7]/15 text-[#12464e] dark:text-[#aceba7] border border-[#aceba7]/30">
                   UNet++ SOTA ({patient.woundAreaCm2} cm²)
                 </span>
               </div>
 
               {/* Factor 2: Infection */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+              <div className="p-3 rounded-2xl bg-white/70 dark:bg-[#15221b] border border-[#12464e]/10 dark:border-[#223229] flex items-center justify-between shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#f43f5e]" />
+                  <span className="w-2 h-2 rounded-full bg-[#f43f5e] shadow-[0_0_6px_#f43f5e]" />
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Bacterial Infection (&gt;50%)</span>
                 </div>
-                <span className="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-lg bg-[#f43f5e]/10 dark:bg-rose-950 text-[#f43f5e] dark:text-rose-300">
+                <span className="text-[10.5px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
                   ConvNeXt ({patient.infectionRiskPercent}%)
                 </span>
               </div>
 
               {/* Factor 3: Neuropathy */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+              <div className="p-3 rounded-2xl bg-white/70 dark:bg-[#15221b] border border-[#12464e]/10 dark:border-[#223229] flex items-center justify-between shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#0d9488]" />
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Neuropathy (Loss of Sensation)</span>
+                  <span className="w-2 h-2 rounded-full bg-[#aceba7] shadow-[0_0_6px_#aceba7]" />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Neuropathy (10g Monofilament)</span>
                 </div>
-                <span className="text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-lg bg-[#0d9488]/10 dark:bg-teal-950 text-[#0d9488] dark:text-teal-300">
-                  Patient Intake (1 pt)
+                <span className="text-[10.5px] font-mono font-bold px-2.5 py-0.5 rounded-lg bg-[#aceba7]/15 text-[#12464e] dark:text-[#aceba7] border border-[#aceba7]/30">
+                  Loss of Sensation (1 pt)
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Section B: Human Validation Mandate Checkboxes */}
+          {/* Section B: Attending Physician Physical Validation */}
           <div className="lg:col-span-6 flex flex-col gap-2.5">
-            <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#f43f5e] dark:text-rose-400 flex items-center gap-1">
-                <ShieldAlert className="w-3.5 h-3.5" />
-                Human Validation Checkboxes:
-              </span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Medical Safety Law</span>
-            </div>
+            <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-0.5">
+              Attending Physician Physical Validation:
+            </span>
 
             <div className="space-y-2">
-              {/* Checkbox 1: Probe-to-Bone (Deep) */}
+              {/* Checkbox 1: Probe to Bone (Depth) */}
               <div
                 onClick={() => setProbeToBoneDeep(!probeToBoneDeep)}
-                className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-start justify-between gap-2.5 ${
+                className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start justify-between gap-2.5 ${
                   probeToBoneDeep
-                    ? 'bg-[#fff1f2] dark:bg-rose-950/40 border-[#f43f5e]/50 dark:border-rose-800 shadow-xs'
-                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-400 dark:border-rose-800 shadow-xs'
+                    : 'bg-white/70 dark:bg-[#15221b] border-[#12464e]/10 dark:border-[#223229] hover:border-slate-300'
                 }`}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
                   <div className="mt-0.5">
                     {probeToBoneDeep ? (
                       <CheckSquare className="w-4 h-4 text-[#f43f5e] dark:text-rose-400" />
@@ -255,15 +275,15 @@ export default function PatientCommandCenter({
                   </div>
                   <div>
                     <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                      Probe-to-Bone (Deep Fascia / Joint)
+                      Deep Ulcer (Probes to Bone / Capsule)
                     </span>
                     <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-tight">
-                      Verified via physical metal probe or X-ray
+                      Blunt metal probe reaches tendon, capsule, or hard bone
                     </p>
                   </div>
                 </div>
-                <span className={`text-[10.5px] font-bold font-mono px-2 py-0.5 rounded-md ${
-                  probeToBoneDeep ? 'bg-[#f43f5e] text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                <span className={`text-[10.5px] font-bold font-mono px-2.5 py-0.5 rounded-lg ${
+                  probeToBoneDeep ? 'bg-[#f43f5e] text-white' : 'bg-slate-200 dark:bg-[#223229] text-slate-600 dark:text-slate-300'
                 }`}>
                   {probeToBoneDeep ? '1 pt' : '0 pt'}
                 </span>
@@ -272,13 +292,13 @@ export default function PatientCommandCenter({
               {/* Checkbox 2: Pedal Pulses (Ischemia) */}
               <div
                 onClick={() => setPedalPulsesIschemia(!pedalPulsesIschemia)}
-                className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-start justify-between gap-2.5 ${
+                className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start justify-between gap-2.5 ${
                   pedalPulsesIschemia
-                    ? 'bg-[#fff1f2] dark:bg-rose-950/40 border-[#f43f5e]/50 dark:border-rose-800 shadow-xs'
-                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-400 dark:border-rose-800 shadow-xs'
+                    : 'bg-white/70 dark:bg-[#15221b] border-[#12464e]/10 dark:border-[#223229] hover:border-slate-300'
                 }`}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
                   <div className="mt-0.5">
                     {pedalPulsesIschemia ? (
                       <CheckSquare className="w-4 h-4 text-[#f43f5e] dark:text-rose-400" />
@@ -295,8 +315,8 @@ export default function PatientCommandCenter({
                     </p>
                   </div>
                 </div>
-                <span className={`text-[10.5px] font-bold font-mono px-2 py-0.5 rounded-md ${
-                  pedalPulsesIschemia ? 'bg-[#f43f5e] text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                <span className={`text-[10.5px] font-bold font-mono px-2.5 py-0.5 rounded-lg ${
+                  pedalPulsesIschemia ? 'bg-[#f43f5e] text-white' : 'bg-slate-200 dark:bg-[#223229] text-slate-600 dark:text-slate-300'
                 }`}>
                   {pedalPulsesIschemia ? '1 pt' : '0 pt'}
                 </span>
@@ -305,16 +325,16 @@ export default function PatientCommandCenter({
               {/* Checkbox 3: Hindfoot / Midfoot Site */}
               <div
                 onClick={() => setSiteHindfoot(!siteHindfoot)}
-                className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-start justify-between gap-2.5 ${
+                className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start justify-between gap-2.5 ${
                   siteHindfoot
-                    ? 'bg-teal-50/70 dark:bg-teal-950/40 border-[#0d9488]/50 dark:border-teal-800 shadow-xs'
-                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    ? 'bg-[#aceba7]/10 dark:bg-[#aceba7]/10 border-[#aceba7]/50 dark:border-[#aceba7]/40 shadow-xs'
+                    : 'bg-white/70 dark:bg-[#15221b] border-[#12464e]/10 dark:border-[#223229] hover:border-slate-300'
                 }`}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
                   <div className="mt-0.5">
                     {siteHindfoot ? (
-                      <CheckSquare className="w-4 h-4 text-[#0d9488] dark:text-teal-400" />
+                      <CheckSquare className="w-4 h-4 text-[#12464e] dark:text-[#aceba7]" />
                     ) : (
                       <Square className="w-4 h-4 text-slate-400" />
                     )}
@@ -328,8 +348,8 @@ export default function PatientCommandCenter({
                     </p>
                   </div>
                 </div>
-                <span className={`text-[10.5px] font-bold font-mono px-2 py-0.5 rounded-md ${
-                  siteHindfoot ? 'bg-[#0d9488] text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                <span className={`text-[10.5px] font-bold font-mono px-2.5 py-0.5 rounded-lg ${
+                  siteHindfoot ? 'bg-[#12464e] text-white dark:bg-[#aceba7] dark:text-[#0e120f]' : 'bg-slate-200 dark:bg-[#223229] text-slate-600 dark:text-slate-300'
                 }`}>
                   {siteHindfoot ? '1 pt' : '0 pt'}
                 </span>
@@ -342,27 +362,27 @@ export default function PatientCommandCenter({
       {/* ========================================================= */}
       {/* PANEL 2: WOUND VISUALS & UNet++ SEGMENTATION INSPECTOR     */}
       {/* ========================================================= */}
-      <div className="w-full bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl rounded-2xl p-4 md:p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-4">
+      <div className="w-full spotlight-card glass-panel-luxury rounded-3xl p-5 md:p-6 shadow-xs flex flex-col gap-4">
         {/* Header with Mode Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-[10.5px] font-black uppercase tracking-wider text-[#0d9488] dark:text-teal-400 bg-[#0d9488]/10 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#12464e]/10 dark:border-[#223229] pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/15 px-3 py-1 rounded-full border border-[#aceba7]/40">
               Panel 2
             </span>
-            <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white">
+            <h3 className="font-serif-luxury text-base md:text-lg font-normal text-[#12464e] dark:text-white">
               Wound Visuals & UNet++ Inspector
             </h3>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {/* View Mode Toggle Button */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center bg-[#12464e]/5 dark:bg-[#15221b] p-1 rounded-2xl border border-[#12464e]/10 dark:border-[#223229]">
               <button
                 onClick={() => setViewMode('split')}
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
+                className={`px-3.5 py-1 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
                   viewMode === 'split'
-                    ? 'bg-white dark:bg-slate-700 text-[#0d9488] dark:text-teal-300 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'bg-[#12464e] dark:bg-[#aceba7] text-white dark:text-[#0e120f] shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
                 }`}
               >
                 <Columns className="w-3.5 h-3.5" />
@@ -370,10 +390,10 @@ export default function PatientCommandCenter({
               </button>
               <button
                 onClick={() => setViewMode('overlay')}
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
+                className={`px-3.5 py-1 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
                   viewMode === 'overlay'
-                    ? 'bg-white dark:bg-slate-700 text-[#0d9488] dark:text-teal-300 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'bg-[#12464e] dark:bg-[#aceba7] text-white dark:text-[#0e120f] shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -381,7 +401,7 @@ export default function PatientCommandCenter({
               </button>
             </div>
 
-            <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
+            <span className="text-[11px] font-mono font-bold text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/15 px-3 py-1 rounded-xl border border-[#aceba7]/30 shrink-0">
               25mm ArUco Tag
             </span>
           </div>
@@ -392,20 +412,26 @@ export default function PatientCommandCenter({
           {/* Left Column: Real Scanned Images & Overlay Visualizer */}
           <div className="lg:col-span-7 flex flex-col gap-3">
             {viewMode === 'split' ? (
-              /* Split Comparison View (Matching User Attachment 2) */
+              /* Split Comparison View */
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* 1. Original Clean Scan */}
                 <div className="space-y-1.5">
                   <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block text-center">
                     Original Scan
                   </span>
-                  <div className="relative w-full aspect-square rounded-xl bg-slate-950 overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center group">
+                  <div className="relative w-full aspect-square rounded-2xl bg-slate-950 overflow-hidden border border-slate-200 dark:border-[#223229] shadow-inner flex items-center justify-center group scanner-target">
+                    {/* Corner Reticle Brackets */}
+                    <span className="absolute top-2 left-2 w-2.5 h-2.5 border-t-2 border-l-2 border-[#aceba7] z-20 pointer-events-none" />
+                    <span className="absolute top-2 right-2 w-2.5 h-2.5 border-t-2 border-r-2 border-[#aceba7] z-20 pointer-events-none" />
+                    <span className="absolute bottom-2 left-2 w-2.5 h-2.5 border-b-2 border-l-2 border-[#aceba7] z-20 pointer-events-none" />
+                    <span className="absolute bottom-2 right-2 w-2.5 h-2.5 border-b-2 border-r-2 border-[#aceba7] z-20 pointer-events-none" />
+
                     <img
                       src={rawImageSrc}
                       alt="Original Patient Wound Scan"
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/80 text-[9.5px] font-mono font-bold text-slate-300 border border-slate-700">
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-900/80 text-[9.5px] font-mono font-bold text-[#aceba7] border border-[#aceba7]/40 z-20">
                       RAW SCAN
                     </div>
                   </div>
@@ -413,10 +439,19 @@ export default function PatientCommandCenter({
 
                 {/* 2. Live AI Heatmap Segmentation Overlay */}
                 <div className="space-y-1.5">
-                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#f43f5e] dark:text-rose-400 block text-center">
+                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#12464e] dark:text-[#aceba7] block text-center">
                     AI Label Overlap
                   </span>
-                  <div className="relative w-full aspect-square rounded-xl bg-slate-950 overflow-hidden border-2 border-[#f43f5e]/80 shadow-md shadow-rose-500/10 flex items-center justify-center group">
+                  <div className="relative w-full aspect-square rounded-2xl bg-slate-950 overflow-hidden border-2 border-[#aceba7]/60 shadow-lg shadow-[#aceba7]/10 flex items-center justify-center group scanner-target">
+                    {/* Cybernetic Reticle Corner Brackets */}
+                    <span className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-[#aceba7] z-20 pointer-events-none" />
+                    <span className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-[#aceba7] z-20 pointer-events-none" />
+                    <span className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-[#aceba7] z-20 pointer-events-none" />
+                    <span className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-[#aceba7] z-20 pointer-events-none" />
+
+                    {/* Laser Scanner Sweep Line */}
+                    {showAiBoundary && <div className="laser-scanner-line" />}
+
                     {/* Base Scanned Photo */}
                     <img
                       src={rawImageSrc}
@@ -435,16 +470,25 @@ export default function PatientCommandCenter({
                     )}
 
                     {/* Calibrated Area Callout Tag */}
-                    <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-slate-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-teal-500/40 flex items-center justify-between text-[10px] font-mono font-bold text-teal-300 shadow-lg">
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[#aceba7]/50 flex items-center justify-between text-[10px] font-mono font-bold text-[#aceba7] shadow-lg z-20">
                       <span>Area: {patient.woundAreaCm2 || 2.45} cm²</span>
-                      <span className="text-emerald-400">0.1mm Calibrated</span>
+                      <span className="text-white">0.1mm Calibrated</span>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              /* Layered Single Inspector View (Matching User Attachment 1) */
-              <div className="relative w-full h-[250px] md:h-[280px] rounded-xl bg-slate-950 overflow-hidden border border-slate-800 shadow-inner flex items-center justify-center">
+              /* Layered Single Inspector View */
+              <div className="relative w-full h-[250px] md:h-[280px] rounded-2xl bg-slate-950 overflow-hidden border border-[#aceba7]/40 shadow-inner flex items-center justify-center scanner-target">
+                {/* Cybernetic Reticle Corner Brackets */}
+                <span className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-[#aceba7] z-20 pointer-events-none" />
+                <span className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-[#aceba7] z-20 pointer-events-none" />
+                <span className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-[#aceba7] z-20 pointer-events-none" />
+                <span className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-[#aceba7] z-20 pointer-events-none" />
+
+                {/* Laser Scanner Sweep Line */}
+                {showAiBoundary && <div className="laser-scanner-line" />}
+
                 {/* Base Scanned Photo */}
                 <img
                   src={rawImageSrc}
@@ -603,18 +647,18 @@ export default function PatientCommandCenter({
       {/* ========================================================= */}
       {/* PANEL 3: AI METRICS, DYNAMIC 6-AXIS RADAR & TREATMENT     */}
       {/* ========================================================= */}
-      <div className="w-full bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl rounded-2xl p-4 md:p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-3.5">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-          <div className="flex items-center gap-2.5">
-            <span className="text-[10.5px] font-black uppercase tracking-wider text-[#0d9488] dark:text-teal-400 bg-[#0d9488]/10 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-lg">
+      <div className="w-full spotlight-card glass-panel-luxury rounded-3xl p-5 md:p-6 shadow-xs flex flex-col gap-4">
+        <div className="flex items-center justify-between border-b border-[#12464e]/10 dark:border-[#223229] pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/15 px-3 py-1 rounded-full border border-[#aceba7]/40">
               Panel 3
             </span>
-            <h3 className="text-sm md:text-base font-bold text-slate-800 dark:text-white">
+            <h3 className="font-serif-luxury text-base md:text-lg font-normal text-[#12464e] dark:text-white">
               AI Metrics & 6-Axis Radar
             </h3>
           </div>
-          <div className="px-2.5 py-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 text-xs border border-slate-200 dark:border-slate-700">
-            Score: <strong className="text-[#0d9488] dark:text-teal-400 text-sm font-black tracking-tight">{calculatedScore} / 6</strong>
+          <div className="px-3 py-1 rounded-full bg-[#aceba7]/15 font-bold text-[#12464e] dark:text-[#aceba7] text-xs border border-[#aceba7]/30">
+            SINBAD: <strong className="text-sm font-mono font-black tracking-tight">{calculatedScore} / 6</strong>
           </div>
         </div>
 
@@ -623,17 +667,17 @@ export default function PatientCommandCenter({
           <div className="lg:col-span-6 flex flex-col justify-between gap-3.5 h-full">
             {/* Top: Wound Area & Infection Risk Metrics */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-[#15221b] border border-[#12464e]/10 dark:border-[#223229] shadow-2xs">
                 <span className="text-[10.5px] font-bold uppercase text-slate-400 dark:text-slate-500 block">Wound Area</span>
-                <div className="text-lg font-black text-slate-800 dark:text-slate-100 mt-0.5">
-                  {patient.woundAreaCm2 || 2.45} <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">cm²</span>
+                <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5 font-mono">
+                  {patient.woundAreaCm2 || 2.45} <span className="text-xs font-sans font-normal text-slate-500">cm²</span>
                 </div>
-                <span className="text-[10px] text-[#0d9488] dark:text-teal-400 font-bold">UNet++ SOTA Brain</span>
+                <span className="text-[10px] text-[#12464e] dark:text-[#aceba7] font-bold">UNet++ SOTA Brain</span>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-[#15221b] border border-[#12464e]/10 dark:border-[#223229] shadow-2xs">
                 <span className="text-[10.5px] font-bold uppercase text-slate-400 dark:text-slate-500 block">Infection Risk</span>
-                <div className="text-lg font-black text-[#f43f5e] dark:text-rose-400 mt-0.5">
+                <div className="text-xl font-black text-[#f43f5e] dark:text-rose-400 mt-0.5 font-mono">
                   {patient.infectionRiskPercent || 78.4}%
                 </div>
                 <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">ConvNeXt-V2</span>
@@ -641,8 +685,8 @@ export default function PatientCommandCenter({
             </div>
 
             {/* Middle: Automated Treatment Protocol */}
-            <div className="p-3.5 bg-[#0d9488]/5 dark:bg-teal-950/40 border border-[#0d9488]/20 dark:border-teal-800 rounded-xl flex flex-col gap-1.5">
-              <span className="text-[11px] font-black text-[#0d9488] dark:text-teal-400 uppercase tracking-wider block">
+            <div className="p-4 bg-[#aceba7]/10 dark:bg-[#15221b] border border-[#aceba7]/30 dark:border-[#223229] rounded-2xl flex flex-col gap-1.5">
+              <span className="text-[11px] font-black text-[#12464e] dark:text-[#aceba7] uppercase tracking-wider block">
                 Automated Treatment Recommendation
               </span>
               <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 leading-relaxed">
@@ -656,24 +700,24 @@ export default function PatientCommandCenter({
             <div>
               <button
                 onClick={onOpenReferralModal}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#f43f5e] hover:bg-[#e11d48] text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
               >
                 <Siren className="w-4 h-4" />
-                <span>Generate Vascular Referral</span>
+                <span>Generate Vascular Referral Directive</span>
               </button>
             </div>
           </div>
 
           {/* Right Column: Dynamic 6-Axis Radar Graph */}
           <div className="lg:col-span-6 flex flex-col justify-center">
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 flex flex-col items-center shadow-2xs">
+            <div className="bg-white/70 dark:bg-[#15221b] rounded-2xl p-4 border border-[#12464e]/10 dark:border-[#223229] flex flex-col items-center shadow-2xs">
               <div className="w-full flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">6-Axis SINBAD Radar</span>
-                <span className="text-[10px] font-mono text-[#0d9488] dark:text-teal-400 font-bold">Live Synced</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">6-Axis SINBAD Radar</span>
+                <span className="text-[10px] font-mono text-[#12464e] dark:text-[#aceba7] font-bold bg-[#aceba7]/15 px-2 py-0.5 rounded-md">Live Synced</span>
               </div>
 
               {/* SVG 6-Axis Radar Polygon */}
-              <div className="w-36 h-36 relative my-1">
+              <div className="w-38 h-38 relative my-1">
                 <svg className="w-full h-full" viewBox="0 0 200 200">
                   {/* Hexagon Grid Rings */}
                   {[0.33, 0.66, 1].map((scale, i) => (
@@ -684,7 +728,7 @@ export default function PatientCommandCenter({
                       transform-origin="100 100"
                       fill="none"
                       stroke="#cbd5e1"
-                      className="dark:stroke-slate-700"
+                      className="dark:stroke-[#223229]"
                       strokeWidth="1"
                     />
                   ))}
@@ -699,10 +743,10 @@ export default function PatientCommandCenter({
                       ${30 + (100 - radarPoints[4].val) * 0.7},${140 - (100 - radarPoints[4].val) * 0.4}
                       ${30 + (100 - radarPoints[5].val) * 0.7},${60 + (100 - radarPoints[5].val) * 0.4}
                     `}
-                    fill="rgba(36, 149, 131, 0.4)"
-                    stroke="#0d9488"
+                    fill="rgba(172, 235, 167, 0.4)"
+                    stroke="#12464e"
+                    className="dark:stroke-[#aceba7]"
                     strokeWidth="2.5"
-                    className="transition-all duration-300 ease-out"
                   />
                 </svg>
               </div>
@@ -711,10 +755,10 @@ export default function PatientCommandCenter({
               <div className="grid grid-cols-3 gap-1.5 text-[10px] text-center w-full font-mono font-bold mt-1">
                 <span className={radarPoints[0].active ? 'text-[#f43f5e] dark:text-rose-400' : 'text-slate-400 dark:text-slate-600'}>Sepsis: {radarPoints[0].pt}</span>
                 <span className={radarPoints[1].active ? 'text-[#f43f5e] dark:text-rose-400' : 'text-slate-400 dark:text-slate-600'}>Depth: {radarPoints[1].pt}</span>
-                <span className={radarPoints[2].active ? 'text-[#0d9488] dark:text-teal-400' : 'text-slate-400 dark:text-slate-600'}>Area: {radarPoints[2].pt}</span>
+                <span className={radarPoints[2].active ? 'text-[#12464e] dark:text-[#aceba7]' : 'text-slate-400 dark:text-slate-600'}>Area: {radarPoints[2].pt}</span>
                 <span className={radarPoints[3].active ? 'text-[#f43f5e] dark:text-rose-400' : 'text-slate-400 dark:text-slate-600'}>Ischemia: {radarPoints[3].pt}</span>
-                <span className={radarPoints[4].active ? 'text-[#0d9488] dark:text-teal-400' : 'text-slate-400 dark:text-slate-600'}>Site: {radarPoints[4].pt}</span>
-                <span className={radarPoints[5].active ? 'text-[#0d9488] dark:text-teal-400' : 'text-slate-400 dark:text-slate-600'}>Neuro: {radarPoints[5].pt}</span>
+                <span className={radarPoints[4].active ? 'text-[#12464e] dark:text-[#aceba7]' : 'text-slate-400 dark:text-slate-600'}>Site: {radarPoints[4].pt}</span>
+                <span className={radarPoints[5].active ? 'text-[#12464e] dark:text-[#aceba7]' : 'text-slate-400 dark:text-slate-600'}>Neuro: {radarPoints[5].pt}</span>
               </div>
             </div>
           </div>

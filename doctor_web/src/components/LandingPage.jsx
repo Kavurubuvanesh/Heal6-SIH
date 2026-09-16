@@ -127,21 +127,22 @@ export default function LandingPage({ onEnterWorkstation }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#070e14] text-slate-800 dark:text-slate-100 selection:bg-[#0d9488]/20 selection:text-[#0f766e] dark:selection:text-teal-300 overflow-x-hidden font-sans relative transition-colors duration-300">
-      {/* Full-bleed ambient lighting glow layers (calibrated for both Light and Dark themes) */}
+    <div className="min-h-screen bg-[#f4f8f5] dark:bg-[#0e120f] text-slate-800 dark:text-slate-100 selection:bg-[#aceba7]/30 selection:text-[#12464e] dark:selection:text-[#aceba7] overflow-x-hidden font-sans relative transition-colors duration-300">
+      {/* Full-bleed ambient lighting glow layers & Volumetric Light Rays (Screenshot 1 & 3 inspired) */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-0">
-        {/* Top Left Teal Glow */}
-        <div className="absolute -top-40 left-1/4 -translate-x-1/2 w-[900px] h-[900px] bg-gradient-to-br from-[#0d9488]/15 via-[#0284c7]/10 to-transparent dark:from-[#0d9488]/12 dark:via-[#0284c7]/8 rounded-full blur-[140px]" />
-        {/* Right Mid Ice-Cyan Glow */}
-        <div className="absolute top-1/4 right-0 translate-x-1/3 w-[800px] h-[800px] bg-gradient-to-bl from-[#5eead4]/22 via-[#0284c7]/10 to-transparent dark:from-[#5eead4]/14 dark:via-[#0284c7]/6 rounded-full blur-[150px]" />
+        <div className="ambient-light-ray opacity-70" />
+        {/* Top Left Glowing Mint Aura */}
+        <div className="absolute -top-40 left-1/4 -translate-x-1/2 w-[900px] h-[900px] bg-gradient-to-br from-[#aceba7]/18 via-[#12464e]/10 to-transparent dark:from-[#aceba7]/14 dark:via-[#12464e]/20 rounded-full blur-[140px]" />
+        {/* Right Mid Deep Forest Glow */}
+        <div className="absolute top-1/4 right-0 translate-x-1/3 w-[800px] h-[800px] bg-gradient-to-bl from-[#aceba7]/15 via-[#466f49]/10 to-transparent dark:from-[#aceba7]/10 dark:via-[#12464e]/15 rounded-full blur-[150px]" />
         {/* Center Subsurface Perfusion Glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-rose-500/[0.04] dark:bg-rose-500/[0.03] rounded-full blur-[160px]" />
-        {/* Bottom Ambient Teal Glow */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-teal-500/[0.08] dark:bg-teal-400/[0.02] rounded-full blur-[160px]" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#aceba7]/[0.05] dark:bg-[#aceba7]/[0.03] rounded-full blur-[160px]" />
+        {/* Bottom Ambient Glow */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[#12464e]/[0.06] dark:bg-[#aceba7]/[0.02] rounded-full blur-[160px]" />
       </div>
 
       {/* 1. TOP NAVIGATION WITH MOTION TRANSITIONS */}
-      <header className="fixed top-0 inset-x-0 z-40 bg-white/85 dark:bg-[#070e14]/85 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800/70 shadow-xs dark:shadow-2xs transition-all duration-300">
+      <header className="fixed top-0 inset-x-0 z-40 bg-white/80 dark:bg-[#0e120f]/85 backdrop-blur-2xl border-b border-[#12464e]/10 dark:border-[#223229] shadow-xs dark:shadow-2xs transition-all duration-300">
         <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 h-20 flex items-center justify-between gap-6">
           {/* Brand Logo */}
           <div className="flex items-center shrink-0">
@@ -159,15 +160,15 @@ export default function LandingPage({ onEnterWorkstation }) {
                   href={`#${item.id}`}
                   onClick={(e) => scrollToSection(e, item.id)}
                   className={`relative px-4 sm:px-5 py-2 text-xs sm:text-sm transition-colors duration-200 select-none cursor-pointer rounded-full z-10 ${isActive
-                    ? 'text-[#0f766e] dark:text-teal-400 font-bold'
+                    ? 'text-[#12464e] dark:text-[#aceba7] font-bold'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-medium'
                     }`}
                 >
-                  {/* Smooth Sliding Active Pill Background (Only Inner Transition) */}
+                  {/* Smooth Sliding Active Pill Background */}
                   {isActive && (
                     <motion.div
                       layoutId="activeNavSmoothPill"
-                      className="absolute inset-0 bg-white dark:bg-slate-800/90 rounded-full shadow-sm dark:shadow-xs border border-slate-200/90 dark:border-slate-700/80 -z-10"
+                      className="absolute inset-0 bg-[#aceba7]/15 dark:bg-[#15221b] rounded-full shadow-sm dark:shadow-xs border border-[#aceba7]/40 dark:border-[#223229] -z-10"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -184,24 +185,24 @@ export default function LandingPage({ onEnterWorkstation }) {
               whileHover={{ scale: 1.03, y: -1 }}
               whileTap={{ scale: 0.97, y: 0 }}
               onClick={handleOpenAuth}
-              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-[#0d9488] via-[#0f766e] to-[#0284c7] hover:from-[#0f766e] hover:to-[#0369a1] shadow-md shadow-teal-700/20 hover:shadow-lg hover:shadow-teal-700/30 transition-all flex items-center gap-2 group cursor-pointer"
+              className="px-5 py-2.5 rounded-full text-xs font-bold text-slate-900 bg-gradient-to-r from-[#aceba7] via-[#8ee287] to-[#aceba7] hover:brightness-105 shadow-md shadow-[#aceba7]/25 hover:shadow-lg transition-all flex items-center gap-2 group cursor-pointer border border-[#aceba7]"
             >
-              <User className="w-3.5 h-3.5" />
-              <span>Doctor Portal</span>
-              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" />
+              <User className="w-3.5 h-3.5 text-[#12464e]" />
+              <span className="text-[#12464e] font-extrabold tracking-tight">Doctor Portal</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#12464e] transform group-hover:translate-x-0.5 transition-transform" />
             </motion.button>
           </div>
         </div>
       </header>
 
-      {/* 2. HERO SECTION (2-COLUMN REFERENCE LAYOUT WITH 3D CRYSTAL FOOT) */}
+      {/* 2. HERO SECTION */}
       <section
         id="hero"
         className="relative min-h-[calc(100vh-5rem)] mt-20 pt-6 pb-6 flex flex-col justify-between max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-14"
       >
         {/* 2-Column Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center z-10 my-auto flex-1 py-4">
-          {/* LEFT COLUMN: Typography & Reference-Style Pill Button */}
+          {/* LEFT COLUMN: Baskervville Typography & Ethereal Aesthetic */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -223,23 +224,23 @@ export default function LandingPage({ onEnterWorkstation }) {
                 hidden: { opacity: 0, y: -10 },
                 visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
               }}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-500/10 dark:bg-teal-500/15 border border-teal-600/25 dark:border-teal-400/30 text-[#0f766e] dark:text-teal-300 text-xs font-semibold backdrop-blur-md mb-5"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#aceba7]/15 dark:bg-[#aceba7]/10 border border-[#aceba7]/40 dark:border-[#aceba7]/30 text-[#12464e] dark:text-[#aceba7] text-xs font-semibold backdrop-blur-md mb-5"
             >
-              <span className="w-2 h-2 rounded-full bg-[#0d9488] dark:bg-teal-400 animate-pulse" />
-              <span>Next-Gen Diabetic Limb Diagnostics</span>
+              <span className="w-2 h-2 rounded-full bg-[#aceba7] shadow-[0_0_6px_#aceba7] animate-pulse" />
+              <span>Next-Gen Diabetic Limb Diagnostics & Copilot</span>
             </motion.div>
 
-            {/* Headline with Sans Gradient */}
+            {/* Headline with Baskervville Editorial Elegance (Screenshot 1 & 3 inspired) */}
             <motion.h1
               variants={{
                 hidden: { opacity: 0, y: 15 },
                 visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 280, damping: 24 } }
               }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-sans font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.12] mb-5"
+              className="font-serif-luxury text-4xl sm:text-5xl lg:text-[64px] font-normal text-slate-900 dark:text-white tracking-tight leading-[1.12] mb-5"
             >
-              Clinical-Grade <br />
-              <span className="font-sans font-black bg-gradient-to-r from-[#0d9488] via-[#14b8a6] to-[#0284c7] bg-clip-text text-transparent">
-                Diabetic Foot Analysis
+              Precision <br />
+              <span className="font-serif-luxury italic font-normal text-[#12464e] dark:text-[#aceba7] drop-shadow-[0_0_25px_rgba(172,235,167,0.25)]">
+                Clinical Intelligence.
               </span>
             </motion.h1>
 
@@ -251,10 +252,10 @@ export default function LandingPage({ onEnterWorkstation }) {
               }}
               className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-xl mb-7"
             >
-              Leveraging ConvNeXt tissue classification, Attention U-Net segmentation, and calibrated optical homography, Heal6 delivers objective diabetic limb assessment and automated SINBAD triage.
+              Leveraging ConvNeXt tissue classification, UNet++ multi-class segmentation, and calibrated optical homography, Heal6 delivers objective diabetic limb assessment and automated SINBAD triage.
             </motion.p>
 
-            {/* Creative Hero CTA Button (Reference Capsule Style with White Circle Arrow) */}
+            {/* Creative Hero CTA Button */}
             <motion.div
               variants={{
                 hidden: { opacity: 0, y: 15 },
@@ -266,10 +267,10 @@ export default function LandingPage({ onEnterWorkstation }) {
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.98, y: 0 }}
                 onClick={handleOpenAuth}
-                className="bg-gradient-to-r from-[#0d9488] via-[#0f766e] to-[#0284c7] hover:from-[#0f766e] hover:to-[#0369a1] text-white font-bold pl-7 pr-2.5 py-2.5 rounded-full shadow-lg shadow-teal-700/25 hover:shadow-xl hover:shadow-teal-700/35 flex items-center justify-between gap-4 group cursor-pointer transition-all"
+                className="bg-gradient-to-r from-[#12464e] via-[#185a64] to-[#12464e] dark:from-[#aceba7] dark:via-[#8ee287] dark:to-[#aceba7] text-white dark:text-[#0e120f] font-bold pl-7 pr-2.5 py-2.5 rounded-full shadow-lg shadow-[#12464e]/25 hover:shadow-xl flex items-center justify-between gap-4 group cursor-pointer transition-all border border-[#aceba7]/30"
               >
                 <span className="text-sm tracking-wide">Launch Clinical Workstation</span>
-                <span className="w-8 h-8 rounded-full bg-white text-[#0f766e] flex items-center justify-center font-black shadow-md group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200">
+                <span className="w-8 h-8 rounded-full bg-white dark:bg-[#0e120f] text-[#12464e] dark:text-[#aceba7] flex items-center justify-center font-black shadow-md group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200">
                   <ArrowUpRight className="w-4 h-4" />
                 </span>
               </motion.button>
@@ -439,6 +440,120 @@ export default function LandingPage({ onEnterWorkstation }) {
             <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">Accelerated Healing</span>
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* 2.5 HEALTHCARE CLINICAL GATEWAY (Inspired by Oakview, MindfulPsychology & BrightSmile Schemes) */}
+      <section className="py-12 relative z-10 max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          {/* Card 1: Blue-Based Diagnostic Scheme (Inspired by BrightSmile Dental) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            whileHover={{ y: -4 }}
+            className="spotlight-card glass-panel-luxury p-7 sm:p-8 rounded-3xl border border-sky-200/70 dark:border-sky-900/30 flex flex-col justify-between shadow-md hover:shadow-xl transition-all group"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-sky-500/10 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-500/20 shadow-xs group-hover:scale-105 transition-transform">
+                  <Scan className="w-6 h-6" />
+                </div>
+                <span className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 bg-sky-500/10 dark:bg-sky-950/60 px-3 py-1 rounded-full border border-sky-500/20">
+                  Diagnostic Vision
+                </span>
+              </div>
+              <h3 className="text-xl font-serif-luxury font-bold text-slate-900 dark:text-white tracking-wide">
+                Patient Triage & Intake
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                Autonomous ArUco metric planimetry and multi-modal image intake. Corrects lens perspective and maps sub-millimeter wound surface area.
+              </p>
+            </div>
+            <div className="mt-7 pt-5 border-t border-slate-200/70 dark:border-white/5 flex items-center justify-between">
+              <button
+                onClick={() => onEnterWorkstation()}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-serif-luxury font-bold text-white bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 transition-all shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 cursor-pointer group/btn"
+              >
+                <span>Launch Triage Queue</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Card 2: Green-Based Healing & Protocol Scheme (Inspired by MindfulPsychology & Arounda) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            whileHover={{ y: -4 }}
+            className="spotlight-card glass-panel-luxury p-7 sm:p-8 rounded-3xl border border-[#aceba7]/50 dark:border-[#aceba7]/20 flex flex-col justify-between shadow-md hover:shadow-xl transition-all group"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-[#aceba7]/15 dark:bg-[#aceba7]/10 text-[#12464e] dark:text-[#aceba7] flex items-center justify-center border border-[#aceba7]/30 shadow-xs group-hover:scale-105 transition-transform">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <span className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 dark:bg-[#aceba7]/10 px-3 py-1 rounded-full border border-[#aceba7]/30">
+                  IWGDF 6-Factor
+                </span>
+              </div>
+              <h3 className="text-xl font-serif-luxury font-bold text-slate-900 dark:text-white tracking-wide">
+                SINBAD Protocol Staging
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                Objective 6-factor composite severity score (Site, Ischemia, Neuropathy, Bacterial Infection, Area, Depth) coupled with 12-week healing trajectory models.
+              </p>
+            </div>
+            <div className="mt-7 pt-5 border-t border-slate-200/70 dark:border-white/5 flex items-center justify-between">
+              <a
+                href="#sinbad"
+                onClick={(e) => scrollToSection(e, 'sinbad')}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-serif-luxury font-bold text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 hover:bg-[#aceba7]/30 dark:bg-[#aceba7]/10 dark:hover:bg-[#aceba7]/20 border border-[#aceba7]/40 transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer group/btn"
+              >
+                <span>Explore SINBAD Protocol</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Card 3: Neutral & Cardinal Red Emergency Access Scheme (Inspired by Oakview & Cardinal Health) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ y: -4 }}
+            className="spotlight-card glass-panel-luxury p-7 sm:p-8 rounded-3xl border border-rose-200/70 dark:border-rose-900/30 flex flex-col justify-between shadow-md hover:shadow-xl transition-all group"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20 shadow-xs group-hover:scale-105 transition-transform">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <span className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-950/60 px-3 py-1 rounded-full border border-rose-500/20">
+                  Clinical Portal
+                </span>
+              </div>
+              <h3 className="text-xl font-serif-luxury font-bold text-slate-900 dark:text-white tracking-wide">
+                Physician Workstation & Portal
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                Secure biometric access for endocrinologists and surgeons. Instant priority escalation, telemetry overrides, and 1-click vascular referral generation.
+              </p>
+            </div>
+            <div className="mt-7 pt-5 border-t border-slate-200/70 dark:border-white/5 flex items-center justify-between">
+              <button
+                onClick={handleOpenAuth}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-serif-luxury font-bold text-white bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 transition-all shadow-md shadow-rose-600/20 flex items-center justify-center gap-2 cursor-pointer group/btn border border-rose-500/30"
+              >
+                <span>Doctor Access Portal</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* 3. TECHNOLOGY PILLARS WITH SCROLL IN-VIEW MOTION */}

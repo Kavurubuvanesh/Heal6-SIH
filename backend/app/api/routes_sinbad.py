@@ -1,7 +1,8 @@
 import io
 import base64
 import numpy as np
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from PIL import Image
 
 # Import Core Clinical ML Modules
@@ -9,7 +10,9 @@ from app.ml_engine.inference import predict_wound
 from app.ml_engine.segmentation_inference import predict_wound_mask
 from app.ml_engine.sinbad_engine import SinbadEngine, ClinicalInput
 from app.ml_engine.calibration import detect_marker_and_calculate_ratio, calculate_real_world_area
-from app.api.routes_patients import add_or_update_patient_in_queue
+from app.core.database import get_db
+from app.core.event_bus import event_bus
+from app.api.routes_patients import add_or_update_patient_in_db
 
 router = APIRouter()
 
@@ -31,7 +34,8 @@ async def analyze_wound(
     patient_gender: str = Form("Male", description="Patient Gender"),
     diabetes_type: str = Form("Type 2 DM (14 yrs)", description="Diabetes history"),
     patient_id: str = Form(None, description="Patient MRN / ID"),
-    location_label: str = Form(None, description="Anatomical site description")
+    location_label: str = Form(None, description="Anatomical site description"),
+    db: AsyncSession = Depends(get_db)
 ):
     try:
         if not file.content_type.startswith("image/"):
@@ -200,8 +204,11 @@ async def analyze_wound(
             }
         }
 
-        # Auto-register into doctor triage queue
-        add_or_update_patient_in_queue(patient_record)
+        # Auto-register into relational database doctor triage queue
+        saved_record = await add_or_update_patient_in_db(db, patient_record)
+
+        # Broadcast sub-50ms real-time event to all connected doctor terminals (WebSocket + SSE)
+        await event_bus.broadcast_patient_intake(saved_record)
 
         # 9. Assemble Full Data Contract for Client Response
         return {

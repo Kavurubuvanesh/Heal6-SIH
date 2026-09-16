@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # 0. Production PostgreSQL Relational Database
+  heal6-postgres:
+    image: postgres:16-alpine
+    container_name: heal6-postgres
+    environment:
+      POSTGRES_USER: heal6_admin
+      POSTGRES_PASSWORD: heal6_secure_clinical_pass
+      POSTGRES_DB: heal6_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U heal6_admin -d heal6_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 1. PyTorch & FastAPI ML Telemetry Backend
+  heal6-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: heal6-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
+      - DATABASE_URL=postgresql+asyncpg://heal6_admin:heal6_secure_clinical_pass@heal6-postgres:5432/heal6_db
+    depends_on:
+      heal6-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 2. Doctor Clinical Command Center
+  heal6-doctor-web:
+    build:
+      context: ./doctor_web
+      dockerfile: Dockerfile
+    container_name: heal6-doctor-web
+    ports:
+      - "5173:80"
+    depends_on:
+      - heal6-backend
+    restart: unless-stopped
+
+  # 3. Patient Edge Intake Portal
+  heal6-patient-app:
+    build:
+      context: ./heal6-patient-app
+      dockerfile: Dockerfile
+    container_name: heal6-patient-app
+    ports:
+      - "5174:80"
+    depends_on:
+      - heal6-backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local

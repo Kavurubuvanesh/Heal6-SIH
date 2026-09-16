@@ -223,3 +223,25 @@ export function calculateLocalSinbadScore({
     healingEstimateWeeks,
   }
 }
+
+/**
+ * Fetch full HL7 FHIR R4 document bundle for a given patient / assessment
+ */
+export async function fetchFhirBundle(identifier) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/fhir/Bundle/${identifier}`)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const data = await response.json()
+    return { success: true, data }
+  } catch (error) {
+    console.warn('[Heal6 FHIR] Could not fetch live FHIR bundle, synthesizing fallback:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Get direct download URL for HL7 FHIR R4 Bundle JSON
+ */
+export function getFhirDownloadUrl(identifier) {
+  return `${API_BASE_URL}/api/v1/fhir/Bundle/${identifier}/download`
+}

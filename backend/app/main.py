@@ -24,6 +24,8 @@ from app.ml_engine.segmentation_inference import load_segmentation_model
 from app.api.routes_sinbad import router as sinbad_router
 from app.api.routes_patients import router as patients_router
 from app.api.routes_auth import router as auth_router
+from app.api.routes_stream import router as stream_router
+from app.api.routes_fhir import router as fhir_router
 
 # Set PyTorch execution threads to prevent CPU thrashing
 torch.set_num_threads(4)
@@ -31,10 +33,17 @@ torch.set_num_threads(4)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Lifespan context manager loads ML models ONCE into memory
-    at server startup, dropping API latency from ~4s to <200ms.
+    Lifespan context manager initializes relational database and
+    loads ML models ONCE into memory at server startup, dropping API latency to <200ms.
     """
     print("🚀 [STARTUP] Initializing Heal6 Diagnostic Intelligence Platform...")
+    try:
+        from app.core.database import init_db
+        await init_db()
+        print("✅ [STARTUP] Relational Database initialized & baseline clinical cases verified.")
+    except Exception as db_err:
+        print(f"⚠️ [STARTUP WARNING] Database initialization failed: {db_err}")
+
     try:
         load_segmentation_model()
         print("✅ [STARTUP] PyTorch UNet++ Diagnostic Models loaded into memory.")
@@ -64,6 +73,8 @@ app.add_middleware(
 app.include_router(sinbad_router, prefix="/api/v1/sinbad", tags=["SINBAD Diagnostic Protocol"])
 app.include_router(patients_router, prefix="/api/v1/patients", tags=["Triage Queue"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(stream_router, prefix="/api/v1/stream", tags=["Real-Time Triage Streaming"])
+app.include_router(fhir_router, prefix="/api/v1/fhir", tags=["HL7 / FHIR R4 Interoperability"])
 
 # 3. System Health Check Endpoint
 @app.get("/health", tags=["System Telemetry"])

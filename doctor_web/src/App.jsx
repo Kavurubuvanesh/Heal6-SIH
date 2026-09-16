@@ -24,6 +24,8 @@ import {
   verifyPatientReport,
   checkBackendStatus
 } from './services/api'
+import { triageStream } from './services/websocket'
+import CriticalAlertBanner from './components/CriticalAlertBanner'
 
 export default function App() {
   // Top-level View Mode: 'landing' | 'workstation'
@@ -81,13 +83,18 @@ export default function App() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [isReferralModalOpen, setIsReferralModalOpen] = useState(false)
 
+  // Real-Time Streaming & Emergency Alerting State
+  const [activeAlert, setActiveAlert] = useState(null)
+  const [streamStatus, setStreamStatus] = useState({ isConnected: false, protocol: 'DISCONNECTED', latencyMs: 0 })
+
   // ----------------------------------------------------------------
-  // Real-Time Queue Synchronization with FastAPI Backend
+  // Real-Time Queue Synchronization via WebSocket & Fallback Polling
   // ----------------------------------------------------------------
   useEffect(() => {
     let isMounted = true
 
-    const syncLiveQueue = async () => {
+    // 1. Initial snapshot fetch from relational database
+    const syncInitialQueue = async () => {
       try {
         const isOnline = await checkBackendStatus()
         if (isMounted) setIsLiveBackend(isOnline)
@@ -99,16 +106,90 @@ export default function App() {
           }
         }
       } catch (err) {
-        console.warn('[Heal6] Sync error:', err)
+        console.warn('[Heal6] Initial sync error:', err)
       }
     }
+    syncInitialQueue()
 
-    syncLiveQueue()
-    const interval = setInterval(syncLiveQueue, 4000)
+    // 2. Initialize Real-Time WebSocket Connection
+    triageStream.connect()
+
+    const unsubStatus = triageStream.on('status', (status) => {
+      if (isMounted) {
+        setStreamStatus(status)
+        setIsLiveBackend(status.isConnected)
+      }
+    })
+
+    // Sub-50ms Patient Intake Push Event
+    const unsubIntake = triageStream.on('intake', (newPatient) => {
+      console.log('⚡ [STREAM EVENT] New patient intake received via WebSocket:', newPatient)
+      if (!isMounted) return
+      setPatientCases((prev) => {
+        const exists = prev.some((p) => p.id === newPatient.id)
+        const updated = exists
+          ? prev.map((p) => (p.id === newPatient.id ? newPatient : p))
+          : [newPatient, ...prev]
+        return updated.sort((a, b) => (b.calculatedSinbad || 0) - (a.calculatedSinbad || 0))
+      })
+    })
+
+    // Emergency Critical Alert (SINBAD >= 4)
+    const unsubCritical = triageStream.on('critical', (alertData) => {
+      console.warn('🚨 [STREAM CRITICAL ALERT]', alertData)
+      if (isMounted) {
+        setActiveAlert(alertData)
+      }
+    })
+
+    // Patient Verified Event
+    const unsubVerified = triageStream.on('verified', ({ patientId }) => {
+      if (!isMounted) return
+      setPatientCases((prev) =>
+        prev.map((p) => (p.id === patientId ? { ...p, verifiedByDoctor: true } : p))
+      )
+    })
+
+    // Patient Reverify Request Event
+    const unsubReverify = triageStream.on('reverify', ({ patientId, patientNotes }) => {
+      if (!isMounted) return
+      setPatientCases((prev) =>
+        prev.map((p) =>
+          p.id === patientId
+            ? {
+                ...p,
+                reverificationRequested: true,
+                patientNotes,
+                triageLevel: 'MANUAL RE-VERIFY REQUESTED',
+                triageColor: '#e11d48'
+              }
+            : p
+        )
+      )
+    })
+
+    // 3. Fallback Heartbeat (every 15s, only active if WebSocket stream drops)
+    const fallbackInterval = setInterval(async () => {
+      if (!triageStream.isConnected) {
+        const isOnline = await checkBackendStatus()
+        if (isMounted) setIsLiveBackend(isOnline)
+        if (isOnline) {
+          const queueRes = await fetchPatientQueue()
+          if (isMounted && queueRes.success && Array.isArray(queueRes.data) && queueRes.data.length > 0) {
+            setPatientCases(queueRes.data)
+          }
+        }
+      }
+    }, 15000)
 
     return () => {
       isMounted = false
-      clearInterval(interval)
+      unsubStatus()
+      unsubIntake()
+      unsubCritical()
+      unsubVerified()
+      unsubReverify()
+      clearInterval(fallbackInterval)
     }
   }, [])
 
@@ -245,6 +326,18 @@ export default function App() {
       {/* Smooth Fluid Medical Custom Cursor */}
       <CustomCursor />
 
+      {/* Real-Time Emergency Critical Alert Banner (SINBAD >= 4) */}
+      <CriticalAlertBanner
+        alert={activeAlert}
+        onReview={(patientId) => {
+          const idx = patientCases.findIndex((p) => p.id === patientId)
+          if (idx !== -1) handleSelectCase(idx)
+          setActiveTab('command_center')
+          setActiveAlert(null)
+        }}
+        onDismiss={() => setActiveAlert(null)}
+      />
+
       <AnimatePresence mode="wait">
         {viewMode === 'landing' ? (
           <motion.div
@@ -268,13 +361,14 @@ export default function App() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="min-h-screen bg-slate-50 dark:bg-[#070e14] flex flex-col md:flex-row text-slate-800 dark:text-slate-100 antialiased font-sans transition-colors duration-300 relative"
+            className="min-h-screen bg-[#f4f8f5] dark:bg-[#0e120f] flex flex-col md:flex-row text-slate-800 dark:text-slate-100 antialiased font-sans transition-colors duration-300 relative"
           >
-            {/* Ambient Lighting Glow Layers (Unified with Landing Page) */}
+            {/* Ambient Lighting Glow Layers & Volumetric Light Rays (Screenshot 1 & 3 inspired) */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden -z-0">
-              <div className="absolute -top-40 left-1/3 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-br from-[#0d9488]/12 via-[#0284c7]/8 to-transparent dark:from-[#0d9488]/10 dark:via-[#0284c7]/6 rounded-full blur-[140px]" />
-              <div className="absolute top-1/3 right-0 translate-x-1/4 w-[700px] h-[700px] bg-gradient-to-bl from-[#5eead4]/18 via-[#0284c7]/8 to-transparent dark:from-[#5eead4]/10 dark:via-[#0284c7]/5 rounded-full blur-[150px]" />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-teal-500/[0.06] dark:bg-teal-400/[0.02] rounded-full blur-[160px]" />
+              <div className="ambient-light-ray opacity-70" />
+              <div className="absolute -top-40 left-1/3 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-br from-[#aceba7]/12 via-[#12464e]/10 to-transparent dark:from-[#aceba7]/12 dark:via-[#12464e]/20 rounded-full blur-[140px]" />
+              <div className="absolute top-1/3 right-0 translate-x-1/4 w-[700px] h-[700px] bg-gradient-to-bl from-[#aceba7]/15 via-[#12464e]/10 to-transparent dark:from-[#aceba7]/10 dark:via-[#12464e]/15 rounded-full blur-[150px]" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[#466f49]/[0.08] dark:bg-[#aceba7]/[0.03] rounded-full blur-[160px]" />
             </div>
 
             {/* 1. Left-Hand Clinical Sidebar */}
@@ -298,6 +392,7 @@ export default function App() {
                 onOpenReferralModal={() => setIsReferralModalOpen(true)}
                 isAnalyzing={isAnalyzing}
                 isLiveBackend={isLiveBackend}
+                streamStatus={streamStatus}
               />
 
               {/* View Switcher based on Active Tab */}

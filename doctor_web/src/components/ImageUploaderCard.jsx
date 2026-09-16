@@ -62,22 +62,26 @@ export default function ImageUploaderCard({
   }
 
   return (
-    <div className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col gap-4 transition-all hover:shadow-md">
+    <div className="spotlight-card glass-panel-luxury rounded-3xl p-6 border border-slate-200/80 dark:border-white/10 shadow-xl flex flex-col gap-4 transition-all relative overflow-hidden group">
       {/* Card Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[#0d9488]/10 dark:bg-teal-950 text-[#0d9488] dark:text-teal-300 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-[#aceba7]/15 text-[#12464e] dark:text-[#aceba7] flex items-center justify-center border border-[#aceba7]/30">
             <Camera className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-white">Clinical Image Intake & ArUco Vision</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Autonomous fiducial homography & contouring</p>
+            <h3 className="text-base font-serif-luxury font-semibold text-slate-900 dark:text-white tracking-wide">
+              Clinical Image Intake & ArUco Vision
+            </h3>
+            <p className="text-[11px] font-sans text-slate-500 dark:text-slate-400">
+              Autonomous fiducial homography & contouring
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#0d9488]/10 dark:bg-teal-950 text-[#0d9488] dark:text-teal-300">
-            <span className="w-2 h-2 rounded-full bg-[#0d9488] animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-semibold bg-[#aceba7]/15 text-[#12464e] dark:text-[#aceba7] border border-[#aceba7]/30">
+            <span className="w-2 h-2 rounded-full bg-[#aceba7] animate-pulse" />
             Live CV Tracking
           </span>
         </div>
@@ -260,18 +264,18 @@ export default function ImageUploaderCard({
       </div>
 
       {/* Vision Status Metadata Badges */}
-      <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center justify-center">
-          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Scale Ratio</span>
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono">42.0 px / cm</span>
+      <div className="grid grid-cols-3 gap-2.5 pt-1 text-center">
+        <div className="p-2.5 rounded-2xl bg-white/70 dark:bg-[#0e120f]/80 border border-slate-200/70 dark:border-white/5 flex flex-col items-center justify-center shadow-xs">
+          <span className="text-[10px] uppercase font-mono font-bold text-slate-400 dark:text-slate-500">Scale Ratio</span>
+          <span className="text-xs font-bold text-slate-800 dark:text-slate-100 font-mono">42.0 px/cm</span>
         </div>
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center justify-center">
-          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Lighting</span>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-semibold">96% Optimal</span>
+        <div className="p-2.5 rounded-2xl bg-white/70 dark:bg-[#0e120f]/80 border border-slate-200/70 dark:border-white/5 flex flex-col items-center justify-center shadow-xs">
+          <span className="text-[10px] uppercase font-mono font-bold text-slate-400 dark:text-slate-500">Lighting</span>
+          <span className="text-xs font-bold text-[#12464e] dark:text-[#aceba7] font-mono">96% Optimal</span>
         </div>
-        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex flex-col items-center justify-center">
-          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Fiducial Tag</span>
-          <span className="text-xs font-bold text-[#0d9488] dark:text-teal-400 font-mono">ArUco #42</span>
+        <div className="p-2.5 rounded-2xl bg-white/70 dark:bg-[#0e120f]/80 border border-slate-200/70 dark:border-white/5 flex flex-col items-center justify-center shadow-xs">
+          <span className="text-[10px] uppercase font-mono font-bold text-slate-400 dark:text-slate-500">Fiducial Tag</span>
+          <span className="text-xs font-bold text-[#12464e] dark:text-[#aceba7] font-mono">ArUco #42</span>
         </div>
       </div>
     </div>
