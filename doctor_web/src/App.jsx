@@ -9,6 +9,8 @@ import ClinicalFormCard from './components/ClinicalFormCard'
 import AiResultsColumn from './components/AiResultsColumn'
 import ReportModal from './components/ReportModal'
 import ReferralModal from './components/ReferralModal'
+import FhirExportModal from './components/FhirExportModal'
+import ArchitectureHubModal from './components/ArchitectureHubModal'
 import MasterTriageQueue from './components/MasterTriageQueue'
 import PatientCommandCenter from './components/PatientCommandCenter'
 import AnalyticsView from './components/AnalyticsView'
@@ -82,6 +84,8 @@ export default function App() {
   // Modals
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [isReferralModalOpen, setIsReferralModalOpen] = useState(false)
+  const [isFhirModalOpen, setIsFhirModalOpen] = useState(false)
+  const [isArchitectureModalOpen, setIsArchitectureModalOpen] = useState(false)
 
   // Real-Time Streaming & Emergency Alerting State
   const [activeAlert, setActiveAlert] = useState(null)
@@ -380,6 +384,7 @@ export default function App() {
               cases={patientCases}
               isAnalyzing={isAnalyzing}
               onExitToLanding={() => setViewMode('landing')}
+              onOpenArchitectureModal={() => setIsArchitectureModalOpen(true)}
             />
 
             {/* 2. Main Workstation Area */}
@@ -390,6 +395,8 @@ export default function App() {
                 onReset={handleReset}
                 onOpenReportModal={() => setIsReportModalOpen(true)}
                 onOpenReferralModal={() => setIsReferralModalOpen(true)}
+                onOpenArchitectureModal={() => setIsArchitectureModalOpen(true)}
+                onOpenFhirModal={() => setIsFhirModalOpen(true)}
                 isAnalyzing={isAnalyzing}
                 isLiveBackend={isLiveBackend}
                 streamStatus={streamStatus}
@@ -407,6 +414,7 @@ export default function App() {
                       setActiveTab('command_center')
                     }}
                     onNewAssessment={() => setActiveTab('assessment')}
+                    onOpenArchitectureModal={() => setIsArchitectureModalOpen(true)}
                   />
                 )}
 
@@ -416,6 +424,7 @@ export default function App() {
                     patient={patient}
                     onOpenReportModal={() => setIsReportModalOpen(true)}
                     onOpenReferralModal={() => setIsReferralModalOpen(true)}
+                    onOpenFhirModal={() => setIsFhirModalOpen(true)}
                     onBackToQueue={() => setActiveTab('queue')}
                     onVerifyPatient={handleVerifyPatient}
                   />
@@ -526,6 +535,26 @@ export default function App() {
               sinbadScore={calculatedSinbadScore}
               woundArea={woundArea}
               infectionRisk={infectionRisk}
+            />
+
+            {/* Pillar 3: HL7 / FHIR Release 4 Document Bundle Modal */}
+            <FhirExportModal
+              isOpen={isFhirModalOpen}
+              onClose={() => setIsFhirModalOpen(false)}
+              patient={patient}
+              sinbadScore={calculatedSinbadScore}
+              woundArea={woundArea}
+              infectionRisk={infectionRisk}
+            />
+
+            {/* Pillar 1-5: Enterprise Architecture & Cluster Telemetry Hub */}
+            <ArchitectureHubModal
+              isOpen={isArchitectureModalOpen}
+              onClose={() => setIsArchitectureModalOpen(false)}
+              onOpenFhirModal={() => setIsFhirModalOpen(true)}
+              streamStatus={streamStatus}
+              isLiveBackend={isLiveBackend}
+              patientCases={patientCases}
             />
           </motion.div>
         )}

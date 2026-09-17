@@ -1,71 +1,172 @@
+# ==============================================================================
+# Heal6 • Enterprise Clinical Intelligence & DFU Triage Platform
+# Production Multi-Service Container Orchestration Specification
+# ==============================================================================
+
 version: '3.8'
 
+networks:
+  heal6-network:
+    name: heal6-network
+    driver: bridge
+
 services:
-  # 0. Production PostgreSQL Relational Database
+  # ============================================================================
+  # 1. Production PostgreSQL Relational Database (Pillar 1)
+  # ============================================================================
   heal6-postgres:
     image: postgres:16-alpine
     container_name: heal6-postgres
+    restart: unless-stopped
+    networks:
+      - heal6-network
     environment:
-      POSTGRES_USER: heal6_admin
-      POSTGRES_PASSWORD: heal6_secure_clinical_pass
-      POSTGRES_DB: heal6_db
+      POSTGRES_USER: ${POSTGRES_USER:-heal6_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-heal6_secure_clinical_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-heal6_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U heal6_admin -d heal6_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-heal6_admin} -d ${POSTGRES_DB:-heal6_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
-  # 1. PyTorch & FastAPI ML Telemetry Backend
+  # ============================================================================
+  # 2. PyTorch & FastAPI Clinical Telemetry Backend (Pillars 1, 2, 3)
+  # ============================================================================
   heal6-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: heal6-backend
-    ports:
-      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - heal6-network
     environment:
       - PYTHONUNBUFFERED=1
       - PORT=8000
-      - DATABASE_URL=postgresql+asyncpg://heal6_admin:heal6_secure_clinical_pass@heal6-postgres:5432/heal6_db
+      - UVICORN_WORKERS=${UVICORN_WORKERS:-2}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-heal6_admin}:${POSTGRES_PASSWORD:-heal6_secure_clinical_pass}@heal6-postgres:5432/${POSTGRES_DB:-heal6_db}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174,http://localhost:80}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       heal6-postgres:
         condition: service_healthy
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
+      interval: 20s
+      timeout: 5s
       retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.5'
+          memory: 2048M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
-  # 2. Doctor Clinical Command Center
+  # ============================================================================
+  # 3. Doctor Clinical Command Center (Nginx Reverse Proxy)
+  # ============================================================================
   heal6-doctor-web:
     build:
       context: ./doctor_web
       dockerfile: Dockerfile
     container_name: heal6-doctor-web
-    ports:
-      - "5173:80"
-    depends_on:
-      - heal6-backend
     restart: unless-stopped
+    networks:
+      - heal6-network
+    ports:
+      - "${DOCTOR_PORT:-5173}:80"
+    depends_on:
+      heal6-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
-  # 3. Patient Edge Intake Portal
+  # ============================================================================
+  # 4. Patient Edge Intake Portal (Nginx + Wasm + COOP/COEP Headers) (Pillar 4)
+  # ============================================================================
   heal6-patient-app:
     build:
       context: ./heal6-patient-app
       dockerfile: Dockerfile
     container_name: heal6-patient-app
-    ports:
-      - "5174:80"
-    depends_on:
-      - heal6-backend
     restart: unless-stopped
+    networks:
+      - heal6-network
+    ports:
+      - "${PATIENT_PORT:-5174}:80"
+    depends_on:
+      heal6-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
+# ==============================================================================
+# Persistent Volumes
+# ==============================================================================
 volumes:
   postgres_data:
+    name: heal6_postgres_data
     driver: local

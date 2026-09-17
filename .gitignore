@@ -27,6 +27,7 @@ ml_training/data/task3_tissue_analysis/*
 *.pt
 *.pth
 *.h5
+*.onnx
 
 # ==========================================
 # 🐍 PYTHON & FASTAPI (BACKEND)

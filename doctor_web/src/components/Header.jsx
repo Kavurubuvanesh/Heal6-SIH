@@ -12,7 +12,9 @@ import {
   AlertTriangle,
   Search,
   Sparkles,
-  Command
+  Command,
+  FileCode,
+  Boxes
 } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 
@@ -21,6 +23,8 @@ export default function Header({
   onReset,
   onOpenReportModal,
   onOpenReferralModal,
+  onOpenArchitectureModal,
+  onOpenFhirModal,
   isAnalyzing,
   isLiveBackend = false,
   streamStatus = { isConnected: false, protocol: 'DISCONNECTED', latencyMs: 0 }
@@ -138,14 +142,16 @@ export default function Header({
 
         {/* Right Side: Real-time Date, Time, Command Pill & Action Buttons */}
         <div className="flex items-center gap-3 flex-wrap justify-end shrink-0">
-          {/* Real-time Streaming Pulse Indicator */}
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-[11px] font-mono font-bold shadow-xs transition-all"
+          {/* Real-time Streaming Pulse Indicator (Clickable to open Architecture Hub) */}
+          <button
+            onClick={onOpenArchitectureModal}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-[11px] font-mono font-bold shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
             style={{
               backgroundColor: streamStatus?.isConnected ? 'rgba(172, 235, 167, 0.12)' : 'rgba(244, 63, 94, 0.08)',
               borderColor: streamStatus?.isConnected ? 'rgba(172, 235, 167, 0.3)' : 'rgba(244, 63, 94, 0.2)',
               color: streamStatus?.isConnected ? '#12464e' : '#f43f5e'
             }}
+            title="Open 5-Pillar Architecture & Stream Telemetry Hub"
           >
             <span className={`w-2 h-2 rounded-full shrink-0 ${streamStatus?.isConnected ? 'bg-[#aceba7] shadow-[0_0_8px_#aceba7] animate-ping' : 'bg-rose-500'}`} />
             <span className="dark:text-[#aceba7]">
@@ -153,7 +159,18 @@ export default function Header({
                 ? `${streamStatus.protocol} STREAM • ${streamStatus.latencyMs || 4}ms`
                 : 'EDGE LOCAL'}
             </span>
-          </div>
+          </button>
+
+          {/* 5-Pillar Architecture Hub Launch Button */}
+          <button
+            onClick={onOpenArchitectureModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/15 dark:bg-[#aceba7]/10 hover:bg-[#aceba7]/25 border border-[#aceba7]/40 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xs cursor-pointer"
+            title="Inspect 5 Enterprise Pillars (PostgreSQL, WebSocket, FHIR R4, ONNX Edge, Docker)"
+          >
+            <Boxes className="w-3.5 h-3.5 text-[#12464e] dark:text-[#aceba7]" />
+            <span className="font-extrabold">5 Pillars</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          </button>
 
           {/* High-Tech Live Date & Time Ribbon */}
           <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-white dark:bg-[#15221b] border border-[#12464e]/12 dark:border-[#223229] text-xs font-semibold shadow-xs">
@@ -179,6 +196,16 @@ export default function Header({
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
             <span>Reset</span>
+          </button>
+
+          {/* HL7 / FHIR R4 Standards Export Button (Pillar 3) */}
+          <button
+            onClick={onOpenFhirModal}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-teal-800 dark:text-teal-200 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-300 dark:border-teal-700/60 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-xs"
+            title="Export Standardized HL7 FHIR Release 4 Document Bundle (LOINC & SNOMED CT)"
+          >
+            <FileCode className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+            <span className="font-extrabold">FHIR R4</span>
           </button>
 
           {/* Summary / Report Modal Action Button (High-Tech Mint / Deep Teal Glow) */}

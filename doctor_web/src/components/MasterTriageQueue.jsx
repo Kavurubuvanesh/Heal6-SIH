@@ -12,11 +12,18 @@ import {
   Sparkles,
   Layers,
   HeartCrack,
-  Clock
+  Clock,
+  Boxes,
+  Database
 } from 'lucide-react'
 import { generateClinicalWoundDataUrl } from '../data/clinicalImages'
 
-export default function MasterTriageQueue({ cases = [], onSelectPatient, onNewAssessment }) {
+export default function MasterTriageQueue({
+  cases = [],
+  onSelectPatient,
+  onNewAssessment,
+  onOpenArchitectureModal
+}) {
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
 
@@ -79,6 +86,15 @@ export default function MasterTriageQueue({ cases = [], onSelectPatient, onNewAs
               <Clock className="w-3 h-3" />
               Edge Sync: Online (0.1ms)
             </span>
+            {onOpenArchitectureModal && (
+              <button
+                onClick={onOpenArchitectureModal}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-mono font-bold bg-[#12464e] dark:bg-[#aceba7] text-white dark:text-[#0e120f] hover:brightness-110 transition-all cursor-pointer shadow-xs"
+              >
+                <Boxes className="w-3.5 h-3.5" />
+                <span>5 Pillars Hub</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -521,12 +537,26 @@ export default function MasterTriageQueue({ cases = [], onSelectPatient, onNewAs
                         </div>
 
                         <div className="text-left">
-                          <p className="font-serif-luxury text-sm font-semibold text-slate-900 dark:text-white">
-                            {item.name}
+                          <p className="font-serif-luxury text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>{item.name}</span>
+                            {item.isOfflineEdge ? (
+                              <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded" title="Pillar 4: Offline Edge Inference via ONNX Runtime WebGL">
+                                ⚡ Edge WebGL
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-[#aceba7]/20 text-[#12464e] dark:text-[#aceba7] border border-[#aceba7]/40 rounded" title="Pillar 1: SOTA PyTorch Cloud Telemetry">
+                                ☁️ PyTorch
+                              </span>
+                            )}
                           </p>
-                          <p className="font-mono text-[10.5px] text-slate-500 dark:text-slate-400">
-                            {item.id} • {item.age}y
-                          </p>
+                          <div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            <span>{item.id} • {item.age}y</span>
+                            <span>•</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5" title="Pillar 1: Stored in PostgreSQL 16 Relational Engine">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span>PostgreSQL</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>

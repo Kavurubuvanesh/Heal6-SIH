@@ -21,6 +21,11 @@ export default function PatientHeader({ data }) {
             <div className="mt-3 inline-flex items-center gap-2 bg-heal6-light px-3 py-1.5 rounded-md border border-heal6-teal/20">
                 <span className="text-sm font-semibold text-heal6-dark">Report Date: <span className="font-normal text-gray-700">{data?.reportDate || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span></span>
             </div>
+            {data?.isOfflineEdge && (
+              <div className="mt-1.5 inline-flex items-center gap-1.5 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200 text-amber-700 font-mono text-[11px] font-bold">
+                <span>⚡ ONNX Runtime WebGL (Offline Edge Inference)</span>
+              </div>
+            )}
             <p className="text-xs text-gray-400 mt-2">Report ID: {data?.reportId || data?.id || 'H6-DFU-LIVE'}</p>
         </div>
       </header>

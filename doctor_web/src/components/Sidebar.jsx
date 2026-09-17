@@ -9,7 +9,8 @@ import {
   LogOut,
   Search,
   Command,
-  Sparkles
+  Sparkles,
+  Boxes
 } from 'lucide-react'
 import Heal6Logo from './Heal6Logo'
 import ThemeToggle from './ThemeToggle'
@@ -17,7 +18,8 @@ import ThemeToggle from './ThemeToggle'
 export default function Sidebar({
   activeTab = 'queue',
   setActiveTab,
-  onExitToLanding
+  onExitToLanding,
+  onOpenArchitectureModal
 }) {
   const navItems = [
     {
@@ -131,6 +133,30 @@ export default function Sidebar({
               </button>
             )
           })}
+
+          {/* 5-Pillar Architecture Hub Launcher (Pillars 1 to 5) */}
+          <div className="pt-3">
+            <button
+              onClick={onOpenArchitectureModal}
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-[#aceba7]/10 dark:bg-[#aceba7]/5 hover:bg-[#aceba7]/20 border border-[#aceba7]/30 text-left transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-xs group"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#aceba7]/20 border border-[#aceba7]/40 flex items-center justify-center text-[#12464e] dark:text-[#aceba7] shadow-[0_0_10px_rgba(172,235,167,0.3)]">
+                  <Boxes className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[#12464e] dark:text-[#aceba7] flex items-center gap-1.5">
+                    <span>5 Pillars Hub</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">Cluster & Health Telemetry</div>
+                </div>
+              </div>
+              <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-[#aceba7] text-[#0e120f]">
+                Live
+              </span>
+            </button>
+          </div>
         </nav>
       </div>
 

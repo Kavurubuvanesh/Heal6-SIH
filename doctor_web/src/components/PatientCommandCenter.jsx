@@ -19,7 +19,9 @@ import {
   Columns,
   Eye,
   Crosshair,
-  Check
+  Check,
+  FileCode,
+  Database
 } from 'lucide-react'
 import { generateClinicalWoundDataUrl, generateClinicalMaskDataUrl } from '../data/clinicalImages'
 
@@ -27,6 +29,7 @@ export default function PatientCommandCenter({
   patient,
   onOpenReportModal,
   onOpenReferralModal,
+  onOpenFhirModal,
   onBackToQueue,
   onVerifyPatient
 }) {
@@ -201,9 +204,15 @@ export default function PatientCommandCenter({
               Clinical Override & Human Validation
             </h3>
           </div>
-          <span className="text-[11px] font-mono text-emerald-600 dark:text-[#aceba7] font-extrabold bg-[#aceba7]/10 px-3 py-1 rounded-full border border-[#aceba7]/30">
-            IWGDF Verified
-          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-mono text-[#12464e] dark:text-[#aceba7] font-bold bg-[#aceba7]/10 px-2.5 py-0.5 rounded-full border border-[#aceba7]/30 flex items-center gap-1">
+              <Database className="w-3 h-3" />
+              <span>PostgreSQL Persisted</span>
+            </span>
+            <span className="text-[11px] font-mono text-emerald-600 dark:text-[#aceba7] font-extrabold bg-[#aceba7]/10 px-3 py-1 rounded-full border border-[#aceba7]/30">
+              IWGDF Verified
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -696,13 +705,31 @@ export default function PatientCommandCenter({
               </p>
             </div>
 
-            {/* Bottom: Action CTA */}
-            <div>
+            {/* Bottom: Action CTAs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                onClick={onOpenFhirModal}
+                className="py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.01]"
+                title="Export Standards-compliant HL7 FHIR Release 4 Document Bundle"
+              >
+                <FileCode className="w-3.5 h-3.5" />
+                <span>Export HL7 / FHIR R4</span>
+              </button>
+
+              <button
+                onClick={onOpenReportModal}
+                className="py-2.5 px-3 rounded-xl bg-[#12464e] hover:bg-[#12464e]/90 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.01]"
+                title="View and Print Official Medical Diagnostic Report"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Clinical Report</span>
+              </button>
+
               <button
                 onClick={onOpenReferralModal}
-                className="w-full py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
+                className="sm:col-span-2 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.01]"
               >
-                <Siren className="w-4 h-4" />
+                <Siren className="w-3.5 h-3.5" />
                 <span>Generate Vascular Referral Directive</span>
               </button>
             </div>
