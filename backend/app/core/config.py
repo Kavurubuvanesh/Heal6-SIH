@@ -6,6 +6,14 @@ class Settings(BaseModel):
     VERSION: str = "2.4.0"
     API_V1_STR: str = "/api/v1"
     
+    # Cryptographic JWT Authentication Settings
+    JWT_SECRET_KEY: str = os.getenv(
+        "JWT_SECRET_KEY",
+        "HEAL6_CLINICAL_GRADE_CRYPTOGRAPHIC_SALT_2026_PRODUCTION"
+    )
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRATION_HOURS: int = 24
+
     # Dual-Engine Database URL:
     # Defaults to async SQLite for friction-free local dev,
     # or overrides via environment variable DATABASE_URL for production PostgreSQL

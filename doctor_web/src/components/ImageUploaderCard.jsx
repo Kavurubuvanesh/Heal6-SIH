@@ -107,8 +107,8 @@ export default function ImageUploaderCard({
           onChange={handleFileChange}
         />
 
-        {/* Realistic Interactive Medical Canvas / Clinical Photographic Mockup */}
-        <div className="w-full relative rounded-xl overflow-hidden bg-slate-950 border border-slate-700/60 shadow-inner flex items-center justify-center min-h-[220px]">
+        {/* Clean Professional Image Drop Zone */}
+        <div className="w-full relative rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700/60 shadow-inner flex items-center justify-center min-h-[220px]">
           {imageSrc ? (
             <img
               src={imageSrc}
@@ -116,69 +116,14 @@ export default function ImageUploaderCard({
               className="w-full h-full object-cover max-h-[220px]"
             />
           ) : (
-            /* Background Foot Silhouette & Clinical Wound Articulation */
-            <div className="w-full h-full flex items-center justify-center relative min-h-[220px] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-              <svg
-                className="w-full h-full object-cover max-h-[220px]"
-                viewBox="0 0 400 240"
-                preserveAspectRatio="xMidYMid slice"
-              >
-                <defs>
-                  <radialGradient id="footSkin" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#e8c4a2" />
-                    <stop offset="60%" stopColor="#d4a373" />
-                    <stop offset="100%" stopColor="#bc8a5f" />
-                  </radialGradient>
-                  <radialGradient id="ulcerCore" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#b91c1c" stopOpacity="0.9" />
-                    <stop offset="40%" stopColor="#dc2626" stopOpacity="0.8" />
-                    <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-                  </radialGradient>
-                  <filter id="woundGlow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                </defs>
-
-                {/* Grid overlay for medical measurement */}
-                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-                </pattern>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-
-                {/* Stylized Plantar Foot Outline */}
-                <path
-                  d="M 120 40 C 170 30, 260 30, 290 60 C 310 80, 310 110, 280 140 C 260 160, 240 180, 230 210 C 220 230, 180 230, 160 215 C 140 190, 120 160, 100 130 C 80 100, 90 50, 120 40 Z"
-                  fill="url(#footSkin)"
-                  opacity="0.85"
-                  filter="drop-shadow(0 4px 12px rgba(0,0,0,0.5))"
-                />
-
-                {/* Metatarsal / Heel Ulcer Wound Bed */}
-                <g transform="translate(195, 125)">
-                  {/* Erythema margin */}
-                  <ellipse cx="0" cy="0" rx="36" ry="26" fill="#f59e0b" opacity="0.35" filter="url(#woundGlow)" />
-                  {/* Ulcer Core */}
-                  <path
-                    d="M -18 -8 C -14 -18, 12 -16, 20 -4 C 24 6, 16 18, -4 20 C -18 20, -22 4, -18 -8 Z"
-                    fill="url(#ulcerCore)"
-                    filter="url(#woundGlow)"
-                  />
-                  {/* Slough / Fibrin patches */}
-                  <ellipse cx="-2" cy="-1" rx="8" ry="6" fill="#fef08a" opacity="0.75" />
-                  <ellipse cx="6" cy="4" rx="5" ry="4" fill="#991b1b" opacity="0.8" />
-                </g>
-
-                {/* Wound Contour Detection Vector Line */}
-                <path
-                  d="M 172 118 C 180 105, 210 106, 220 120 C 225 132, 215 146, 192 148 C 174 147, 168 132, 172 118 Z"
-                  fill="none"
-                  stroke="#0d9488"
-                  strokeWidth="2"
-                  strokeDasharray="4 2"
-                />
-              </svg>
+            <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-slate-400 dark:text-slate-500 min-h-[220px]">
+              <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center shadow-sm">
+                <ImageIcon className="w-8 h-8 opacity-75" />
+              </div>
+              <p className="text-sm font-semibold">No Image Selected</p>
+              <p className="text-[11px] max-w-[200px] text-center opacity-80">
+                Drag and drop a clinical wound scan here or click to browse files.
+              </p>
             </div>
           )}
 

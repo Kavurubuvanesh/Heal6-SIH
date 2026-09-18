@@ -130,13 +130,13 @@ export default function AiResultsColumn({
         </div>
       </div>
 
-      {/* 2. Compact SINBAD Radar & 12-Week Healing Trajectory */}
+      {/* 2. Compact SINBAD Radar */}
       <div className="bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 rounded-2xl p-4 flex flex-col gap-3 shadow-inner">
         <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/5 pb-2">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-[#12464e] dark:text-[#aceba7]" />
             <span className="text-xs font-serif-luxury font-medium text-slate-800 dark:text-slate-100 tracking-wide">
-              SINBAD Radar & 12-Week Trajectory
+              SINBAD Clinical Radar
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -156,119 +156,55 @@ export default function AiResultsColumn({
           </div>
         </div>
 
-        {/* 2-Column Side-by-Side: Radar on Left, Line Chart on Right */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-          {/* Radar Chart Column */}
-          <div className="flex flex-col items-center justify-between">
-            <div className="w-36 h-36 relative flex items-center justify-center">
-              <svg className="w-full h-full" viewBox="0 0 200 200">
-                {/* Hexagon Grid Rings */}
-                {[0.33, 0.66, 1].map((scale, i) => (
-                  <polygon
-                    key={i}
-                    points="100,20 170,60 170,140 100,180 30,140 30,60"
-                    transform={`scale(${scale})`}
-                    transform-origin="100 100"
-                    fill="none"
-                    stroke="#cbd5e1"
-                    className="dark:stroke-slate-700/60"
-                    strokeWidth="1"
-                  />
-                ))}
-                <line x1="100" y1="100" x2="100" y2="20" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-                <line x1="100" y1="100" x2="170" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-                <line x1="100" y1="100" x2="170" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-                <line x1="100" y1="100" x2="100" y2="180" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-                <line x1="100" y1="100" x2="30" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-                <line x1="100" y1="100" x2="30" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
-
-                {/* Patient Dynamic Radar Polygon */}
+        {/* Radar Chart Column (Centered) */}
+        <div className="flex flex-col items-center justify-center pt-2">
+          <div className="w-40 h-40 relative flex items-center justify-center">
+            <svg className="w-full h-full" viewBox="0 0 200 200">
+              {/* Hexagon Grid Rings */}
+              {[0.33, 0.66, 1].map((scale, i) => (
                 <polygon
-                  points={`
-                    100,${20 + (100 - radarPoints[0].val) * 0.8}
-                    ${170 - (100 - radarPoints[1].val) * 0.7},${60 + (100 - radarPoints[1].val) * 0.4}
-                    ${170 - (100 - radarPoints[2].val) * 0.7},${140 - (100 - radarPoints[2].val) * 0.4}
-                    100,${180 - (100 - radarPoints[3].val) * 0.8}
-                    ${30 + (100 - radarPoints[4].val) * 0.7},${140 - (100 - radarPoints[4].val) * 0.4}
-                    ${30 + (100 - radarPoints[5].val) * 0.7},${60 + (100 - radarPoints[5].val) * 0.4}
-                  `}
-                  fill="rgba(172, 235, 167, 0.25)"
-                  stroke="#aceba7"
-                  strokeWidth="2"
-                  className="transition-all duration-300 ease-out"
+                  key={i}
+                  points="100,20 170,60 170,140 100,180 30,140 30,60"
+                  transform={`scale(${scale})`}
+                  transformOrigin="100 100"
+                  fill="none"
+                  stroke="#cbd5e1"
+                  className="dark:stroke-slate-700/60"
+                  strokeWidth="1"
                 />
-              </svg>
-            </div>
+              ))}
+              <line x1="100" y1="100" x2="100" y2="20" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+              <line x1="100" y1="100" x2="170" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+              <line x1="100" y1="100" x2="170" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+              <line x1="100" y1="100" x2="100" y2="180" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+              <line x1="100" y1="100" x2="30" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+              <line x1="100" y1="100" x2="30" y2="60" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
 
-            <div className="grid grid-cols-6 gap-1 text-[8px] font-mono font-bold text-center w-full mt-1">
-              <span className={`py-1 rounded-md border ${radarPoints[4].active ? 'text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 border-[#aceba7]/40' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Site:{radarPoints[4].pt}</span>
-              <span className={`py-1 rounded-md border ${radarPoints[3].active ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Isch:{radarPoints[3].pt}</span>
-              <span className={`py-1 rounded-md border ${radarPoints[5].active ? 'text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 border-[#aceba7]/40' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Neur:{radarPoints[5].pt}</span>
-              <span className={`py-1 rounded-md border ${radarPoints[0].active ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Bact:{radarPoints[0].pt}</span>
-              <span className={`py-1 rounded-md border ${radarPoints[2].active ? 'text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 border-[#aceba7]/40' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Area:{radarPoints[2].pt}</span>
-              <span className={`py-1 rounded-md border ${radarPoints[1].active ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Depth:{radarPoints[1].pt}</span>
-            </div>
+              {/* Patient Dynamic Radar Polygon */}
+              <polygon
+                points={`
+                  100,${20 + (100 - radarPoints[0].val) * 0.8}
+                  ${170 - (100 - radarPoints[1].val) * 0.7},${60 + (100 - radarPoints[1].val) * 0.4}
+                  ${170 - (100 - radarPoints[2].val) * 0.7},${140 - (100 - radarPoints[2].val) * 0.4}
+                  100,${180 - (100 - radarPoints[3].val) * 0.8}
+                  ${30 + (100 - radarPoints[4].val) * 0.7},${140 - (100 - radarPoints[4].val) * 0.4}
+                  ${30 + (100 - radarPoints[5].val) * 0.7},${60 + (100 - radarPoints[5].val) * 0.4}
+                `}
+                fill="rgba(172, 235, 167, 0.25)"
+                stroke="#aceba7"
+                strokeWidth="2"
+                className="transition-all duration-300 ease-out"
+              />
+            </svg>
           </div>
 
-          {/* Area Reduction Trajectory Line Chart */}
-          <div className="flex flex-col justify-between h-full">
-            <div className="w-full flex items-center justify-between mb-1">
-              <span className="text-[11px] font-medium font-serif-luxury text-slate-800 dark:text-slate-200">Trajectory Projection</span>
-              <span className="text-[9.5px] font-bold text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/15 px-2 py-0.5 rounded-md border border-[#aceba7]/30">
-                12-Wk Horizon
-              </span>
-            </div>
-
-            <div className="w-full h-32 relative my-1">
-              <svg className="w-full h-full" viewBox="0 0 240 100" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="areaGradientAi" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#aceba7" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#aceba7" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <line x1="0" y1="20" x2="240" y2="20" stroke="#e2e8f0" className="dark:stroke-slate-800" strokeWidth="1" />
-                <line x1="0" y1="50" x2="240" y2="50" stroke="#e2e8f0" className="dark:stroke-slate-800" strokeWidth="1" />
-                <line x1="0" y1="80" x2="240" y2="80" stroke="#e2e8f0" className="dark:stroke-slate-800" strokeWidth="1" />
-
-                <path
-                  d="M 20,20 C 60,25 120,45 220,70"
-                  fill="none"
-                  stroke="#94a3b8"
-                  strokeWidth="1.5"
-                  strokeDasharray="3 3"
-                />
-
-                <path
-                  d="M 20,20 C 60,35 120,75 220,95 L 220,100 L 20,100 Z"
-                  fill="url(#areaGradientAi)"
-                />
-
-                <path
-                  d="M 20,20 C 60,35 120,75 220,95"
-                  fill="none"
-                  stroke="#aceba7"
-                  strokeWidth="2.5"
-                />
-
-                <circle cx="20" cy="20" r="3.5" fill="#f43f5e" />
-                <text x="25" y="16" fill="#f43f5e" fontSize="8" fontWeight="bold">W0: {woundArea}cm²</text>
-
-                <circle cx="220" cy="95" r="3.5" fill="#aceba7" />
-                <text x="175" y="90" fill="#aceba7" fontSize="8" fontWeight="bold">W12: Closed</text>
-              </svg>
-            </div>
-
-            <div className="flex items-center justify-between text-[9.5px] text-slate-500 pt-1.5 border-t border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-400">
-                <span className="w-2.5 h-1 bg-[#0d9488] rounded-full" />
-                <span>Heal6 ({healingTime})</span>
-              </div>
-              <div className="flex items-center gap-1 font-medium text-slate-400">
-                <span className="w-2.5 h-0.5 bg-slate-400 border-b border-dashed" />
-                <span>Standard</span>
-              </div>
-            </div>
+          <div className="grid grid-cols-6 gap-1 text-[8px] font-mono font-bold text-center w-full mt-2">
+            <span className={`py-1 rounded-md border ${radarPoints[4].active ? 'text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 border-[#aceba7]/40' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Site:{radarPoints[4].pt}</span>
+            <span className={`py-1 rounded-md border ${radarPoints[3].active ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Isch:{radarPoints[3].pt}</span>
+            <span className={`py-1 rounded-md border ${radarPoints[5].active ? 'text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 border-[#aceba7]/40' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Neur:{radarPoints[5].pt}</span>
+            <span className={`py-1 rounded-md border ${radarPoints[0].active ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Bact:{radarPoints[0].pt}</span>
+            <span className={`py-1 rounded-md border ${radarPoints[2].active ? 'text-[#12464e] dark:text-[#aceba7] bg-[#aceba7]/20 border-[#aceba7]/40' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Area:{radarPoints[2].pt}</span>
+            <span className={`py-1 rounded-md border ${radarPoints[1].active ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800' : 'text-slate-400 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>Depth:{radarPoints[1].pt}</span>
           </div>
         </div>
       </div>

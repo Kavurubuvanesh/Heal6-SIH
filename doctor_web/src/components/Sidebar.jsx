@@ -18,6 +18,11 @@ import ThemeToggle from './ThemeToggle'
 export default function Sidebar({
   activeTab = 'queue',
   setActiveTab,
+  cases = [],
+  loggedInDoctor = {
+    name: 'Dr. Sharma',
+    department: 'Endocrinology & DFU'
+  },
   onExitToLanding,
   onOpenArchitectureModal
 }) {
@@ -26,7 +31,7 @@ export default function Sidebar({
       id: 'queue',
       label: 'Master Triage Queue',
       icon: Users,
-      badge: 'Live'
+      badge: cases.length > 0 ? `${cases.length} Active` : 'Clear'
     },
     {
       id: 'command_center',
@@ -166,13 +171,13 @@ export default function Sidebar({
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#12464e] to-[#466f49] text-[#aceba7] flex items-center justify-center font-bold text-sm shadow-xs border border-[#aceba7]/30">
-                DS
+                {loggedInDoctor?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).replace('D.', 'D') || 'MD'}
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#aceba7] border-2 border-white dark:border-[#0e120f] rounded-full shadow-[0_0_6px_#aceba7]" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-100 font-serif-luxury">Dr. Sharma</span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Endocrinology & DFU</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-100 font-serif-luxury truncate max-w-[120px]">{loggedInDoctor?.name || 'Dr. Sharma'}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[120px]">{loggedInDoctor?.department || 'Endocrinology & DFU'}</span>
             </div>
           </div>
 

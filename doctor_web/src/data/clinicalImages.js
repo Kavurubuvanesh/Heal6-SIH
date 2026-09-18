@@ -100,3 +100,33 @@ export function generateClinicalMaskDataUrl(type = 'hindfoot') {
 
   return canvas.toDataURL('image/png')
 }
+
+// Helper to generate SOTA ConvNeXt Grad-CAM JET thermal explainability heatmap
+export function generateClinicalGradCamDataUrl(type = 'hindfoot') {
+  if (typeof document === 'undefined') return ''
+  const canvas = document.createElement('canvas')
+  canvas.width = 400
+  canvas.height = 300
+  const ctx = canvas.getContext('2d')
+
+  ctx.clearRect(0, 0, 400, 300)
+
+  // Multi-tier JET colormap simulation: Red -> Orange -> Yellow -> Green -> Cyan -> Blue/Alpha
+  const cx = type === 'forefoot' ? 220 : 210
+  const cy = type === 'forefoot' ? 145 : 150
+
+  const grad = ctx.createRadialGradient(cx, cy, 5, cx, cy, 85)
+  grad.addColorStop(0, 'rgba(239, 68, 68, 0.90)')     // Peak crimson hotspot
+  grad.addColorStop(0.25, 'rgba(249, 115, 22, 0.78)') // Orange
+  grad.addColorStop(0.50, 'rgba(234, 179, 8, 0.65)')  // Yellow
+  grad.addColorStop(0.70, 'rgba(34, 197, 94, 0.45)')  // Green
+  grad.addColorStop(0.88, 'rgba(6, 182, 212, 0.25)')  // Cyan
+  grad.addColorStop(1, 'rgba(59, 130, 246, 0.0)')     // Transparent blue perimeter
+
+  ctx.fillStyle = grad
+  ctx.beginPath()
+  ctx.ellipse(cx, cy, 88, 68, type === 'forefoot' ? 0.15 : -0.1, 0, Math.PI * 2)
+  ctx.fill()
+
+  return canvas.toDataURL('image/png')
+}

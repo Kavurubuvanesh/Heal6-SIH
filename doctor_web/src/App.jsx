@@ -17,6 +17,9 @@ import AnalyticsView from './components/AnalyticsView'
 import WoundRegistryView from './components/WoundRegistryView'
 import CalibrationView from './components/CalibrationView'
 import SinbadTrajectoryCard from './components/SinbadTrajectoryCard'
+import DoctorAuthModal from './components/DoctorAuthModal'
+import ClinicalRAGScribeModal from './components/ClinicalRAGScribeModal'
+import FederatedLearningModal from './components/FederatedLearningModal'
 import { PATIENT_CASES } from './data/clinicalCases'
 import { generateClinicalWoundDataUrl } from './data/clinicalImages'
 import {
@@ -24,7 +27,8 @@ import {
   calculateLocalSinbadScore,
   fetchPatientQueue,
   verifyPatientReport,
-  checkBackendStatus
+  checkBackendStatus,
+  verifyDoctorSession
 } from './services/api'
 import { triageStream } from './services/websocket'
 import CriticalAlertBanner from './components/CriticalAlertBanner'
@@ -86,6 +90,9 @@ export default function App() {
   const [isReferralModalOpen, setIsReferralModalOpen] = useState(false)
   const [isFhirModalOpen, setIsFhirModalOpen] = useState(false)
   const [isArchitectureModalOpen, setIsArchitectureModalOpen] = useState(false)
+  const [isDoctorAuthModalOpen, setIsDoctorAuthModalOpen] = useState(false)
+  const [isScribeModalOpen, setIsScribeModalOpen] = useState(false)
+  const [isFederatedModalOpen, setIsFederatedModalOpen] = useState(false)
 
   // Real-Time Streaming & Emergency Alerting State
   const [activeAlert, setActiveAlert] = useState(null)
@@ -96,6 +103,19 @@ export default function App() {
   // ----------------------------------------------------------------
   useEffect(() => {
     let isMounted = true
+
+    // Check active cryptographic doctor session from localStorage/sessionStorage
+    const checkActiveDoctorSession = async () => {
+      try {
+        const verifyRes = await verifyDoctorSession()
+        if (isMounted && verifyRes.success && verifyRes.doctor) {
+          setLoggedInDoctor(verifyRes.doctor)
+        }
+      } catch (err) {
+        // Fallback default maintained
+      }
+    }
+    checkActiveDoctorSession()
 
     // 1. Initial snapshot fetch from relational database
     const syncInitialQueue = async () => {
@@ -365,14 +385,14 @@ export default function App() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="min-h-screen bg-[#f4f8f5] dark:bg-[#0e120f] flex flex-col md:flex-row text-slate-800 dark:text-slate-100 antialiased font-sans transition-colors duration-300 relative"
+            className="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#0e120f] flex flex-col md:flex-row text-slate-800 dark:text-slate-100 antialiased font-sans transition-colors duration-300 relative"
           >
-            {/* Ambient Lighting Glow Layers & Volumetric Light Rays (Screenshot 1 & 3 inspired) */}
+            {/* Ambient Lighting Glow Layers & Volumetric Light Rays */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden -z-0">
               <div className="ambient-light-ray opacity-70" />
-              <div className="absolute -top-40 left-1/3 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-br from-[#aceba7]/12 via-[#12464e]/10 to-transparent dark:from-[#aceba7]/12 dark:via-[#12464e]/20 rounded-full blur-[140px]" />
-              <div className="absolute top-1/3 right-0 translate-x-1/4 w-[700px] h-[700px] bg-gradient-to-bl from-[#aceba7]/15 via-[#12464e]/10 to-transparent dark:from-[#aceba7]/10 dark:via-[#12464e]/15 rounded-full blur-[150px]" />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[#466f49]/[0.08] dark:bg-[#aceba7]/[0.03] rounded-full blur-[160px]" />
+              <div className="absolute -top-40 left-1/3 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-br from-emerald-100/50 via-teal-50/30 to-transparent dark:from-[#aceba7]/12 dark:via-[#12464e]/20 rounded-full blur-[140px]" />
+              <div className="absolute top-1/3 right-0 translate-x-1/4 w-[700px] h-[700px] bg-gradient-to-bl from-cyan-100/40 via-blue-50/20 to-transparent dark:from-[#aceba7]/10 dark:via-[#12464e]/15 rounded-full blur-[150px]" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-slate-200/20 dark:bg-[#aceba7]/[0.03] rounded-full blur-[160px]" />
             </div>
 
             {/* 1. Left-Hand Clinical Sidebar */}
@@ -382,6 +402,7 @@ export default function App() {
               currentCaseIndex={currentCaseIndex}
               onSelectCase={handleSelectCase}
               cases={patientCases}
+              loggedInDoctor={loggedInDoctor}
               isAnalyzing={isAnalyzing}
               onExitToLanding={() => setViewMode('landing')}
               onOpenArchitectureModal={() => setIsArchitectureModalOpen(true)}
@@ -392,11 +413,15 @@ export default function App() {
               {/* Sticky Header */}
               <Header
                 patient={patient}
+                loggedInDoctor={loggedInDoctor}
+                onOpenAuthModal={() => setIsDoctorAuthModalOpen(true)}
                 onReset={handleReset}
                 onOpenReportModal={() => setIsReportModalOpen(true)}
                 onOpenReferralModal={() => setIsReferralModalOpen(true)}
                 onOpenArchitectureModal={() => setIsArchitectureModalOpen(true)}
                 onOpenFhirModal={() => setIsFhirModalOpen(true)}
+                onOpenScribeModal={() => setIsScribeModalOpen(true)}
+                onOpenFederatedModal={() => setIsFederatedModalOpen(true)}
                 isAnalyzing={isAnalyzing}
                 isLiveBackend={isLiveBackend}
                 streamStatus={streamStatus}
@@ -408,6 +433,7 @@ export default function App() {
                 {activeTab === 'queue' && (
                   <MasterTriageQueue
                     cases={patientCases}
+                    streamStatus={streamStatus}
                     onSelectPatient={(id) => {
                       const idx = patientCases.findIndex((p) => p.id === id)
                       if (idx !== -1) handleSelectCase(idx)
@@ -425,6 +451,7 @@ export default function App() {
                     onOpenReportModal={() => setIsReportModalOpen(true)}
                     onOpenReferralModal={() => setIsReferralModalOpen(true)}
                     onOpenFhirModal={() => setIsFhirModalOpen(true)}
+                    onOpenScribeModal={() => setIsScribeModalOpen(true)}
                     onBackToQueue={() => setActiveTab('queue')}
                     onVerifyPatient={handleVerifyPatient}
                   />
@@ -434,6 +461,7 @@ export default function App() {
 
                 {activeTab === 'registry' && (
                   <WoundRegistryView
+                    cases={patientCases}
                     onSelectPatientWound={(mrn) => {
                       const idx = patientCases.findIndex((p) => p.id === mrn)
                       if (idx !== -1) handleSelectCase(idx)
@@ -444,7 +472,7 @@ export default function App() {
                   />
                 )}
 
-                {activeTab === 'calibration' && <CalibrationView />}
+                {activeTab === 'calibration' && <CalibrationView streamStatus={streamStatus} arucoScale={arucoScale} />}
 
                 {activeTab === 'assessment' && (
                   <motion.div
@@ -555,6 +583,31 @@ export default function App() {
               streamStatus={streamStatus}
               isLiveBackend={isLiveBackend}
               patientCases={patientCases}
+            />
+
+            {/* Phase 4: Cryptographic Security & Doctor Authentication Modal */}
+            <DoctorAuthModal
+              isOpen={isDoctorAuthModalOpen}
+              onClose={() => setIsDoctorAuthModalOpen(false)}
+              onLoginSuccess={(doctorProfile) => {
+                if (doctorProfile) setLoggedInDoctor(doctorProfile)
+                setIsDoctorAuthModalOpen(false)
+              }}
+            />
+
+            {/* Phase 9: Autonomous Clinical RAG Agent & IWGDF Scribe Note Generator */}
+            <ClinicalRAGScribeModal
+              isOpen={isScribeModalOpen}
+              onClose={() => setIsScribeModalOpen(false)}
+              activePatient={patient}
+              isLiveBackend={isLiveBackend}
+            />
+
+            {/* Phase 10: Federated Learning Consortium & Topology Hub */}
+            <FederatedLearningModal
+              isOpen={isFederatedModalOpen}
+              onClose={() => setIsFederatedModalOpen(false)}
+              isLiveBackend={isLiveBackend}
             />
           </motion.div>
         )}

@@ -21,6 +21,10 @@ export const PATIENT_CASES = [
     arucoCalibration: 42, // px/cm
     infectionRiskPercent: 78.4,
     convnextConfidence: 62.0, // Trigger for Human-in-the-Loop warning
+    maxDepthMm: 5.8,
+    meanDepthMm: 3.6,
+    woundVolumeCm3: 0.38,
+    depthClassification: "Probe-to-Bone / Deep Fascia",
     tissueBreakdown: {
       granulation: 45,
       slough: 35,
@@ -38,15 +42,7 @@ export const PATIENT_CASES = [
       { axis: 'Area (≥1cm²)', value: 90, label: '2.45cm² (1)' },
       { axis: 'Depth (Bone/Fascia)', value: 100, label: 'Deep (1)' },
     ],
-    trajectoryData: [
-      { week: 'W0 (Today)', actual: 2.45, projectedStandard: 2.45, projectedMulti: 2.45 },
-      { week: 'W2', projectedStandard: 2.30, projectedMulti: 1.95 },
-      { week: 'W4', projectedStandard: 2.10, projectedMulti: 1.40 },
-      { week: 'W6', projectedStandard: 1.85, projectedMulti: 0.90 },
-      { week: 'W8', projectedStandard: 1.55, projectedMulti: 0.45 },
-      { week: 'W10', projectedStandard: 1.20, projectedMulti: 0.15 },
-      { week: 'W12', projectedStandard: 0.90, projectedMulti: 0.00 },
-    ],
+
     actionPlan: {
       headline: 'Standard wound care, multidisciplinary intervention.',
       debridement: 'Sharp mechanical debridement of slough margin required.',
@@ -74,6 +70,10 @@ export const PATIENT_CASES = [
     arucoCalibration: 42,
     infectionRiskPercent: 34.2,
     convnextConfidence: 89.5,
+    maxDepthMm: 1.8,
+    meanDepthMm: 1.1,
+    woundVolumeCm3: 0.08,
+    depthClassification: "Superficial Dermal Ulcer",
     tissueBreakdown: {
       granulation: 75,
       slough: 20,
@@ -91,13 +91,7 @@ export const PATIENT_CASES = [
       { axis: 'Area (≥1cm²)', value: 65, label: '1.20cm² (1)' },
       { axis: 'Depth (Superficial)', value: 20, label: 'Superficial (0)' },
     ],
-    trajectoryData: [
-      { week: 'W0 (Today)', actual: 1.20, projectedStandard: 1.20, projectedMulti: 1.20 },
-      { week: 'W2', projectedStandard: 1.05, projectedMulti: 0.85 },
-      { week: 'W4', projectedStandard: 0.80, projectedMulti: 0.40 },
-      { week: 'W6', projectedStandard: 0.45, projectedMulti: 0.10 },
-      { week: 'W8', projectedStandard: 0.15, projectedMulti: 0.00 },
-    ],
+
     actionPlan: {
       headline: 'Outpatient podiatric wound management & offloading footwear.',
       debridement: 'Callus and hyperkeratotic rim reduction.',
@@ -125,6 +119,10 @@ export const PATIENT_CASES = [
     arucoCalibration: 42,
     infectionRiskPercent: 94.6,
     convnextConfidence: 96.2,
+    maxDepthMm: 7.9,
+    meanDepthMm: 4.8,
+    woundVolumeCm3: 0.82,
+    depthClassification: "Probe-to-Bone / Joint Capsule Excavation",
     tissueBreakdown: {
       granulation: 20,
       slough: 45,
@@ -142,15 +140,7 @@ export const PATIENT_CASES = [
       { axis: 'Area (≥1cm²)', value: 100, label: '4.80cm² (1)' },
       { axis: 'Depth (Probe-to-Bone)', value: 100, label: 'Bone (1)' },
     ],
-    trajectoryData: [
-      { week: 'W0 (Today)', actual: 4.80, projectedStandard: 4.80, projectedMulti: 4.80 },
-      { week: 'W2', projectedStandard: 4.60, projectedMulti: 3.80 },
-      { week: 'W4', projectedStandard: 4.30, projectedMulti: 2.70 },
-      { week: 'W6', projectedStandard: 3.90, projectedMulti: 1.80 },
-      { week: 'W8', projectedStandard: 3.40, projectedMulti: 1.10 },
-      { week: 'W10', projectedStandard: 2.80, projectedMulti: 0.50 },
-      { week: 'W12', projectedStandard: 2.20, projectedMulti: 0.10 },
-    ],
+
     actionPlan: {
       headline: 'Urgent limb salvage protocol & immediate hospital admission.',
       debridement: 'Operative debridement & deep tissue bone cultures.',

@@ -12,9 +12,9 @@ import {
   Printer
 } from 'lucide-react'
 
-export default function CalibrationView() {
-  const [targetMarkerSize, setTargetMarkerSize] = useState(25) // 25mm
-  const [pixelRatio, setPixelRatio] = useState(42.0)
+export default function CalibrationView({ streamStatus, arucoScale = 42.0 }) {
+  const targetMarkerSize = streamStatus?.fiducialSize || 25 // 25mm
+  const pixelRatio = arucoScale
   const [isCalibrating, setIsCalibrating] = useState(false)
   const [calibratedSuccess, setCalibratedSuccess] = useState(true)
 

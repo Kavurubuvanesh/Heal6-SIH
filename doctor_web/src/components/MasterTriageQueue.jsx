@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Users,
   Search,
@@ -20,6 +20,7 @@ import { generateClinicalWoundDataUrl } from '../data/clinicalImages'
 
 export default function MasterTriageQueue({
   cases = [],
+  streamStatus,
   onSelectPatient,
   onNewAssessment,
   onOpenArchitectureModal
@@ -47,6 +48,36 @@ export default function MasterTriageQueue({
     return matchesSearch
   })
 
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const hour = currentTime.getHours()
+  let greeting = 'Good Evening'
+  if (hour >= 5 && hour < 12) greeting = 'Good Morning'
+  else if (hour >= 12 && hour < 17) greeting = 'Good Afternoon'
+
+  const generateWeekSchedule = () => {
+    const result = [];
+    for (let i = -4; i <= 2; i++) {
+      const d = new Date(currentTime);
+      d.setDate(currentTime.getDate() + i);
+      const isToday = i === 0;
+      result.push({
+        day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        date: d.toLocaleDateString('en-US', { day: '2-digit' }),
+        count: isToday ? sortedCases.length : Math.floor(Math.random() * 5) + 3,
+        active: isToday,
+        today: isToday
+      });
+    }
+    return result;
+  }
+  const weekSchedule = generateWeekSchedule();
+
   return (
     <div className="relative flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto w-full">
       {/* Volumetric Ethereal Ambient Light Ray (Screenshot 1 & 3 inspired) */}
@@ -67,7 +98,7 @@ export default function MasterTriageQueue({
             </span>
           </div>
           <h2 className="font-serif-luxury text-3xl sm:text-4xl font-normal text-[#12464e] dark:text-white tracking-tight leading-tight">
-            Good Evening, Dr. Sharma!
+            {greeting}, Dr. Sharma!
           </h2>
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             Continuous PyTorch ConvNeXt-V2 & UNet++ telemetry is active. There are <strong className="text-rose-600 dark:text-rose-400 font-extrabold">{criticalCount} urgent surgical triage cases</strong> requiring limb salvage verification today.
@@ -139,15 +170,7 @@ export default function MasterTriageQueue({
           Clinical Schedule:
         </span>
         <div className="flex items-center gap-2 flex-1 overflow-x-auto">
-          {[
-            { day: 'Mon', date: '08', count: 5, active: false },
-            { day: 'Tue', date: '09', count: 8, active: false },
-            { day: 'Wed', date: '10', count: 6, active: false },
-            { day: 'Thu', date: '11', count: 4, active: false },
-            { day: 'Fri', date: '12', count: 9, active: false },
-            { day: 'Sat', date: '13', count: 6, active: true, today: true },
-            { day: 'Sun', date: '14', count: 2, active: false }
-          ].map((item, idx) => (
+          {weekSchedule.map((item, idx) => (
             <div
               key={idx}
               className={`px-3.5 py-2 rounded-2xl border transition-all cursor-pointer flex items-center gap-2.5 shrink-0 ${
@@ -187,7 +210,7 @@ export default function MasterTriageQueue({
           <div className="mt-3 flex items-baseline justify-between">
             <span className="text-2xl font-black text-[#12464e] dark:text-white font-serif-luxury">{sortedCases.length}</span>
             <span className="text-[11px] font-bold text-emerald-600 dark:text-[#aceba7] flex items-center gap-0.5">
-              <TrendingUp className="w-3 h-3" /> Active Triage
+              <TrendingUp className="w-3 h-3" /> {streamStatus?.isConnected ? '1 Active Stream' : '0 Active Streams'}
             </span>
           </div>
           <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Real-time edge sync connected</p>
@@ -245,103 +268,9 @@ export default function MasterTriageQueue({
 
       {/* 2.5 Industrial Telemetry Visuals (Inspired by Ania Cywińska Multi-Wave Chart & Docx Donut Gauge) */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: 12-Week Area Healing Trajectory Wave (Ania Cywińska & Arounda Inspired) */}
-        <div className="lg:col-span-7 spotlight-card glass-panel-luxury p-6 sm:p-7 rounded-3xl border border-[#12464e]/12 dark:border-white/10 shadow-sm flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between border-b border-[#12464e]/8 dark:border-white/5 pb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#aceba7]" />
-                <h3 className="font-serif-luxury text-lg font-bold text-[#12464e] dark:text-white tracking-wide">
-                  12-Week Predictive Trajectory & Offloading Compliance
-                </h3>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Area reduction dynamics comparing Heal6 AI Offloading vs Standard of Care
-              </p>
-            </div>
+        {/* Center: Population Triage Donut (Ania Cywińska & Docx Inspired) */}
+        <div className="lg:col-span-12 spotlight-card glass-panel-luxury p-6 sm:p-7 rounded-3xl border border-[#12464e]/12 dark:border-white/10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
 
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-[#aceba7]/20 text-[#12464e] dark:text-[#aceba7] border border-[#aceba7]/30">
-                -40.8% Closure Time
-              </span>
-            </div>
-          </div>
-
-          {/* SVG Multi-Wave Curve Chart */}
-          <div className="w-full h-44 relative my-2">
-            <svg className="w-full h-full" viewBox="0 0 500 160" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="triageCurveGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#aceba7" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="#aceba7" stopOpacity="0.0" />
-                </linearGradient>
-                <linearGradient id="triageStandardGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-
-              {/* Horizontal Reference Gridlines */}
-              <line x1="0" y1="30" x2="500" y2="30" stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeWidth="1" strokeDasharray="3 3" />
-              <line x1="0" y1="80" x2="500" y2="80" stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeWidth="1" strokeDasharray="3 3" />
-              <line x1="0" y1="130" x2="500" y2="130" stroke="currentColor" className="text-slate-200 dark:text-slate-800" strokeWidth="1" strokeDasharray="3 3" />
-
-              {/* Standard of Care Curve Area Fill */}
-              <path
-                d="M 30,35 C 140,45 280,75 470,110 L 470,150 L 30,150 Z"
-                fill="url(#triageStandardGrad)"
-              />
-              <path
-                d="M 30,35 C 140,45 280,75 470,110"
-                fill="none"
-                stroke="#f43f5e"
-                strokeWidth="2"
-                strokeDasharray="4 4"
-                opacity="0.75"
-              />
-
-              {/* Heal6 Accelerated Trajectory Wave Fill */}
-              <path
-                d="M 30,35 C 130,55 240,115 470,145 L 470,150 L 30,150 Z"
-                fill="url(#triageCurveGrad)"
-              />
-              <path
-                d="M 30,35 C 130,55 240,115 470,145"
-                fill="none"
-                stroke="#aceba7"
-                strokeWidth="3"
-                className="drop-shadow-[0_0_8px_rgba(172,235,167,0.8)]"
-              />
-
-              {/* Data Nodes */}
-              <circle cx="30" cy="35" r="4.5" fill="#f43f5e" stroke="#ffffff" strokeWidth="1.5" />
-              <text x="35" y="28" fill="currentColor" className="text-slate-700 dark:text-slate-300 font-mono font-bold text-[9px]">W0: 3.24cm²</text>
-
-              <circle cx="160" cy="65" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
-              <text x="165" y="60" fill="currentColor" className="text-slate-700 dark:text-slate-300 font-mono text-[8.5px]">W4: 1.82cm²</text>
-
-              <circle cx="310" cy="120" r="4" fill="#aceba7" stroke="#12464e" strokeWidth="1.5" />
-              <text x="315" y="115" fill="currentColor" className="text-slate-700 dark:text-slate-300 font-mono text-[8.5px]">W8: 0.65cm²</text>
-
-              <circle cx="470" cy="145" r="5" fill="#aceba7" stroke="#ffffff" strokeWidth="2" className="animate-pulse" />
-              <text x="415" y="140" fill="#aceba7" className="font-mono font-bold text-[9.5px]">W12: Closed</text>
-            </svg>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] pt-2 border-t border-[#12464e]/8 dark:border-white/5 font-mono">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-1 bg-[#aceba7] rounded-full" />
-              <span className="font-bold text-[#12464e] dark:text-[#aceba7]">Heal6 Precision Offloading</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="w-3 h-0.5 bg-[#f43f5e] border-b border-dashed" />
-              <span>Conventional Standard of Care</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Population Triage Donut (Ania Cywińska & Docx Inspired) */}
-        <div className="lg:col-span-5 spotlight-card glass-panel-luxury p-6 sm:p-7 rounded-3xl border border-[#12464e]/12 dark:border-white/10 shadow-sm flex flex-col justify-between gap-4">
           <div className="flex items-center justify-between border-b border-[#12464e]/8 dark:border-white/5 pb-3">
             <div>
               <h3 className="font-serif-luxury text-lg font-bold text-[#12464e] dark:text-white tracking-wide">

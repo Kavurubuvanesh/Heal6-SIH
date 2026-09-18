@@ -118,11 +118,39 @@ export const WOUND_REGISTRY_DATA = [
   }
 ]
 
-export default function WoundRegistryView({ onSelectPatientWound, onNewAssessment }) {
+export default function WoundRegistryView({ cases = [], onSelectPatientWound, onNewAssessment }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
 
-  const filteredWounds = WOUND_REGISTRY_DATA.filter((w) => {
+  const dynamicRegistryData = cases.map((c, i) => {
+    const isCritical = (c.calculatedSinbad || 0) >= 4;
+    const isHealing = (c.calculatedSinbad || 0) <= 2;
+    return {
+      woundId: `WND-${new Date().getFullYear()}-${String(i + 1).padStart(3, '0')}`,
+      patientName: c.name || 'Unknown Patient',
+      mrn: c.id || `DFU-${Math.floor(1000 + Math.random() * 9000)}`,
+      icd10: c.icd10 || (isCritical ? 'E11.621 / M14.672' : 'E11.621 / L97.412'),
+      icd10Label: c.icd10Label || (isCritical ? 'T2D with Charcot arthropathy & deep ulcer' : 'T2D with chronic foot ulcer'),
+      anatomicalSite: c.locationLabel || 'Unknown Site',
+      sinbadBaseline: (c.calculatedSinbad || 0) + 1,
+      sinbadCurrent: c.calculatedSinbad || 0,
+      areaBaseline: (c.woundAreaCm2 || 0) + 1.5,
+      areaCurrent: c.woundAreaCm2 || 0,
+      par4Week: c.par4Week || (isHealing ? '-63.1%' : '-15.5%'),
+      tissueState: c.tissueBreakdown || { gran: 45, slough: 35, necr: 20 },
+      microbiology: c.microbiology || (isCritical ? 'Polymicrobial • Purulent' : 'Staph. epidermidis'),
+      offloadingDevice: c.offloadingDevice || 'Total Contact Cast (TCC)',
+      lastAssessed: c.lastAssessed || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      status: isCritical ? 'High Risk (Active Care)' : (isHealing ? 'Granulating / Healing' : 'Moderate Neuro-Ischemic'),
+      statusColor: isCritical 
+        ? 'bg-[#fff1f2] text-[#f43f5e] dark:bg-rose-950/60 dark:text-rose-400 border-[#f43f5e]/40 dark:border-rose-800' 
+        : (isHealing 
+          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800' 
+          : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-300 dark:border-amber-800')
+    }
+  });
+
+  const filteredWounds = dynamicRegistryData.filter((w) => {
     const matchesSearch =
       w.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       w.mrn.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -198,12 +226,12 @@ export default function WoundRegistryView({ onSelectPatientWound, onNewAssessmen
         </div>
       </div>
 
-      {/* Metric Quick Stats (Realistically Synced to the 5 Registered Patients) */}
+      {/* Metric Quick Stats (Realistically Synced to the Registered Patients) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Tracked Ulcers</span>
-            <div className="text-xl font-black text-slate-800 dark:text-white mt-0.5">5 Active Cases</div>
+            <div className="text-xl font-black text-slate-800 dark:text-white mt-0.5">{dynamicRegistryData.length} Active Cases</div>
             <span className="text-[10px] text-slate-500 dark:text-slate-400">100% Telemetry Enrolled</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-[#0d9488]/10 dark:bg-teal-950 text-[#0d9488] dark:text-teal-300 flex items-center justify-center font-bold">
@@ -214,7 +242,9 @@ export default function WoundRegistryView({ onSelectPatientWound, onNewAssessmen
         <div className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">4-Wk Area Reduction</span>
-            <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">2 / 5 (40%)</div>
+            <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+              {dynamicRegistryData.filter(w => parseFloat(w.par4Week) <= -40).length} / {dynamicRegistryData.length} ({Math.round((dynamicRegistryData.filter(w => parseFloat(w.par4Week) <= -40).length / Math.max(dynamicRegistryData.length, 1)) * 100)}%)
+            </div>
             <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">Achieved ≥ 40% Target</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
@@ -225,7 +255,9 @@ export default function WoundRegistryView({ onSelectPatientWound, onNewAssessmen
         <div className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">High-Risk SINBAD (≥4)</span>
-            <div className="text-xl font-black text-[#f43f5e] dark:text-rose-400 mt-0.5">2 Cases (40%)</div>
+            <div className="text-xl font-black text-[#f43f5e] dark:text-rose-400 mt-0.5">
+              {dynamicRegistryData.filter(w => w.sinbadCurrent >= 4).length} Cases ({Math.round((dynamicRegistryData.filter(w => w.sinbadCurrent >= 4).length / Math.max(dynamicRegistryData.length, 1)) * 100)}%)
+            </div>
             <span className="text-[10px] text-[#f43f5e] dark:text-rose-400 font-semibold">Under Vascular Protocol</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-[#fff1f2] dark:bg-rose-950 text-[#f43f5e] dark:text-rose-400 flex items-center justify-center font-bold">
@@ -236,7 +268,7 @@ export default function WoundRegistryView({ onSelectPatientWound, onNewAssessmen
         <div className="bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl p-4.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Offloading Compliance</span>
-            <div className="text-xl font-black text-[#0d9488] dark:text-teal-400 mt-0.5">5 / 5 (100%)</div>
+            <div className="text-xl font-black text-[#0d9488] dark:text-teal-400 mt-0.5">{dynamicRegistryData.length} / {dynamicRegistryData.length} (100%)</div>
             <span className="text-[10px] text-[#0d9488] dark:text-teal-400 font-semibold">Active TCC / Orthotics</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950 text-[#0d9488] dark:text-teal-300 flex items-center justify-center font-bold">

@@ -31,14 +31,24 @@ export default function FhirExportModal({
   const [copied, setCopied] = useState(false)
   const [rawText, setRawText] = useState('')
 
+  const safePatient = patient || {
+    id: 'DFU-8842',
+    name: 'Carlos Mendez',
+    gender: 'Male',
+    diabetesType: 'Type 2 DM (14 yrs)',
+    hba1c: '8.5%',
+    locationLabel: 'Right Plantar Hindfoot Ulcer'
+  }
+
   useEffect(() => {
-    if (!isOpen || !patient) return
+    if (!isOpen) return
 
     let isMounted = true
     setLoading(true)
 
     async function loadBundle() {
-      const res = await fetchFhirBundle(patient.id)
+      const patientId = safePatient.id || 'DFU-8842'
+      const res = await fetchFhirBundle(patientId)
       if (!isMounted) return
 
       if (res.success && res.data) {
@@ -46,7 +56,7 @@ export default function FhirExportModal({
         setRawText(JSON.stringify(res.data, null, 2))
       } else {
         // High-fidelity fallback FHIR R4 Bundle if server offline
-        const fallback = synthesizeClientFhirBundle(patient, sinbadScore, woundArea, infectionRisk)
+        const fallback = synthesizeClientFhirBundle(safePatient, sinbadScore, woundArea, infectionRisk)
         setBundle(fallback)
         setRawText(JSON.stringify(fallback, null, 2))
       }
@@ -58,9 +68,9 @@ export default function FhirExportModal({
     return () => {
       isMounted = false
     }
-  }, [isOpen, patient, sinbadScore, woundArea, infectionRisk])
+  }, [isOpen, safePatient?.id, sinbadScore, woundArea, infectionRisk])
 
-  if (!isOpen || !patient) return null
+  if (!isOpen) return null
 
   const handleCopy = async () => {
     try {
@@ -77,7 +87,7 @@ export default function FhirExportModal({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `Heal6_FHIR_R4_${patient.id}.json`
+    a.download = `Heal6_FHIR_R4_${safePatient.id || 'export'}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -256,7 +266,7 @@ export default function FhirExportModal({
                     </div>
                     <div className="bg-slate-950 p-2 rounded-lg border border-slate-800">
                       <span className="text-[10px] text-slate-500 uppercase font-bold">HbA1c</span>
-                      <p className="font-semibold text-amber-400">{patient.hba1c || '8.5%'}</p>
+                      <p className="font-semibold text-amber-400">{safePatient?.hba1c || '8.5%'}</p>
                     </div>
                   </div>
                 </div>
@@ -333,7 +343,7 @@ export default function FhirExportModal({
                   Cerner Ignite APIs consume LOINC 89260-4 area observations directly into PowerChart wound documentation flowsheets with automatic ArUco scale verification.
                 </p>
                 <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
-                  <div>GET http://127.0.0.1:8000/api/v1/fhir/Bundle/{patient.id}</div>
+                  <div>GET http://127.0.0.1:8000/api/v1/fhir/Bundle/{safePatient.id || 'DFU-8842'}</div>
                   <div className="text-slate-500">Accept: application/fhir+json</div>
                 </div>
               </div>
@@ -395,8 +405,9 @@ export default function FhirExportModal({
  */
 function synthesizeClientFhirBundle(patient, sinbadScore, woundArea, infectionRisk) {
   const now = new Date().toISOString()
-  const patientRef = `urn:uuid:${patient.id}`
-  const reportId = `rep-${patient.id}`
+  const patientId = patient?.id || 'DFU-8842'
+  const patientRef = `urn:uuid:${patientId}`
+  const reportId = `rep-${patientId}`
 
   return {
     resourceType: 'Bundle',
@@ -414,7 +425,7 @@ function synthesizeClientFhirBundle(patient, sinbadScore, woundArea, infectionRi
             coding: [{ system: 'http://loinc.org', code: '72230-6', display: 'Wound note' }],
             text: 'Heal6 AI Clinical DFU Evaluation Report'
           },
-          subject: { reference: patientRef, display: patient.name },
+          subject: { reference: patientRef, display: patient?.name || 'Carlos Mendez' },
           effectiveDateTime: now,
           issued: now,
           performer: [{ reference: 'Practitioner/DR-SHARMA-01', display: 'Dr. Sharma, MD, FRCP' }],
@@ -425,12 +436,12 @@ function synthesizeClientFhirBundle(patient, sinbadScore, woundArea, infectionRi
         fullUrl: patientRef,
         resource: {
           resourceType: 'Patient',
-          id: patient.id,
-          identifier: [{ system: 'https://heal6.health/fhir/mrn', value: patient.id }],
+          id: patientId,
+          identifier: [{ system: 'https://heal6.health/fhir/mrn', value: patientId }],
           active: true,
-          name: [{ text: patient.name }],
-          gender: patient.gender?.toLowerCase() || 'unknown',
-          extension: [{ url: 'https://heal6.health/fhir/diabetes-type', valueString: patient.diabetesType || 'Type 2 DM' }]
+          name: [{ text: patient?.name || 'Carlos Mendez' }],
+          gender: patient?.gender?.toLowerCase() || 'unknown',
+          extension: [{ url: 'https://heal6.health/fhir/diabetes-type', valueString: patient?.diabetesType || 'Type 2 DM' }]
         }
       },
       {

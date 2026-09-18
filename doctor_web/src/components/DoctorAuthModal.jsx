@@ -16,6 +16,7 @@ import {
   Check
 } from 'lucide-react'
 import Heal6Logo from './Heal6Logo'
+import { loginDoctor } from '../services/api'
 
 const DEPARTMENTS = [
   { id: 'endocrinology', label: 'Endocrinology & Diabetic Foot Unit (Suite B)', badge: 'Suite B' },
@@ -54,7 +55,7 @@ export default function DoctorAuthModal({ isOpen, onClose, onLoginSuccess }) {
 
   const selectedDepartmentObj = DEPARTMENTS.find(d => d.id === hospitalDept) || DEPARTMENTS[0]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setErrorMessage('')
 
@@ -65,16 +66,23 @@ export default function DoctorAuthModal({ isOpen, onClose, onLoginSuccess }) {
 
     setIsLoading(true)
 
-    // Simulate secure clinical SSO authentication handshake
-    setTimeout(() => {
-      setIsLoading(false)
-      onLoginSuccess({
-        name: 'Dr. Sharma',
-        email: email,
-        role: 'Consultant Endocrinologist & DFU Specialist',
-        department: hospitalDept
+    try {
+      const res = await loginDoctor({
+        email: email.trim(),
+        password,
+        department: selectedDepartmentObj.label
       })
-    }, 900)
+      setIsLoading(false)
+
+      if (res.success && res.data && res.data.doctor) {
+        onLoginSuccess(res.data.doctor)
+      } else {
+        setErrorMessage(res.error || 'Authentication failed. Please verify your staff credentials.')
+      }
+    } catch (err) {
+      setIsLoading(false)
+      setErrorMessage(err.message || 'Authentication error. Please try again.')
+    }
   }
 
   const handleQuickFillDoctor = () => {
@@ -127,6 +135,10 @@ export default function DoctorAuthModal({ isOpen, onClose, onLoginSuccess }) {
             >
               Auto-Fill
             </button>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 text-[9.5px] font-mono font-bold text-teal-600 dark:text-teal-400 mt-2">
+            <KeyRound className="w-3 h-3" />
+            <span>HS256 JWT Cryptographic Signature • 24h Clinical Expiry</span>
           </div>
         </div>
 

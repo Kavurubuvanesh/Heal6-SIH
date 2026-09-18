@@ -223,5 +223,6 @@ def predict_wound_mask(image: Image.Image, threshold: float = 0.5) -> dict:
             "coverage_percentage": wound_coverage_percent,
             "is_wound_detected": total_wound_pixels > 50,
             "tissue_breakdown": tissue_breakdown,
-            "mask_image_base64": mask_base64  # NEW: Send the mask to the UI
+            "mask_image_base64": mask_base64,
+            "raw_mask_np": (full_res_mask * 255).astype(np.uint8)
         }

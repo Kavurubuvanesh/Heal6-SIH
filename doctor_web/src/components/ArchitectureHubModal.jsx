@@ -4,6 +4,7 @@ import {
   Database,
   Radio,
   FileCode,
+  FileText,
   Cpu,
   Boxes,
   CheckCircle2,
@@ -138,7 +139,9 @@ export default function ArchitectureHubModal({
             { id: 'pillar2', name: 'Pillar 2', title: 'Live Streaming', icon: Radio, badge: 'WebSocket' },
             { id: 'pillar3', name: 'Pillar 3', title: 'HL7 / FHIR R4', icon: FileCode, badge: 'LOINC/SNOMED' },
             { id: 'pillar4', name: 'Pillar 4', title: 'Offline Edge AI', icon: Cpu, badge: 'ONNX WebGL' },
-            { id: 'pillar5', name: 'Pillar 5', title: 'Containers', icon: Server, badge: 'Docker & Nginx' },
+            { id: 'pillar5', name: 'Pillar 5', title: 'Containers', icon: Server, badge: 'On-Hold (Ph. 7)' },
+            { id: 'pillar9', name: 'Pillar 9', title: 'RAG Agent', icon: FileText, badge: 'IWGDF' },
+            { id: 'pillar10', name: 'Pillar 10', title: 'Federated AI', icon: Zap, badge: 'Multi-Center' },
           ].map(p => {
             const Icon = p.icon
             const isActive = activePillar === p.id
@@ -482,8 +485,8 @@ export default function ArchitectureHubModal({
                     Multi-stage Docker builds, isolated bridge network (heal6-network), non-root CIS hardening, and Nginx reverse proxies.
                   </p>
                 </div>
-                <div className="px-3 py-1.5 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-[#aceba7] font-mono text-xs font-bold">
-                  Compose Spec: v3.8 Active
+                <div className="px-3 py-1.5 rounded-xl bg-slate-500/10 border border-slate-500/30 text-slate-600 dark:text-slate-400 font-mono text-xs font-bold">
+                  Status: On-Hold (Phase 7)
                 </div>
               </div>
 
@@ -524,8 +527,8 @@ export default function ArchitectureHubModal({
                       <div className="font-mono font-bold text-sm text-[#12464e] dark:text-[#aceba7]">
                         {svc.name}
                       </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                        {svc.status}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border ${svc.name === 'heal6-postgres' || svc.name === 'heal6-backend' || svc.name.includes('web') || svc.name.includes('app') ? 'bg-slate-500/15 text-slate-500 border-slate-500/30' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'}`}>
+                        PENDING
                       </span>
                     </div>
                     <div className="text-xs text-slate-500 font-mono mt-1">Port: {svc.port} • Base: {svc.base}</div>
@@ -558,13 +561,85 @@ export default function ArchitectureHubModal({
             </div>
           )}
 
+          {/* ================================================================ */}
+          {/* PILLAR 9: Clinical RAG Agent (Phase 9)                           */}
+          {/* ================================================================ */}
+          {activePillar === 'pillar9' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#aceba7]/10 dark:bg-[#aceba7]/5 border border-[#aceba7]/30">
+                <div>
+                  <h3 className="font-bold text-sm text-[#12464e] dark:text-[#aceba7] flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Pillar 9: Autonomous Clinical RAG Agent (IWGDF Guidelines)
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                    LLM-powered semantic search and reasoning engine vectorizing official IWGDF and WoundsUK clinical pathways.
+                  </p>
+                </div>
+                <div className="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 font-mono text-xs font-bold">
+                  Vector Engine: Active
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#15221b] border border-slate-200 dark:border-[#223229]">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase">Knowledge Base</div>
+                  <div className="text-lg font-bold text-[#12464e] dark:text-[#aceba7] mt-1 font-mono">IWGDF 2023</div>
+                  <div className="text-xs text-slate-500 mt-1">Tokenized & Chunked (FAISS)</div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#15221b] border border-slate-200 dark:border-[#223229]">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase">LLM Capabilities</div>
+                  <div className="text-lg font-bold text-slate-900 dark:text-white mt-1 font-mono">SOAP Note Gen</div>
+                  <div className="text-xs text-emerald-500 mt-1">Citations & Rationale Linked</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================ */}
+          {/* PILLAR 10: Federated AI (Phase 10)                               */}
+          {/* ================================================================ */}
+          {activePillar === 'pillar10' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#aceba7]/10 dark:bg-[#aceba7]/5 border border-[#aceba7]/30">
+                <div>
+                  <h3 className="font-bold text-sm text-[#12464e] dark:text-[#aceba7] flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    Pillar 10: Federated Learning Topology (Privacy-Preserving AI)
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                    Multi-center asynchronous weight aggregation (FedAvg). Data remains localized; only cryptographic model updates traverse the network.
+                  </p>
+                </div>
+                <div className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 font-mono text-xs font-bold">
+                  Global Aggregator: Online
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#15221b] border border-slate-200 dark:border-[#223229]">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase">Topology</div>
+                  <div className="text-lg font-bold text-[#12464e] dark:text-[#aceba7] mt-1 font-mono">Star Network</div>
+                  <div className="text-xs text-slate-500 mt-1">Central FastAPI Aggregator + 3 Edge Nodes</div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#15221b] border border-slate-200 dark:border-[#223229]">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase">Privacy Guarantees</div>
+                  <div className="text-lg font-bold text-slate-900 dark:text-white mt-1 font-mono">Differential Privacy</div>
+                  <div className="text-xs text-emerald-500 mt-1">Zero raw data transmission</div>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* Modal Footer */}
         <div className="bg-slate-50 dark:bg-[#121814] px-6 py-3.5 border-t border-slate-200 dark:border-[#223229] flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shadow-[0_0_6px_#10b981]" />
-            <span>All 5 Pillars Active & Verified</span>
+            <span>Architecture Hub Active (Pillar 5 On-Hold)</span>
           </div>
           <button
             onClick={onClose}

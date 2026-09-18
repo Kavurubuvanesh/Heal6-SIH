@@ -26,6 +26,8 @@ from app.api.routes_patients import router as patients_router
 from app.api.routes_auth import router as auth_router
 from app.api.routes_stream import router as stream_router
 from app.api.routes_fhir import router as fhir_router
+from app.api.routes_rag import router as rag_router
+from app.api.routes_federated import router as federated_router
 
 # Set PyTorch execution threads to prevent CPU thrashing
 torch.set_num_threads(4)
@@ -75,6 +77,8 @@ app.include_router(patients_router, prefix="/api/v1/patients", tags=["Triage Que
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(stream_router, prefix="/api/v1/stream", tags=["Real-Time Triage Streaming"])
 app.include_router(fhir_router, prefix="/api/v1/fhir", tags=["HL7 / FHIR R4 Interoperability"])
+app.include_router(rag_router, prefix="/api/v1/rag", tags=["Clinical RAG & IWGDF Scribe"])
+app.include_router(federated_router, prefix="/api/v1/federated", tags=["Federated Multi-Center AI"])
 
 # 3. System Health Check Endpoint
 @app.get("/health", tags=["System Telemetry"])
