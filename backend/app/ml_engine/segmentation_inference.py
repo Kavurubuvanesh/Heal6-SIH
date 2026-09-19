@@ -117,7 +117,7 @@ def load_segmentation_model():
         # Check if SMP is available and try loading UNetPlusPlus
         try:
             import segmentation_models_pytorch as smp
-            print(f"⚡ [ML ENGINE] Initializing SOTA UNet++ (EfficientNet-B4) for: {target_path}")
+            print(f"[ML ENGINE] Initializing SOTA UNet++ (EfficientNet-B4) for: {target_path}")
             smp_model = smp.UnetPlusPlus(
                 encoder_name="efficientnet-b4",
                 encoder_weights=None,
@@ -128,9 +128,9 @@ def load_segmentation_model():
             smp_model.load_state_dict(state_dict, strict=False)
             model = smp_model
             _model_type = "sota_unetplusplus"
-            print("✅ [ML ENGINE] SOTA UNet++ successfully loaded.")
+            print("[ML ENGINE SUCCESS] SOTA UNet++ successfully loaded.")
         except Exception as smp_err:
-            print(f"⚠️ [ML ENGINE] Could not load as SMP UnetPlusPlus: {smp_err}, attempting AttentionUNet...")
+            print(f"[ML ENGINE WARNING] Could not load as SMP UnetPlusPlus: {smp_err}, attempting AttentionUNet...")
 
         if model is None:
             try:
@@ -139,13 +139,13 @@ def load_segmentation_model():
                 att_model.load_state_dict(state_dict, strict=False)
                 model = att_model
                 _model_type = "attention_unet"
-                print("✅ [ML ENGINE] Attention U-Net successfully loaded.")
+                print("[ML ENGINE SUCCESS] Attention U-Net successfully loaded.")
             except Exception as att_err:
-                print(f"⚠️ [ML ENGINE] Weights partial mismatch ({att_err}). Initializing baseline AttentionUNet.")
+                print(f"[ML ENGINE WARNING] Weights partial mismatch ({att_err}). Initializing baseline AttentionUNet.")
                 model = AttentionUNet(in_channels=3, out_channels=1)
                 _model_type = "attention_unet"
     else:
-        print("⚠️ [ML ENGINE] No local weights found. Initializing baseline AttentionUNet.")
+        print("[ML ENGINE WARNING] No local weights found. Initializing baseline AttentionUNet.")
         model = AttentionUNet(in_channels=3, out_channels=1)
         _model_type = "attention_unet"
 
@@ -170,21 +170,30 @@ def predict_wound_mask(image: Image.Image, threshold: float = 0.5) -> dict:
         if _model_type == "sota_unetplusplus":
             # Multiclass Forward Pass: (1, 4, 224, 224)
             logits = model(input_tensor)
-            pred_classes = torch.argmax(logits, dim=1).squeeze(0).cpu().numpy()
+            probs = torch.softmax(logits, dim=1).squeeze(0).cpu().numpy()  # (4, 224, 224)
 
-            # Binary wound bed is any non-background class (1, 2, or 3)
-            wound_mask_224 = (pred_classes > 0).astype(np.uint8)
+            # Background is channel 0; Active tissue classes are 1 (granulation), 2 (slough), 3 (necrotic)
+            tissue_confidence = probs[1] + probs[2] + probs[3]
+            raw_classes = np.argmax(probs, axis=0)  # 0, 1, 2, or 3
+
+            # Confidence-gated segmentation: require tissue confidence > threshold to eliminate background fabric artifacts
+            valid_wound = (raw_classes > 0) & (tissue_confidence >= threshold)
+            pred_classes = (raw_classes * valid_wound).astype(np.uint8)
+            wound_mask_224 = valid_wound.astype(np.uint8)
 
             gran_pixels = int(np.sum(pred_classes == 1))
             slough_pixels = int(np.sum(pred_classes == 2))
             necrotic_pixels = int(np.sum(pred_classes == 3))
-            total_wound_224 = max(1, gran_pixels + slough_pixels + necrotic_pixels)
+            total_wound_224 = gran_pixels + slough_pixels + necrotic_pixels
 
-            tissue_breakdown = {
-                "granulation": round((gran_pixels / total_wound_224) * 100, 1),
-                "slough": round((slough_pixels / total_wound_224) * 100, 1),
-                "necrotic": round((necrotic_pixels / total_wound_224) * 100, 1)
-            }
+            if total_wound_224 > 0:
+                tissue_breakdown = {
+                    "granulation": round((gran_pixels / total_wound_224) * 100, 1),
+                    "slough": round((slough_pixels / total_wound_224) * 100, 1),
+                    "necrotic": round((necrotic_pixels / total_wound_224) * 100, 1)
+                }
+            else:
+                tissue_breakdown = {"granulation": 0.0, "slough": 0.0, "necrotic": 0.0}
         else:
             # Binary Test-Time Augmentation (TTA)
             out_orig = torch.sigmoid(model(input_tensor))

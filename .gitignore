@@ -62,6 +62,10 @@ mobile_app/.pub-cache/
 *.db
 *.sqlite
 *.sqlite3
+backend/storage/reports/*
+!backend/storage/reports/.gitkeep
+backend/storage/uploads/*
+!backend/storage/uploads/.gitkeep
 
 # OS GENERATED FILES
 .DS_Store

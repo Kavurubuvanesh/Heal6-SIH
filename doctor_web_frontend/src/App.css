@@ -1,0 +1,94 @@
+/* Heal6 Custom Clinical CSS & Animations */
+
+@keyframes laser-sweep {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+@keyframes aruco-border-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(36, 149, 131, 0.6), inset 0 0 10px rgba(36, 149, 131, 0.3);
+    border-color: #249583;
+  }
+  50% {
+    box-shadow: 0 0 18px 3px rgba(36, 149, 131, 0.7), inset 0 0 16px rgba(36, 149, 131, 0.6);
+    border-color: #38bdf8;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-laser {
+  animation: laser-sweep 2.8s ease-in-out infinite;
+}
+
+.animate-aruco {
+  animation: aruco-border-pulse 2.2s infinite ease-in-out;
+}
+
+.animate-fadeIn {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Print Optimization for Clinical Reports */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-report,
+  #printable-report * {
+    visibility: visible;
+  }
+  #printable-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

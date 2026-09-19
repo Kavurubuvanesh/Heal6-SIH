@@ -1,0 +1,22 @@
+from datetime import datetime, timezone
+from pydantic import BaseModel
+from fastapi import APIRouter, Depends
+from app.db import execute, profile_dict
+from app.security import current_user
+
+router=APIRouter()
+class Profile(BaseModel):
+    name: str = ''; age: str = ''; gender: str = ''; dateOfBirth: str = ''; heightCm: str = ''; weightKg: str = ''; bloodGroup: str = ''
+    diabetesType: str = 'type2'; diabetesDurationYears: str = ''; previousUlcer: bool = False; symptoms: str = ''; allergies: str = ''; phone: str = ''; emergencyContact: str = ''
+
+@router.get('/me')
+async def get_profile(user_id: int = Depends(current_user)):
+    return profile_dict(user_id)
+
+@router.put('/me')
+async def save_profile(body: Profile, user_id: int = Depends(current_user)):
+    now=datetime.now(timezone.utc).isoformat()
+    execute('''INSERT INTO profiles(user_id,name,age,gender,date_of_birth,height_cm,weight_kg,blood_group,diabetes_type,diabetes_duration_years,previous_ulcer,symptoms,allergies,phone,emergency_contact,updated_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET name=excluded.name,age=excluded.age,gender=excluded.gender,date_of_birth=excluded.date_of_birth,height_cm=excluded.height_cm,weight_kg=excluded.weight_kg,blood_group=excluded.blood_group,diabetes_type=excluded.diabetes_type,diabetes_duration_years=excluded.diabetes_duration_years,previous_ulcer=excluded.previous_ulcer,symptoms=excluded.symptoms,allergies=excluded.allergies,phone=excluded.phone,emergency_contact=excluded.emergency_contact,updated_at=excluded.updated_at''',
+    (user_id,body.name,body.age,body.gender,body.dateOfBirth,body.heightCm,body.weightKg,body.bloodGroup,body.diabetesType,body.diabetesDurationYears,int(body.previousUlcer),body.symptoms,body.allergies,body.phone,body.emergencyContact,now))
+    return profile_dict(user_id)

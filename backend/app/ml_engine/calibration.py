@@ -114,6 +114,24 @@ def calculate_real_world_area(segmented_pixel_count: int, pixels_per_cm: float) 
     return round(float(area_cm2), 3)
 
 
+def get_fallback_pixels_per_cm(image_width: int, image_height: Optional[int] = None) -> float:
+    """
+    Computes a resolution-normalized fallback calibration ratio (pixels per cm)
+    when no physical ArUco fiducial marker is detected in the frame.
+
+    Clinical baseline reference:
+        42.0 px/cm at 640px major sensor frame dimension (approx. 25-30cm camera distance).
+
+    For modern mobile camera captures (e.g., 1080p, 12MP, 48MP), scales proportionally
+    with the major image dimension so physical wound area (cm²) remains invariant
+    to camera megapixel count:
+        fallback_px_per_cm = 42.0 * max(1.0, major_dim / 640.0)
+    """
+    dim = max(float(image_width), float(image_height or image_width))
+    scale_factor = max(1.0, dim / 640.0)
+    return round(42.0 * scale_factor, 1)
+
+
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
 

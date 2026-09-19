@@ -52,6 +52,18 @@ async def init_db():
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Migrate any missing columns in physician_validations
+        for col, col_type in [
+            ("review_status", "TEXT DEFAULT 'Reviewed & Prescribed'"),
+            ("prescriptions", "TEXT"),
+            ("precautions", "TEXT"),
+            ("follow_up_date", "TEXT"),
+            ("call_back_days", "INTEGER")
+        ]:
+            try:
+                await conn.exec_driver_sql(f"ALTER TABLE physician_validations ADD COLUMN {col} {col_type};")
+            except Exception:
+                pass
 
     # Seed baseline patients if table is empty
     async with AsyncSessionLocal() as session:

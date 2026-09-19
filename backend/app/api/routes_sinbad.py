@@ -5,16 +5,27 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status, De
 from sqlalchemy.ext.asyncio import AsyncSession
 from PIL import Image
 
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+
 # Import Core Clinical ML Modules
 from app.ml_engine.inference import predict_wound
 from app.ml_engine.segmentation_inference import predict_wound_mask
 from app.ml_engine.sinbad_engine import SinbadEngine, ClinicalInput
-from app.ml_engine.calibration import detect_marker_and_calculate_ratio, calculate_real_world_area
+from app.ml_engine.calibration import detect_marker_and_calculate_ratio, calculate_real_world_area, get_fallback_pixels_per_cm
 from app.ml_engine.explainability import generate_explainability_report
 from app.ml_engine.depth_metrology import compute_volumetric_depth_metrology
+from app.services.report_service import build_pdf
 from app.core.database import get_db
 from app.core.event_bus import event_bus
 from app.api.routes_patients import add_or_update_patient_in_db
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+REPORT_ROOT = BASE_DIR / 'storage' / 'reports'
+UPLOAD_ROOT = BASE_DIR / 'storage' / 'uploads'
+REPORT_ROOT.mkdir(parents=True, exist_ok=True)
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter()
 
@@ -71,7 +82,8 @@ async def analyze_wound(
 
         if pixels_per_cm is None or pixels_per_cm <= 0:
             aruco_detected = False
-            pixels_per_cm = 42.0  # Clinical standard fallback scale
+            h_img, w_img = open_cv_image.shape[:2]
+            pixels_per_cm = get_fallback_pixels_per_cm(w_img, h_img)
 
         # 4. Task 1: ConvNeXt Infection Risk & Quality Assessment
         task1_results = predict_wound(pil_image)
@@ -256,9 +268,74 @@ async def analyze_wound(
         # Broadcast sub-50ms real-time event to all connected doctor terminals (WebSocket + SSE)
         await event_bus.broadcast_patient_intake(saved_record)
 
+        # Generate official ReportLab vector clinical PDF
+        now = datetime.now(timezone.utc)
+        report_number = f"H6-{now.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        assessment_id = f"ASMT-{uuid.uuid4().hex[:10].upper()}"
+
+        image_path = UPLOAD_ROOT / f"{report_number}.jpg"
+        pil_image.save(image_path, format='JPEG', quality=90)
+
+        pdf_path = REPORT_ROOT / f"{report_number}.pdf"
+        pdf_payload = {
+            'assessmentId': assessment_id,
+            'reportNumber': report_number,
+            'triageCategory': triage_label,
+            'riskLevel': tier,
+            'severityTier': tier,
+            'sinbadBreakdown': {
+                'totalScore': sinbad_score,
+                'maxPossibleScore': 6,
+                'category': triage_label,
+                'siteScore': site_pt,
+                'ischemiaScore': ischemia_pt,
+                'neuropathyScore': neuropathy_pt,
+                'infectionScore': infection_pt,
+                'areaScore': area_pt,
+                'depthScore': depth_pt
+            },
+            'findings': [
+                task1_results.get("prediction", "Evaluated"),
+                f"SINBAD Score: {sinbad_score}/6 ({tier})",
+                f"Infection risk: {round(ai_infection_prob * 100, 1)}%",
+                f"Calculated wound area: {calculated_area_cm2:.2f} cm²",
+                f"Depth classification: {volumetric_results.get('depth_classification', 'Superficial')}"
+            ],
+            'recommendedActions': [rec],
+            'requiresSpecialistEscalation': sinbad_score >= 4,
+            'generatedAt': now.isoformat(),
+            'profile': {
+                'name': patient_name,
+                'age': parsed_age,
+                'gender': patient_gender,
+                'diabetesType': diabetes_type
+            },
+            'aiDiagnostics': {
+                'task1Classification': task1_results.get("prediction", "Abnormal(Ulcer)"),
+                'convnextConfidence': round(ai_infection_prob * 100, 1),
+                'infectionRiskPercent': round(ai_infection_prob * 100, 1),
+                'calculatedAreaCm2': round(calculated_area_cm2, 2),
+                'tissueBreakdown': tissue_breakdown,
+                'volumetric': volumetric_results
+            },
+            'clinicalProtocol': {
+                'recommendation': rec,
+                'actionDeadline': action_deadline,
+                'doctorFeedback': doctor_feedback,
+                'medications': medications
+            }
+        }
+        try:
+            build_pdf(str(pdf_path), pdf_payload, str(image_path))
+        except Exception as pdf_err:
+            print(f"⚠️ [PDF WARNING] PDF compilation in analyze-wound: {pdf_err}")
+
         # 9. Assemble Full Data Contract for Client Response
         return {
             "patient_id": patient_id,
+            "report_number": report_number,
+            "assessment_id": assessment_id,
+            "pdf_url": f"/api/v1/reports/{report_number}/pdf",
             "sinbad_score": sinbad_score,
             "severity_tier": tier,
             "triage_label": triage_label,

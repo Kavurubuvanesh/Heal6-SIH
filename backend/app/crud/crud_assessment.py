@@ -13,7 +13,10 @@ async def get_active_triage_queue(db: AsyncSession) -> List[Dict[str, Any]]:
     """
     stmt = (
         select(WoundAssessment)
-        .options(selectinload(WoundAssessment.patient))
+        .options(
+            selectinload(WoundAssessment.patient),
+            selectinload(WoundAssessment.validation)
+        )
         .join(WoundAssessment.patient)
         .where(Patient.is_archived == False)
         .order_by(desc(WoundAssessment.sinbad_score), desc(WoundAssessment.timestamp))
@@ -36,7 +39,10 @@ async def get_patient_latest_assessment(db: AsyncSession, patient_id: str) -> Op
     """Retrieve the most recent assessment for a given patient."""
     stmt = (
         select(WoundAssessment)
-        .options(selectinload(WoundAssessment.patient))
+        .options(
+            selectinload(WoundAssessment.patient),
+            selectinload(WoundAssessment.validation)
+        )
         .where(WoundAssessment.patient_id == patient_id)
         .order_by(desc(WoundAssessment.timestamp))
         .limit(1)
@@ -49,7 +55,10 @@ async def get_assessment_by_id(db: AsyncSession, assessment_id: str) -> Optional
     """Retrieve an assessment by its primary key ID with patient eager loaded."""
     stmt = (
         select(WoundAssessment)
-        .options(selectinload(WoundAssessment.patient))
+        .options(
+            selectinload(WoundAssessment.patient),
+            selectinload(WoundAssessment.validation)
+        )
         .where(WoundAssessment.id == assessment_id)
     )
     result = await db.execute(stmt)
@@ -97,9 +106,15 @@ async def verify_patient_assessment(
     final_score: int,
     verified_ischemia: bool,
     verified_depth: bool,
-    doctor_notes: Optional[str] = None
+    doctor_notes: Optional[str] = None,
+    physician_name: Optional[str] = "Dr. Sharma, MD",
+    review_status: Optional[str] = "Reviewed & Prescribed",
+    prescriptions: Optional[list] = None,
+    precautions: Optional[list] = None,
+    follow_up_date: Optional[str] = None,
+    call_back_days: Optional[int] = None
 ) -> Optional[WoundAssessment]:
-    """Records physician digital validation sign-off in the database."""
+    """Records physician digital validation sign-off and clinical prescriptions in the database."""
     assessment = await get_patient_latest_assessment(db, patient_id)
     if not assessment:
         return None
@@ -111,10 +126,16 @@ async def verify_patient_assessment(
     # Insert or update PhysicianValidation record
     validation = PhysicianValidation(
         assessment=assessment,
+        physician_name=physician_name or "Dr. Sharma, MD",
         verified_ischemia=verified_ischemia,
         verified_depth=verified_depth,
         final_verified_score=final_score,
-        doctor_notes=doctor_notes
+        doctor_notes=doctor_notes,
+        review_status=review_status or "Reviewed & Prescribed",
+        prescriptions=prescriptions or [],
+        precautions=precautions or [],
+        follow_up_date=follow_up_date,
+        call_back_days=call_back_days
     )
     db.add(validation)
     await db.flush()

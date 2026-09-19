@@ -331,6 +331,45 @@ export default function App() {
     }
   }
 
+  // --- REAL-TIME DOCTOR REVIEW POLLING ---
+  useEffect(() => {
+    const activeId = reportMetadata.id || aiReport?.patient_id || aiReport?.patient_record?.id;
+    if (appState !== 'report' || !activeId) return;
+    let isSubscribed = true;
+
+    const checkDoctorReview = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/v1/patients/${encodeURIComponent(activeId)}/doctor-review`);
+        if (!res.ok) return;
+        const review = await res.json();
+        if (isSubscribed && review.verifiedByDoctor) {
+          setAiReport(prev => ({
+            ...prev,
+            verifiedByDoctor: true,
+            reviewingPhysician: review.physicianName || "Dr. Sharma, MD",
+            reviewStatus: review.reviewStatus || "Reviewed & Prescribed",
+            followUpDate: review.followUpDate,
+            precautions: review.precautions || [],
+            clinical_protocol: {
+              ...(prev?.clinical_protocol || {}),
+              doctor_feedback: review.doctorNotes || prev?.clinical_protocol?.doctor_feedback,
+              medications: (review.prescriptions && review.prescriptions.length > 0) ? review.prescriptions : prev?.clinical_protocol?.medications
+            }
+          }));
+        }
+      } catch (e) {
+        // Silently catch polling errors
+      }
+    };
+
+    const interval = setInterval(checkDoctorReview, 3000);
+    checkDoctorReview();
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [appState, reportMetadata.id, aiReport?.patient_id]);
+
   // --- DYNAMIC REPORT DATA MAPPING ---
   const patientData = {
     name: formData.name,
@@ -354,7 +393,7 @@ export default function App() {
     doctorFeedback: aiReport?.clinical_protocol?.doctor_feedback || (aiReport?.isOfflineEdge ? "On-device edge inference completed via ONNX Runtime WebGL. Preliminary triage recorded and queued for automatic hospital cloud synchronization." : "AI detects active ulceration with moderate tissue damage. Implement daily antimicrobial dressings and maintain strict glycemic control."),
     actionDeadline: aiReport?.clinical_protocol?.action_deadline || (aiReport?.calculatedSinbad >= 4 ? "Seek Specialist Care within 24-48 Hours." : "Schedule Clinical Consultation within 7-14 Days."),
     medications: aiReport?.clinical_protocol?.medications || ["Topical Silver Sulfadiazine", "Strict Glycemic Control Regime"],
-    reviewingPhysician: aiReport?.isOfflineEdge ? "Heal6 Edge Diagnostic Agent (Pending Doctor Sign-off)" : "Dr. S. Sharma, MD (Lead Podiatrist)",
+    reviewingPhysician: aiReport?.reviewingPhysician || (aiReport?.verifiedByDoctor ? "Dr. Sharma, MD (Verified)" : (aiReport?.isOfflineEdge ? "Heal6 Edge Diagnostic Agent (Pending Doctor Sign-off)" : "Dr. S. Sharma, MD (Lead Podiatrist)")),
 
     ulcerationRisk: aiReport ? (aiReport.infectionRiskPercent ?? aiReport.ai_diagnostics?.infection_risk_percent ?? 78.4) : 78.4,
     infectionSpread: aiReport ? (aiReport.tissue_slough_percent ?? aiReport.ai_diagnostics?.tissue_breakdown?.slough ?? 35.0) : 35.0,
@@ -366,7 +405,9 @@ export default function App() {
     triageColor: aiReport ? (aiReport.triageColor ?? aiReport.triage_color ?? "#f59e0b") : "#f59e0b",
     triageLabel: aiReport ? (aiReport.triageLevel ?? aiReport.triage_label ?? "URGENT TRIAGE") : "URGENT TRIAGE",
 
-    verificationStatus: aiReport?.isOfflineEdge ? "Edge Calculated (Offline Queue)" : "Pending Physician Review"
+    verificationStatus: aiReport?.verifiedByDoctor ? (aiReport.reviewStatus || "Verified by Physician") : (aiReport?.isOfflineEdge ? "Edge Calculated (Offline Queue)" : "Pending Physician Review"),
+    followUpDate: aiReport?.followUpDate,
+    precautions: aiReport?.precautions || []
   }
 
   // ==========================================
@@ -629,6 +670,8 @@ export default function App() {
         pendingSyncCount={pendingSyncCount}
         onSyncNow={handleManualSync}
         onExportFhir={handleExportFhir}
+        pdfUrl={aiReport?.pdf_url}
+        reportNumber={aiReport?.report_number || reportMetadata.id}
       />
 
       <div className="report-paper animate-fade-in">

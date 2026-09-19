@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Heal6",
+    "slug": "heal6",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "scheme": "heal6",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F5FBFD"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.heal6.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Heal6 needs camera access to capture foot screening photographs.",
+        "NSLocationWhenInUseUsageDescription": "Heal6 uses location only when available to associate a screening with its capture context."
+      }
+    },
+    "android": {
+      "package": "com.heal6.app",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Heal6 needs camera access to capture foot screening photographs."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Heal6 uses location only when available to associate a screening with its capture context."
+        }
+      ],
+      "expo-status-bar",
+      "expo-web-browser"
+    ]
+  }
+}
