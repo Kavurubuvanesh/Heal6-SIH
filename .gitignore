@@ -47,10 +47,9 @@ node_modules/
 .pnp.*
 dist/
 build/
-doctor_web/build/
-doctor_web/dist/
-doctor_web/.next/
-doctor_dashboard_next/
+doctor_web_frontend/build/
+doctor_web_frontend/dist/
+doctor_web_frontend/.next/
 .dart_tool/
 mobile_app/build/
 mobile_app/.flutter-plugins

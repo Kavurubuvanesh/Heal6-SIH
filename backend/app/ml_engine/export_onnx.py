@@ -129,7 +129,7 @@ def deploy_to_client_apps(exported_files: list):
     repo_root = os.path.dirname(backend_dir)
     target_dirs = [
         os.path.join(repo_root, "heal6-patient-app", "public", "models"),
-        os.path.join(repo_root, "doctor_web", "public", "models")
+        os.path.join(repo_root, "doctor_web_frontend", "public", "models")
     ]
 
     for target_dir in target_dirs:

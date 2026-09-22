@@ -37,8 +37,8 @@ def test_exported_files_exist():
         os.path.join(backend_dir, "app", "ml_engine", "weights", "wound_segment_edge_unet.onnx"),
         os.path.join(repo_root, "heal6-patient-app", "public", "models", "wound_detect_convnext.onnx"),
         os.path.join(repo_root, "heal6-patient-app", "public", "models", "wound_segment_edge_unet.onnx"),
-        os.path.join(repo_root, "doctor_web", "public", "models", "wound_detect_convnext.onnx"),
-        os.path.join(repo_root, "doctor_web", "public", "models", "wound_segment_edge_unet.onnx"),
+        os.path.join(repo_root, "doctor_web_frontend", "public", "models", "wound_detect_convnext.onnx"),
+        os.path.join(repo_root, "doctor_web_frontend", "public", "models", "wound_segment_edge_unet.onnx"),
     ]
 
     for p in required_paths:

@@ -82,11 +82,11 @@ def test_backend_dockerfile():
 
 def test_doctor_web_dockerfile_and_nginx():
     report_section("Doctor Web Containerization & Nginx Proxy")
-    df_path = WORKSPACE_ROOT / "doctor_web" / "Dockerfile"
-    nginx_path = WORKSPACE_ROOT / "doctor_web" / "nginx.conf"
+    df_path = WORKSPACE_ROOT / "doctor_web_frontend" / "Dockerfile"
+    nginx_path = WORKSPACE_ROOT / "doctor_web_frontend" / "nginx.conf"
 
-    check(df_path.exists(), "doctor_web/Dockerfile exists")
-    check(nginx_path.exists(), "doctor_web/nginx.conf exists")
+    check(df_path.exists(), "doctor_web_frontend/Dockerfile exists")
+    check(nginx_path.exists(), "doctor_web_frontend/nginx.conf exists")
 
     df_content = df_path.read_text(encoding="utf-8")
     check("FROM node:20-alpine AS builder" in df_content, "Stage 1 uses Node 20 Alpine builder")
@@ -131,7 +131,7 @@ def test_dockerignore_files():
     paths = [
         WORKSPACE_ROOT / ".dockerignore",
         WORKSPACE_ROOT / "backend" / ".dockerignore",
-        WORKSPACE_ROOT / "doctor_web" / ".dockerignore",
+        WORKSPACE_ROOT / "doctor_web_frontend" / ".dockerignore",
         WORKSPACE_ROOT / "heal6-patient-app" / ".dockerignore",
     ]
 
@@ -144,9 +144,9 @@ def test_dockerignore_files():
     check("heal6_clinical.db" in backend_ignore or "*.db" in backend_ignore,
           "backend/.dockerignore excludes local SQLite DB files")
 
-    doctor_ignore = (WORKSPACE_ROOT / "doctor_web" / ".dockerignore").read_text(encoding="utf-8")
-    check("node_modules" in doctor_ignore, "doctor_web/.dockerignore excludes node_modules")
-    check("dist" in doctor_ignore, "doctor_web/.dockerignore excludes dist")
+    doctor_ignore = (WORKSPACE_ROOT / "doctor_web_frontend" / ".dockerignore").read_text(encoding="utf-8")
+    check("node_modules" in doctor_ignore, "doctor_web_frontend/.dockerignore excludes node_modules")
+    check("dist" in doctor_ignore, "doctor_web_frontend/.dockerignore excludes dist")
 
     patient_ignore = (WORKSPACE_ROOT / "heal6-patient-app" / ".dockerignore").read_text(encoding="utf-8")
     check("node_modules" in patient_ignore, "heal6-patient-app/.dockerignore excludes node_modules")

@@ -96,7 +96,7 @@ services:
   # ============================================================================
   heal6-doctor-web:
     build:
-      context: ./doctor_web
+      context: ./doctor_web_frontend
       dockerfile: Dockerfile
     container_name: heal6-doctor-web
     restart: unless-stopped

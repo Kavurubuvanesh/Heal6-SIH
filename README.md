@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./doctor_web/src/assets/heal6_logo.png" alt="Heal6 Logo" width="200" />
+  <img src="./doctor_web_frontend/src/assets/heal6_logo.png" alt="Heal6 Logo" width="200" />
   <h1>Heal6: Clinical-Grade Diabetic Foot Analysis & Triage Engine</h1>
   <p><strong>Edge-to-Cloud Computer Vision Telemetry & Automated SINBAD Staging</strong></p>
 
@@ -66,7 +66,7 @@ Heal6_dfu_project/
 │   │   └── fhir/             # HL7 FHIR R4 LOINC/SNOMED schemas & serializer
 │   └── models/               # Top-level SOTA model store (heal6_tissue_sota_best.pth)
 │
-├── doctor_web/               # Physician Diagnostic & Command Center (React 19 + Vite)
+├── doctor_web_frontend/      # Physician Diagnostic & Command Center (React 19 + Vite)
 │   ├── src/
 │   │   ├── App.jsx           # Main controller (Landing vs Workstation)
 │   │   ├── components/       # 21 Clinical UI components
@@ -147,10 +147,10 @@ npm run dev
 
 ### 3. Doctor Command Center
 ```bash
-cd doctor_web
+cd doctor_web_frontend
 npm install
 npm run dev
-# Launches at http://localhost:5174
+# Launches at http://localhost:5173
 ```
 
 ---

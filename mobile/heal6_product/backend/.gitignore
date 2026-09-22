@@ -1,6 +1,0 @@
-heal6.db
-__pycache__/
-*.pyc
-storage/uploads/*
-storage/reports/*
-.env
