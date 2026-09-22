@@ -1,29 +1,50 @@
 /**
  * Industrial API Engine for Patient Intake
  * Converts camera capture and clinical booleans + demographics to strict FormData contract
+ * matching routes_screenings.py endpoint signature exactly.
  */
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 export const submitPatientDiagnostic = async (imageFile, clinicalData = {}) => {
   if (!imageFile) throw new Error("A wound capture image is required.");
 
-  // Strict multipart/form-data mapping
+  // Build clinical_data JSON object matching routes_screenings.py parser
+  const clinicalJson = {
+    site: clinicalData.isHindfoot ? 'hindfoot' : 'forefoot',
+    ischemia: clinicalData.hasIschemia ? 'reduced_or_absent' : 'intact',
+    neuropathy: clinicalData.hasNeuropathy ? 'loss_of_sensation' : 'intact',
+    depth: clinicalData.isDeep ? 'deep_ulcer_or_bone' : 'superficial',
+    has_infection: false,
+    has_neuropathy: clinicalData.hasNeuropathy ?? false,
+    area: 'unknown',
+    symptomFlags: {
+      swelling: false,
+      warmth: false,
+      redness: false,
+      numbness: clinicalData.hasNeuropathy ?? false,
+      tingling: false,
+      ulcer: false,
+    },
+  };
+
+  // Strict multipart/form-data mapping matching routes_screenings.py signature:
+  // image: UploadFile, patient_identifier: str, clinical_data: str (JSON), latitude, longitude
   const formData = new FormData();
-  formData.append("file", imageFile);
-  formData.append("is_hindfoot", String(clinicalData.isHindfoot ?? false));
-  formData.append("has_ischemia", String(clinicalData.hasIschemia ?? false));
-  formData.append("has_neuropathy", String(clinicalData.hasNeuropathy ?? false));
-  formData.append("is_deep", String(clinicalData.isDeep ?? false));
-  
-  if (clinicalData.name) formData.append("patient_name", String(clinicalData.name));
-  if (clinicalData.age) formData.append("patient_age", String(clinicalData.age));
-  if (clinicalData.gender) formData.append("patient_gender", String(clinicalData.gender));
-  if (clinicalData.diabetesType) formData.append("diabetes_type", String(clinicalData.diabetesType));
-  if (clinicalData.id) formData.append("patient_id", String(clinicalData.id));
+  formData.append("image", imageFile);
+  formData.append("patient_identifier", String(clinicalData.id || `PAT-${Date.now().toString().slice(-6)}`));
+  formData.append("clinical_data", JSON.stringify(clinicalJson));
+  // Optional geo fields
+  formData.append("latitude", "");
+  formData.append("longitude", "");
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/sinbad/analyze-wound`, {
+    const token = localStorage.getItem('heal6_patient_jwt');
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/screenings`, {
       method: "POST",
+      headers,
       body: formData,
     });
 

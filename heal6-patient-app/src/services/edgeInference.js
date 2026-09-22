@@ -12,8 +12,11 @@
  */
 import * as ort from 'onnxruntime-web'
 
-// Configure ONNX Runtime WebAssembly binaries location
-ort.env.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 2)
+// Configure ONNX Runtime WebAssembly binaries location.
+// Only enable multi-threading if crossOriginIsolated headers (COOP/COEP) are set.
+// Without those headers SharedArrayBuffer is unavailable and wasm threads silently fail.
+const isIsolated = typeof window !== 'undefined' && window.crossOriginIsolated
+ort.env.wasm.numThreads = isIsolated ? Math.min(4, navigator.hardwareConcurrency || 2) : 1
 ort.env.wasm.simd = true
 // Use CDN for wasm binaries to prevent Vite bundling path discrepancies
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/'
@@ -43,8 +46,12 @@ export async function initializeEdgeModels(onProgress = null) {
   }
 
   isModelLoading = true
+
+  // Only include WebGL if the browser has crossOriginIsolated (COOP/COEP headers set)
+  // Otherwise WebGL provider fails silently and wastes a full load attempt
+  const providers = isIsolated ? ['webgl', 'wasm'] : ['wasm']
   const options = {
-    executionProviders: ['webgl', 'wasm'],
+    executionProviders: providers,
     graphOptimizationLevel: 'all'
   }
 
@@ -56,10 +63,10 @@ export async function initializeEdgeModels(onProgress = null) {
     unetSession = await ort.InferenceSession.create('/models/wound_segment_edge_unet.onnx', options)
 
     if (onProgress) onProgress({ status: 'ready', progress: 100 })
-    console.log('⚡ [Heal6 Edge] ONNX Runtime Web initialized with WebGL/Wasm acceleration.')
+    console.log(`⚡ [Heal6 Edge] ONNX Runtime initialized. Providers: [${providers.join(', ')}]. Threads: ${ort.env.wasm.numThreads}. Isolated: ${isIsolated}`)
     return { convnextSession, unetSession }
   } catch (error) {
-    console.warn('⚠️ [Heal6 Edge] WebGL initialization failed, falling back strictly to WASM:', error)
+    console.warn('⚠️ [Heal6 Edge] Model load failed, retrying with WASM-only fallback:', error)
     const wasmOptions = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' }
     convnextSession = await ort.InferenceSession.create('/models/wound_detect_convnext.onnx', wasmOptions)
     unetSession = await ort.InferenceSession.create('/models/wound_segment_edge_unet.onnx', wasmOptions)
@@ -204,7 +211,12 @@ export async function runEdgeInference({
   // 4. Execute Attention U-Net Segmentation
   const unetFeeds = { input: tensor }
   const unetResults = await unet.run(unetFeeds)
-  const maskOutputTensor = unetResults.output
+  // Detect actual output node name at runtime — ONNX export may name it 'output', '2547', etc.
+  const unetOutputKey = Object.keys(unetResults)[0]
+  const maskOutputTensor = unetResults[unetOutputKey]
+  if (!maskOutputTensor) {
+    throw new Error(`U-Net output tensor not found. Available keys: ${Object.keys(unetResults).join(', ')}`)
+  }
   const { maskBase64, totalWoundPixels } = postprocessMask(maskOutputTensor, originalWidth, originalHeight)
 
   // 5. Optical Metrology & Area Scaling

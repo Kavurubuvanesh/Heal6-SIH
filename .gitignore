@@ -69,3 +69,11 @@ backend/storage/uploads/*
 # OS GENERATED FILES
 .DS_Store
 Thumbs.db
+
+# Local environment overrides — never commit these
+.env.local
+.env.*.local
+
+# Patient edge app build
+heal6-patient-app/dist/
+heal6-patient-app/build/

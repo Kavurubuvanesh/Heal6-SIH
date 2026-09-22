@@ -13,6 +13,8 @@ import ReverifyModal from './components/ReverifyModal'
 import ToolkitModal from './components/ToolkitModal'
 import { Lightning, Cpu, CloudArrowUp, WifiHigh, WifiSlash } from '@phosphor-icons/react'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+
 import { submitPatientDiagnostic } from "./services/api"
 import { runEdgeInference, initializeEdgeModels } from "./services/edgeInference"
 import {
@@ -160,16 +162,22 @@ export default function App() {
   }
 
   const handleExportFhir = () => {
+    // Pull values from aiReport directly since patientData is defined below this handler
+    const currentArea = aiReport?.woundAreaCm2 ?? aiReport?.aiDiagnostics?.calculatedAreaCm2 ?? 2.45
+    const sinbadScore = aiReport?.sinbadBreakdown?.totalScore ?? aiReport?.calculatedSinbad ?? 4
+    const triageLabel = aiReport?.triageCategory ?? aiReport?.triageLevel ?? "URGENT TRIAGE"
+    const currentId = reportMetadata.id || `DFU-${Math.floor(1000 + Math.random() * 9000)}`
+
     const fhirBundle = {
       resourceType: "Bundle",
-      id: `heal6-bundle-${reportMetadata.id || 'patient-1'}`,
+      id: `heal6-bundle-${currentId}`,
       type: "document",
       timestamp: new Date().toISOString(),
       entry: [
         {
           resource: {
             resourceType: "Patient",
-            id: reportMetadata.id || "DFU-001",
+            id: currentId,
             name: [{ text: formData.name || "Carlos Mendez" }],
             gender: (formData.gender || "male").toLowerCase(),
             extension: [{ url: "http://heal6.health/fhir/StructureDefinition/diabetes-type", valueString: formData.diabetesType }]
@@ -183,7 +191,7 @@ export default function App() {
               coding: [{ system: "http://loinc.org", code: "80352-8", display: "Wound surface area" }]
             },
             valueQuantity: {
-              value: parseFloat(patientData?.woundAreaCm2) || 2.45,
+              value: parseFloat(currentArea),
               unit: "cm2",
               system: "http://unitsofmeasure.org",
               code: "cm2"
@@ -197,7 +205,7 @@ export default function App() {
             code: {
               coding: [{ system: "http://loinc.org", code: "90442-5", display: "SINBAD Clinical Score" }]
             },
-            valueInteger: patientData?.sinbadScore || 4
+            valueInteger: sinbadScore
           }
         },
         {
@@ -207,7 +215,7 @@ export default function App() {
             code: {
               coding: [{ system: "http://loinc.org", code: "11526-1", display: "Pathology report" }]
             },
-            conclusion: patientData?.triageLabel || "CRITICAL SURGICAL EMERGENCY"
+            conclusion: triageLabel
           }
         }
       ]
@@ -217,7 +225,7 @@ export default function App() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `Heal6_FHIR_R4_${reportMetadata.id || 'Patient'}.json`
+    a.download = `Heal6_FHIR_R4_${currentId}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -339,7 +347,7 @@ export default function App() {
 
     const checkDoctorReview = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/v1/patients/${encodeURIComponent(activeId)}/doctor-review`);
+        const res = await fetch(`${API_BASE_URL}/api/v1/patients/${encodeURIComponent(activeId)}/doctor-review`);
         if (!res.ok) return;
         const review = await res.json();
         if (isSubscribed && review.verifiedByDoctor) {
