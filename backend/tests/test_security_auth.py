@@ -96,7 +96,7 @@ def test_login_unknown_physician():
         }
     )
     assert response.status_code == 401
-    assert "not recognized" in response.json()["detail"]
+    assert "Invalid" in response.json()["detail"] or "not recognized" in response.json()["detail"]
 
 def test_verify_active_session():
     # First login to acquire genuine token

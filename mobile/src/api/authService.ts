@@ -15,10 +15,14 @@ export interface AuthResponse {
 }
 
 export const AuthService = {
-  async testLogin(email: string, password: string): Promise<AuthResponse> {
-    const { data } = await apiClient.post<AuthResponse>('/api/v1/auth/test-login', { email, password });
+  async login(email: string, password: string): Promise<AuthResponse> {
+    const { data } = await apiClient.post<AuthResponse>('/api/v1/auth/patient-login', { email, password });
     await AppStorage.setToken(data.accessToken);
     return data;
+  },
+
+  async testLogin(email: string, password: string): Promise<AuthResponse> {
+    return this.login(email, password);
   },
 
   async register(email: string, password: string, name?: string): Promise<AuthResponse> {

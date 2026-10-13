@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import CustomCursor from './components/CustomCursor'
 import LandingPage from './components/LandingPage'
@@ -19,6 +19,7 @@ import CalibrationView from './components/CalibrationView'
 import SinbadTrajectoryCard from './components/SinbadTrajectoryCard'
 import DoctorAuthModal from './components/DoctorAuthModal'
 import ClinicalRAGScribeModal from './components/ClinicalRAGScribeModal'
+import ClinicalRAGWorkspace from './components/ClinicalRAGWorkspace'
 import FederatedLearningModal from './components/FederatedLearningModal'
 import { PATIENT_CASES } from './data/clinicalCases'
 import { SCHEDULE_DAYS, SCHEDULE_CASES_BY_DATE, getCasesForDate, getWoundsForDate } from './data/scheduleData'
@@ -27,6 +28,7 @@ import {
   analyzeWoundWithBackend,
   calculateLocalSinbadScore,
   fetchPatientQueue,
+  fetchDoctorAppointments,
   verifyPatientReport,
   checkBackendStatus,
   verifyDoctorSession
@@ -47,18 +49,19 @@ export default function App() {
   // Live Backend status
   const [isLiveBackend, setIsLiveBackend] = useState(false)
 
-  // Clinical Schedule Selected Date ('2026-09-18' = Friday Today)
-  const [selectedDate, setSelectedDate] = useState('2026-09-18')
+  // Clinical Schedule Selected Date
+  const [selectedDate, setSelectedDate] = useState('ALL')
 
   // Dynamic Patient Queue from Schedule / Backend
-  const [patientCases, setPatientCases] = useState(() => getCasesForDate('2026-09-18'))
+  const [allLiveCases, setAllLiveCases] = useState([])
+  const [patientCases, setPatientCases] = useState([])
 
   // Navigation active tab in workstation
   const [activeTab, setActiveTab] = useState('queue')
 
   // Selected Patient Case
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0)
-  const patient = patientCases[currentCaseIndex] || PATIENT_CASES[0]
+  const patient = patientCases[currentCaseIndex] || allLiveCases[0] || null
 
   // Clinical Form Doctor Inputs & Demographics
   const [intakePatientName, setIntakePatientName] = useState(patient?.name || 'Rajesh Verma')
@@ -102,6 +105,40 @@ export default function App() {
   const [activeAlert, setActiveAlert] = useState(null)
   const [streamStatus, setStreamStatus] = useState({ isConnected: false, protocol: 'DISCONNECTED', latencyMs: 0 })
 
+  const activePatientRef = useRef(null)
+
+  const syncPatientFields = (selected) => {
+    if (!selected) return
+    setIntakePatientName(selected.name || 'Patient')
+    setIntakePatientAge(selected.age || 55)
+    setIntakePatientGender(selected.gender || 'Male')
+    setIntakeDiabetesType(selected.diabetesType || 'Type 2 DM')
+    setIntakeLocationLabel(selected.locationLabel || 'Plantar Foot Ulcer')
+
+    setSiteHindfoot(selected.siteScore === 1)
+    setIschemia(selected.ischemiaScore === 1)
+    setNeuropathy(selected.neuropathyScore === 1)
+    setDepthDeep(selected.depthScore === 1)
+    setWoundArea(selected.woundAreaCm2 ?? 0)
+    setArucoScale(selected.arucoCalibration || 42)
+    setInfectionRisk(selected.infectionRiskPercent ?? 0)
+    setConvnextConfidence(selected.convnextConfidence || 75)
+    setTissueBreakdown(selected.tissueBreakdown || { granulation: 0, slough: 0, necrotic: 0 })
+    setHealingTime(selected.healingEstimateWeeks || '4 - 8 Weeks')
+    setTriageLabel(selected.triageLevel || 'ASSESSED')
+    setTriageColor(selected.triageColor || '#10b981')
+    setImageSrc(selected.originalImage || null)
+    setImageFile(null)
+  }
+
+  // Keep activePatientRef updated and auto-sync fields when patient object changes
+  useEffect(() => {
+    if (patient) {
+      activePatientRef.current = patient
+      syncPatientFields(patient)
+    }
+  }, [patient?.id, patient?.generatedAt])
+
   // ----------------------------------------------------------------
   // Real-Time Queue Synchronization via WebSocket & Fallback Polling
   // ----------------------------------------------------------------
@@ -129,7 +166,8 @@ export default function App() {
 
         if (isOnline) {
           const queueRes = await fetchPatientQueue()
-          if (isMounted && queueRes.success && Array.isArray(queueRes.data) && queueRes.data.length > 0) {
+          if (isMounted && queueRes.success && Array.isArray(queueRes.data)) {
+            setAllLiveCases(queueRes.data)
             setPatientCases(queueRes.data)
           }
         }
@@ -153,13 +191,42 @@ export default function App() {
     const unsubIntake = triageStream.on('intake', (newPatient) => {
       console.log('⚡ [STREAM EVENT] New patient intake received via WebSocket:', newPatient)
       if (!isMounted) return
-      setPatientCases((prev) => {
+
+      const isCritical = Boolean(
+        (newPatient.calculatedSinbad || 0) >= 4 ||
+        (newPatient.sinbadScore || 0) >= 4 ||
+        newPatient.triageCategory === 'URGENT_ATTENTION'
+      )
+
+      // 1. Immediately pop up notification alert banner
+      setActiveAlert({
+        patientId: newPatient.id,
+        patientName: newPatient.name,
+        age: newPatient.age,
+        sinbadScore: newPatient.calculatedSinbad ?? (newPatient.sinbadBreakdown?.totalScore ?? 0),
+        triageLevel: newPatient.triageLevel || (isCritical ? 'CRITICAL SURGICAL EMERGENCY' : 'NEW SCREENING REPORT'),
+        woundAreaCm2: newPatient.woundAreaCm2 ?? 0,
+        locationLabel: newPatient.locationLabel,
+        reportNumber: newPatient.reportNumber || newPatient.id,
+        isCritical,
+        patientData: newPatient
+      })
+
+      // 2. Insert into live cases and sort by SINBAD severity descending
+      const updateList = (prev) => {
         const exists = prev.some((p) => p.id === newPatient.id)
         const updated = exists
           ? prev.map((p) => (p.id === newPatient.id ? newPatient : p))
           : [newPatient, ...prev]
         return updated.sort((a, b) => (b.calculatedSinbad || 0) - (a.calculatedSinbad || 0))
-      })
+      }
+      setAllLiveCases(updateList)
+      setPatientCases(updateList)
+
+      // 3. Live on-the-spot sync: if doctor is currently viewing this case, sync immediately!
+      if (activePatientRef.current?.id === newPatient.id || !activePatientRef.current) {
+        syncPatientFields(newPatient)
+      }
     })
 
     // Emergency Critical Alert (SINBAD >= 4)
@@ -185,12 +252,12 @@ export default function App() {
         prev.map((p) =>
           p.id === patientId
             ? {
-                ...p,
-                reverificationRequested: true,
-                patientNotes,
-                triageLevel: 'MANUAL RE-VERIFY REQUESTED',
-                triageColor: '#e11d48'
-              }
+              ...p,
+              reverificationRequested: true,
+              patientNotes,
+              triageLevel: 'MANUAL RE-VERIFY REQUESTED',
+              triageColor: '#e11d48'
+            }
             : p
         )
       )
@@ -224,57 +291,31 @@ export default function App() {
   // Clinical Schedule Date Selector Handler
   const handleSelectDate = (dateKey) => {
     setSelectedDate(dateKey)
-    const newCases = getCasesForDate(dateKey)
-    setPatientCases(newCases)
-    if (newCases && newCases.length > 0) {
-      const selected = newCases[0]
+    let selectedCases = []
+    if (allLiveCases.length > 0) {
+      if (dateKey === 'ALL') {
+        selectedCases = allLiveCases
+      } else {
+        const matching = allLiveCases.filter(c => (c.generatedAt || c.dateAssessed || '').startsWith(dateKey))
+        selectedCases = matching.length > 0 ? matching : allLiveCases
+      }
+      setPatientCases(selectedCases)
+    } else {
+      selectedCases = getCasesForDate(dateKey)
+      setPatientCases(selectedCases)
+    }
+
+    if (selectedCases && selectedCases.length > 0) {
       setCurrentCaseIndex(0)
-      setIntakePatientName(selected.name || 'Rajesh Verma')
-      setIntakePatientAge(selected.age || 64)
-      setIntakePatientGender(selected.gender || 'Male')
-      setIntakeDiabetesType(selected.diabetesType || 'Type 2 DM (14 yrs)')
-      setIntakeLocationLabel(selected.locationLabel || 'Right Plantar Hindfoot Ulcer')
-      setSiteHindfoot(selected.siteScore === 1)
-      setIschemia(selected.ischemiaScore === 1)
-      setNeuropathy(selected.neuropathyScore === 1)
-      setDepthDeep(selected.depthScore === 1)
-      setWoundArea(selected.woundAreaCm2 || 2.45)
-      setArucoScale(selected.arucoCalibration || 42)
-      setInfectionRisk(selected.infectionRiskPercent || 50)
-      setConvnextConfidence(selected.convnextConfidence || 75)
-      setTissueBreakdown(selected.tissueBreakdown || { granulation: 50, slough: 30, necrotic: 20 })
-      setHealingTime(selected.healingEstimateWeeks || '8 - 12 Weeks')
-      setTriageLabel(selected.triageLevel || 'MODERATE RISK')
-      setTriageColor(selected.triageColor || '#f59e0b')
-      setImageSrc(selected.originalImage || null)
-      setImageFile(null)
+      syncPatientFields(selectedCases[0])
     }
   }
 
-  // Sync state when switching demo cases
+  // Sync state when switching cases
   const handleSelectCase = (index) => {
-    const selected = patientCases[index] || PATIENT_CASES[0]
+    const selected = patientCases[index] || allLiveCases[index] || PATIENT_CASES[0]
     setCurrentCaseIndex(index)
-    setIntakePatientName(selected.name || 'Rajesh Verma')
-    setIntakePatientAge(selected.age || 64)
-    setIntakePatientGender(selected.gender || 'Male')
-    setIntakeDiabetesType(selected.diabetesType || 'Type 2 DM (14 yrs)')
-    setIntakeLocationLabel(selected.locationLabel || 'Right Plantar Hindfoot Ulcer')
-
-    setSiteHindfoot(selected.siteScore === 1)
-    setIschemia(selected.ischemiaScore === 1)
-    setNeuropathy(selected.neuropathyScore === 1)
-    setDepthDeep(selected.depthScore === 1)
-    setWoundArea(selected.woundAreaCm2 || 2.45)
-    setArucoScale(selected.arucoCalibration || 42)
-    setInfectionRisk(selected.infectionRiskPercent || 50)
-    setConvnextConfidence(selected.convnextConfidence || 75)
-    setTissueBreakdown(selected.tissueBreakdown || { granulation: 50, slough: 30, necrotic: 20 })
-    setHealingTime(selected.healingEstimateWeeks || '8 - 12 Weeks')
-    setTriageLabel(selected.triageLevel || 'MODERATE RISK')
-    setTriageColor(selected.triageColor || '#f59e0b')
-    setImageSrc(selected.originalImage || null)
-    setImageFile(null)
+    syncPatientFields(selected)
   }
 
   // Calculate dynamic SINBAD score (Total 0 to 6 points)
@@ -375,7 +416,7 @@ export default function App() {
       setPatientCases(q.data)
       const updatedIdx = q.data.findIndex(p => p.id === patientId)
       if (updatedIdx !== -1) {
-        setSelectedCaseIndex(updatedIdx)
+        setCurrentCaseIndex(updatedIdx)
       }
     } else {
       setPatientCases(prev => prev.map(p => p.id === patientId ? {
@@ -395,12 +436,17 @@ export default function App() {
       {/* Smooth Fluid Medical Custom Cursor */}
       <CustomCursor />
 
-      {/* Real-Time Emergency Critical Alert Banner (SINBAD >= 4) */}
+      {/* Real-Time Patient Intake & Critical Emergency Alert Banner */}
       <CriticalAlertBanner
         alert={activeAlert}
-        onReview={(patientId) => {
-          const idx = patientCases.findIndex((p) => p.id === patientId)
-          if (idx !== -1) handleSelectCase(idx)
+        onReview={(patientId, patientData) => {
+          const target = patientData || patientCases.find((p) => p.id === patientId) || allLiveCases.find((p) => p.id === patientId)
+          if (target) {
+            syncPatientFields(target)
+            const idx = patientCases.findIndex((p) => p.id === target.id)
+            if (idx !== -1) setCurrentCaseIndex(idx)
+          }
+          setViewMode('workstation')
           setActiveTab('command_center')
           setActiveAlert(null)
         }}
@@ -497,6 +543,16 @@ export default function App() {
                     }}
                     onNewAssessment={() => setActiveTab('assessment')}
                     onOpenArchitectureModal={() => setIsArchitectureModalOpen(true)}
+                  />
+                )}
+
+                {/* First-Class Clinical RAG Copilot Workspace */}
+                {activeTab === 'rag_workspace' && (
+                  <ClinicalRAGWorkspace
+                    cases={patientCases.length > 0 ? patientCases : allLiveCases}
+                    activePatientIndex={currentCaseIndex}
+                    onSelectPatient={handleSelectCase}
+                    isLiveBackend={isLiveBackend}
                   />
                 )}
 

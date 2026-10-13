@@ -160,53 +160,29 @@ export default function WoundRegistryView({
       </div>
 
       {/* Clinical Schedule Date Filter Ribbon */}
-      <div className="glass-panel-luxury px-5 py-3 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 overflow-x-auto">
-        <span className="text-xs font-bold text-[#12464e] dark:text-[#aceba7] shrink-0 flex items-center gap-2 font-serif-luxury tracking-wide">
+      <div className="glass-panel-luxury px-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full">
+        <span className="text-xs sm:text-sm font-bold text-[#12464e] dark:text-[#aceba7] shrink-0 flex items-center gap-2 font-serif-luxury tracking-wide">
           <Calendar className="w-4 h-4 text-[#12464e] dark:text-[#aceba7]" />
-          <span>Filter Wounds by Date:</span>
+          <span className="whitespace-nowrap">clinical schedule:</span>
         </span>
-        <div className="flex items-center gap-2 overflow-x-auto py-0.5">
-          <button
-            type="button"
-            onClick={() => handleDateChange('all')}
-            className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shrink-0 font-mono ${
-              activeDateFilter === 'all'
-                ? 'bg-[#12464e] text-white dark:bg-[#aceba7] dark:text-[#0e120f] border-[#aceba7]/40 shadow-xs'
-                : 'bg-white/90 dark:bg-[#141c17] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-[#aceba7]/40'
-            }`}
-          >
-            All Dates ({allWoundsList.length})
-          </button>
-
-          {SCHEDULE_DAYS.map((item) => {
-            const isActive = activeDateFilter === item.dateKey
-            return (
-              <button
-                key={item.dateKey}
-                type="button"
-                onClick={() => handleDateChange(item.dateKey)}
-                className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
-                  isActive
-                    ? 'bg-[#12464e] text-white dark:bg-[#aceba7] dark:text-[#0e120f] border-[#aceba7]/40 shadow-xs'
-                    : 'bg-white/90 dark:bg-[#141c17] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-[#aceba7]/40'
-                }`}
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-[9px] font-mono uppercase font-semibold opacity-75">{item.day}</span>
-                  <span className="text-xs font-bold leading-none">{item.date}</span>
-                </div>
-                <span
-                  className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
-                    isActive
-                      ? 'bg-white/20 dark:bg-black/20 text-current'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  {item.isToday ? 'Today • 6' : `${item.count}`}
-                </span>
-              </button>
-            )
-          })}
+        <div className="flex-1 w-full grid grid-cols-7 gap-1.5 sm:gap-2 p-1.5 rounded-xl sm:rounded-2xl border border-slate-300/80 dark:border-slate-700/80 bg-white/90 dark:bg-[#121c16]/80">
+          {SCHEDULE_DAYS.map((item) => (
+            <div
+              key={item.dateKey}
+              className={`w-full py-1.5 sm:py-2 px-1 rounded-lg sm:rounded-xl border transition-all flex flex-col items-center justify-center text-center ${
+                item.isToday
+                  ? 'bg-[#aceba7] text-[#0e120f] border-[#8ed988] shadow-xs font-bold'
+                  : 'bg-white dark:bg-[#18231c]/60 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-white/5'
+              }`}
+            >
+              <span className={`text-[9px] font-mono uppercase font-semibold ${item.isToday ? 'text-[#0e120f]/80' : 'text-slate-400 dark:text-slate-500'}`}>
+                {item.day}
+              </span>
+              <span className="text-xs sm:text-sm font-bold leading-tight mt-0.5">
+                {item.date}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 

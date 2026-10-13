@@ -97,7 +97,8 @@ export const IsoDatePickerField: React.FC<Props> = ({
       try {
         DateTimePickerAndroid.open({
           value: currentDate,
-          onChange: handlePickerChange,
+          onValueChange: handlePickerChange,
+          onDismiss: handleDismiss,
           mode: 'date',
           maximumDate: effectiveMaxDate,
           minimumDate: minimumDate,
@@ -201,7 +202,6 @@ export const IsoDatePickerField: React.FC<Props> = ({
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           maximumDate={effectiveMaxDate}
           minimumDate={minimumDate}
-          onChange={handlePickerChange}
           onValueChange={handlePickerChange}
           onDismiss={handleDismiss}
         />

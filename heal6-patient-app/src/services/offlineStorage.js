@@ -119,22 +119,25 @@ export async function syncPendingAssessmentsToCloud(apiUploadFn) {
   for (const record of pending) {
     try {
       const a = record.assessment
-      const res = await apiUploadFn({
+      const payload = {
         imageFile: record.imageBlob,
-        isHindfoot: a.radarData?.[0]?.value > 0,
-        hasIschemia: a.radarData?.[1]?.value > 0,
-        hasNeuropathy: a.radarData?.[2]?.value > 0,
-        isDeep: a.radarData?.[5]?.value > 0,
-        patientName: a.patientName,
-        patientAge: a.patientAge,
-        patientGender: a.patientGender,
+        isHindfoot: a.radarData?.[0]?.value > 0 || a.siteScore === 1,
+        hasIschemia: a.radarData?.[1]?.value > 0 || a.ischemiaScore === 1,
+        hasNeuropathy: a.radarData?.[2]?.value > 0 || a.neuropathyScore === 1,
+        isDeep: a.radarData?.[5]?.value > 0 || a.depthScore === 1,
+        name: a.patientName || a.name,
+        age: a.patientAge || a.age,
+        gender: a.patientGender || a.gender,
         diabetesType: a.diabetesType,
+        id: a.id,
         patientId: a.id,
         locationLabel: a.locationLabel
-      })
+      }
 
-      if (res && res.success) {
-        await markAssessmentSynced(record.id, res.data)
+      const res = await apiUploadFn(record.imageBlob, payload)
+
+      if (res && (res.success || res.reportNumber || res.assessmentId || res.patient_id || res.id)) {
+        await markAssessmentSynced(record.id, res.data || res)
         syncedCount++
         console.log(`✅ [Heal6 Sync] Successfully synced offline record ${record.id} to cloud.`)
       }

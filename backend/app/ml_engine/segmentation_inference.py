@@ -211,7 +211,7 @@ def predict_wound_mask(image: Image.Image, threshold: float = 0.5) -> dict:
         wound_coverage_percent = round((total_wound_pixels / total_image_pixels) * 100, 2)
 
         # ---------------------------------------------------------
-        # NEW: GENERATE BASE64 HEATMAP OVERLAY FOR THE FRONTEND
+        # GENERATE BASE64 HEATMAP OVERLAY FOR THE FRONTEND
         # ---------------------------------------------------------
         # Create an empty transparent RGBA image array
         overlay_rgba = np.zeros((orig_h, orig_w, 4), dtype=np.uint8)
@@ -227,11 +227,61 @@ def predict_wound_mask(image: Image.Image, threshold: float = 0.5) -> dict:
         # Encode to Base64 String
         mask_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
+        # ---------------------------------------------------------
+        # AUTO-ISOLATE WOUND ROI (PROPER WOUND PART EXTRACTION)
+        # ---------------------------------------------------------
+        y_indices, x_indices = np.where(full_res_mask)
+        cropped_image_b64 = ""
+        cropped_mask_b64 = ""
+        if len(x_indices) > 20:
+            min_x, max_x = int(np.min(x_indices)), int(np.max(x_indices))
+            min_y, max_y = int(np.min(y_indices)), int(np.max(y_indices))
+            # 30% contextual margin around wound margin
+            w_box = max_x - min_x
+            h_box = max_y - min_y
+            pad = int(max(w_box, h_box) * 0.3)
+            crop_x0 = max(0, min_x - pad)
+            crop_x1 = min(orig_w, max_x + pad)
+            crop_y0 = max(0, min_y - pad)
+            crop_y1 = min(orig_h, max_y + pad)
+
+            wound_roi = {
+                "x": crop_x0,
+                "y": crop_y0,
+                "width": crop_x1 - crop_x0,
+                "height": crop_y1 - crop_y0,
+                "has_focused_roi": True
+            }
+
+            try:
+                cropped_rgb = image.crop((crop_x0, crop_y0, crop_x1, crop_y1))
+                buf_rgb = BytesIO()
+                cropped_rgb.save(buf_rgb, format="JPEG", quality=90)
+                cropped_image_b64 = base64.b64encode(buf_rgb.getvalue()).decode("utf-8")
+
+                cropped_ov = overlay_img.crop((crop_x0, crop_y0, crop_x1, crop_y1))
+                buf_ov = BytesIO()
+                cropped_ov.save(buf_ov, format="PNG")
+                cropped_mask_b64 = base64.b64encode(buf_ov.getvalue()).decode("utf-8")
+            except Exception:
+                pass
+        else:
+            wound_roi = {
+                "x": 0,
+                "y": 0,
+                "width": orig_w,
+                "height": orig_h,
+                "has_focused_roi": False
+            }
+
         return {
             "mask_pixel_count": total_wound_pixels,
             "coverage_percentage": wound_coverage_percent,
             "is_wound_detected": total_wound_pixels > 50,
             "tissue_breakdown": tissue_breakdown,
             "mask_image_base64": mask_base64,
-            "raw_mask_np": (full_res_mask * 255).astype(np.uint8)
+            "raw_mask_np": (full_res_mask * 255).astype(np.uint8),
+            "wound_roi": wound_roi,
+            "cropped_image_base64": cropped_image_b64,
+            "cropped_mask_base64": cropped_mask_b64
         }

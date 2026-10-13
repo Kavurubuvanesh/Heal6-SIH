@@ -17,18 +17,27 @@ import Heal6Logo from './Heal6Logo'
 export default function ReportModal({
   isOpen,
   onClose,
-  patient,
+  patient = {},
   sinbadScore,
   woundArea,
   infectionRisk,
   triageLabel,
   healingTime
 }) {
-  if (!isOpen) return null
+  if (!isOpen || !patient) return null
 
   const handlePrint = () => {
     window.print()
   }
+
+  const actualScore = patient.calculatedSinbad ?? sinbadScore ?? 0
+  const actualArea = patient.woundAreaCm2 ?? woundArea ?? 0
+  const actualInfection = patient.infectionRiskPercent ?? infectionRisk ?? 0
+  const actualSite = patient.siteScore ?? 0
+  const actualIschemia = patient.ischemiaScore ?? 0
+  const actualNeuropathy = patient.neuropathyScore ?? 0
+  const actualDepth = patient.depthScore ?? 0
+  const actualReportUuid = patient.reportNumber || `${patient.id}-SINBAD`
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
@@ -72,7 +81,7 @@ export default function ReportModal({
               <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Podiatry & Wound Care Division</div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">Heal6 Clinical Care Network</div>
               <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-1">
-                Report UUID: {patient.id}-SINBAD-2026
+                Report UUID: {actualReportUuid}
               </div>
             </div>
           </div>
@@ -81,19 +90,19 @@ export default function ReportModal({
           <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Patient Name</span>
-              <p className="font-bold text-slate-800 dark:text-white">{patient.name}</p>
+              <p className="font-bold text-slate-800 dark:text-white">{patient.name || 'Unassigned Patient'}</p>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">MRN</span>
-              <p className="font-mono font-bold text-slate-800 dark:text-white">{patient.id}</p>
+              <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">MRN / ID</span>
+              <p className="font-mono font-bold text-slate-800 dark:text-white">{patient.id || 'N/A'}</p>
             </div>
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Demographics</span>
-              <p className="font-semibold text-slate-800 dark:text-slate-200">{patient.age}y / {patient.gender}</p>
+              <p className="font-semibold text-slate-800 dark:text-slate-200">{patient.age ? `${patient.age}y` : 'Adult'} / {patient.gender || 'Unknown'}</p>
             </div>
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">HbA1c & DM</span>
-              <p className="font-bold text-amber-700 dark:text-amber-400">{patient.hba1c} ({patient.diabetesType})</p>
+              <p className="font-bold text-amber-700 dark:text-amber-400">{patient.hba1c || '7.5%'} ({patient.diabetesType || 'Type 2 DM'})</p>
             </div>
           </div>
 
@@ -102,34 +111,34 @@ export default function ReportModal({
             <div className="bg-slate-100 dark:bg-slate-800 px-4 py-2 font-bold text-slate-700 dark:text-slate-300 flex justify-between items-center">
               <span>SINBAD Factor Scoring Matrix (IWGDF Guideline)</span>
               <span className="text-xs text-[#0d9488] dark:text-teal-400 font-mono font-bold">
-                Total Score: {sinbadScore} / 6
+                Total Score: {actualScore} / 6
               </span>
             </div>
 
             <div className="p-4 grid grid-cols-2 gap-3 bg-white dark:bg-[#0c1524]/85 backdrop-blur-xl">
               <div className="flex justify-between border-b pb-1.5 border-slate-100 dark:border-slate-800">
                 <span className="text-slate-600 dark:text-slate-400">Site (Hindfoot/Midfoot):</span>
-                <span className="font-bold text-slate-800 dark:text-white">1 pt (High Risk)</span>
+                <span className="font-bold text-slate-800 dark:text-white">{actualSite === 1 ? '1 pt (Hindfoot)' : '0 pt (Forefoot)'}</span>
               </div>
               <div className="flex justify-between border-b pb-1.5 border-slate-100 dark:border-slate-800">
                 <span className="text-slate-600 dark:text-slate-400">Ischemia (Reduced Pulses):</span>
-                <span className="font-bold text-slate-800 dark:text-white">1 pt (Reduced)</span>
+                <span className="font-bold text-slate-800 dark:text-white">{actualIschemia === 1 ? '1 pt (Reduced)' : '0 pt (Intact)'}</span>
               </div>
               <div className="flex justify-between border-b pb-1.5 border-slate-100 dark:border-slate-800">
                 <span className="text-slate-600 dark:text-slate-400">Neuropathy (Sensory Loss):</span>
-                <span className="font-bold text-slate-800 dark:text-white">1 pt (Loss of 10g)</span>
+                <span className="font-bold text-slate-800 dark:text-white">{actualNeuropathy === 1 ? '1 pt (Sensory Loss)' : '0 pt (Intact)'}</span>
               </div>
               <div className="flex justify-between border-b pb-1.5 border-slate-100 dark:border-slate-800">
                 <span className="text-slate-600 dark:text-slate-400">Bacterial Infection:</span>
-                <span className="font-bold text-slate-800 dark:text-white">{infectionRisk > 50 ? '1 pt (Present)' : '0 pt (None)'}</span>
+                <span className="font-bold text-slate-800 dark:text-white">{actualInfection >= 60 ? `1 pt (${actualInfection}%)` : `0 pt (${actualInfection}%)`}</span>
               </div>
               <div className="flex justify-between border-b pb-1.5 border-slate-100 dark:border-slate-800">
                 <span className="text-slate-600 dark:text-slate-400">Area (ArUco Calibrated):</span>
-                <span className="font-bold text-slate-800 dark:text-white">{woundArea >= 1.0 ? '1 pt (≥1cm²)' : '0 pt (<1cm²)'}</span>
+                <span className="font-bold text-slate-800 dark:text-white">{actualArea >= 1.0 ? `1 pt (${actualArea} cm²)` : `0 pt (${actualArea} cm²)`}</span>
               </div>
               <div className="flex justify-between border-b pb-1.5 border-slate-100 dark:border-slate-800">
                 <span className="text-slate-600 dark:text-slate-400">Depth (Bone / Fascia):</span>
-                <span className="font-bold text-slate-800 dark:text-white">1 pt (Deep Tissue)</span>
+                <span className="font-bold text-slate-800 dark:text-white">{actualDepth === 1 ? '1 pt (Deep Tissue)' : '0 pt (Superficial)'}</span>
               </div>
             </div>
           </div>

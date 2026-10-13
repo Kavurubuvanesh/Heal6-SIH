@@ -3,9 +3,17 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 
+export interface ReticleLayout {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface ArUcoGuideBoxProps {
   isAligned?: boolean;
   markerLocked?: boolean;
+  onBoxLayout?: (layout: ReticleLayout) => void;
 }
 
 /**
@@ -16,6 +24,7 @@ interface ArUcoGuideBoxProps {
 export const ArUcoGuideBox: React.FC<ArUcoGuideBoxProps> = ({
   isAligned = false,
   markerLocked = false,
+  onBoxLayout,
 }) => {
   const active = isAligned || markerLocked;
   const frameColor = active ? '#10B981' : Colors.white;
@@ -25,6 +34,12 @@ export const ArUcoGuideBox: React.FC<ArUcoGuideBoxProps> = ({
     <View style={styles.wrapper} pointerEvents="none">
       {/* Main Foot Framing Box */}
       <View
+        onLayout={(e) => {
+          if (onBoxLayout) {
+            const { x, y, width, height } = e.nativeEvent.layout;
+            onBoxLayout({ x, y, width, height });
+          }
+        }}
         style={[
           styles.box,
           {

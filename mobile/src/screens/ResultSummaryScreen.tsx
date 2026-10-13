@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../constants/colors';
@@ -26,6 +27,7 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
   const { record, response } = route.params;
   const [openingPdf, setOpeningPdf] = useState(false);
   const [showMask, setShowMask] = useState(true);
+  const [viewMode, setViewMode] = useState<'framed' | 'roi'>('framed');
   const [doctorReview, setDoctorReview] = useState<any>(null);
   const { language } = useApp();
   const t = getDictionary(language);
@@ -36,7 +38,7 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
     const fetchReview = async () => {
       try {
         const rev = await ScreeningService.getLatestDoctorReview();
-        if (isSubscribed && rev?.hasReview) {
+        if (isSubscribed && rev) {
           setDoctorReview(rev);
         }
       } catch {
@@ -181,6 +183,23 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
         <View style={styles.cardHeaderRow}>
           <Text style={styles.sectionTitle}>{t.capturedPhotograph || 'Captured Photograph'}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {d?.croppedImageBase64 ? (
+              <TouchableOpacity
+                style={[styles.maskToggleBtn, viewMode === 'roi' && styles.maskToggleBtnActive]}
+                onPress={() => setViewMode((prev) => (prev === 'framed' ? 'roi' : 'framed'))}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={viewMode === 'roi' ? 'crop' : 'crop-outline'}
+                  size={13}
+                  color={viewMode === 'roi' ? '#FFFFFF' : Colors.primaryTeal}
+                />
+                <Text style={[styles.maskToggleText, viewMode === 'roi' && styles.maskToggleTextActive]}>
+                  {viewMode === 'roi' ? 'Wound ROI: ON' : 'Wound ROI: OFF'}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+
             {d?.maskImageBase64 ? (
               <TouchableOpacity
                 style={[styles.maskToggleBtn, showMask && styles.maskToggleBtnActive]}
@@ -212,26 +231,69 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
           </View>
         </View>
 
-        <View style={styles.imageWrapper}>
-          <Image source={{ uri: record.imageUri }} style={styles.image} resizeMode="cover" />
-          {showMask && d?.maskImageBase64 ? (
-            <Image
-              source={{
-                uri: d.maskImageBase64.startsWith('data:')
-                  ? d.maskImageBase64
-                  : `data:image/png;base64,${d.maskImageBase64}`,
-              }}
-              style={[StyleSheet.absoluteFill, { opacity: 0.72 }]}
-              resizeMode="cover"
-            />
-          ) : null}
-          {showMask && d?.maskImageBase64 ? (
-            <View style={styles.maskLegendPill}>
-              <View style={styles.coralDot} />
-              <Text style={styles.maskLegendText}>UNet++ Deep Segmentation Bed</Text>
+        {/* Frame / ROI Image Rendering */}
+        {(() => {
+          const resolvedBaseUri =
+            (record?.imageUri && typeof record.imageUri === 'string' && record.imageUri.trim().length > 0)
+              ? record.imageUri.trim()
+              : ((response as any)?.originalImage && typeof (response as any).originalImage === 'string' && (response as any).originalImage.trim().length > 0)
+              ? (response as any).originalImage.trim()
+              : ((response as any)?.croppedImage && typeof (response as any).croppedImage === 'string' && (response as any).croppedImage.trim().length > 0)
+              ? (response as any).croppedImage.trim()
+              : null;
+
+          const rawRoi = d?.croppedImageBase64;
+          const resolvedRoiUri =
+            (rawRoi && typeof rawRoi === 'string' && rawRoi.trim().length > 0)
+              ? (rawRoi.startsWith('data:') ? rawRoi : `data:image/jpeg;base64,${rawRoi}`)
+              : resolvedBaseUri;
+
+          const activeMainUri = viewMode === 'roi' ? (resolvedRoiUri || resolvedBaseUri) : resolvedBaseUri;
+
+          const rawRoiMask = d?.croppedMaskBase64 || (response as any)?.croppedMaskImage;
+          const rawFullMask = d?.maskImageBase64 || (response as any)?.aiMaskImage || (response as any)?.maskImage;
+          const validRoiMask = (rawRoiMask && typeof rawRoiMask === 'string' && rawRoiMask.trim().length > 0)
+            ? (rawRoiMask.startsWith('data:') ? rawRoiMask : `data:image/png;base64,${rawRoiMask}`)
+            : null;
+          const validFullMask = (rawFullMask && typeof rawFullMask === 'string' && rawFullMask.trim().length > 0)
+            ? (rawFullMask.startsWith('data:') ? rawFullMask : `data:image/png;base64,${rawFullMask}`)
+            : null;
+          const activeMaskUri = viewMode === 'roi' ? (validRoiMask || validFullMask) : validFullMask;
+
+          return (
+            <View style={styles.imageWrapper}>
+              {activeMainUri ? (
+                <Image
+                  source={{ uri: activeMainUri }}
+                  style={styles.image}
+                  resizeMode={viewMode === 'roi' ? 'contain' : 'cover'}
+                />
+              ) : (
+                <View style={[styles.image, styles.placeholderImage]}>
+                  <Ionicons name="camera-outline" size={42} color={Colors.textSecondary} />
+                  <Text style={styles.placeholderImageText}>Clinical Foot Scan</Text>
+                </View>
+              )}
+
+              {showMask && activeMaskUri && (
+                <Image
+                  source={{ uri: activeMaskUri }}
+                  style={[StyleSheet.absoluteFill, { opacity: 0.72 }]}
+                  resizeMode={viewMode === 'roi' ? 'contain' : 'cover'}
+                />
+              )}
+
+              {showMask && activeMaskUri ? (
+                <View style={styles.maskLegendPill}>
+                  <View style={styles.coralDot} />
+                  <Text style={styles.maskLegendText}>
+                    {viewMode === 'roi' ? 'UNet++ Focused Wound ROI' : 'UNet++ Deep Segmentation Bed'}
+                  </Text>
+                </View>
+              ) : null}
             </View>
-          ) : null}
-        </View>
+          );
+        })()}
       </View>
 
       {/* Tissue Composition Breakdown (Progress Bar & Badges) */}
@@ -446,12 +508,17 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
       </View>
 
       {/* Attending Physician Assessment & Prescriptions (Closed Loop Sync) */}
-      {doctorReview?.hasReview && (
-        <View style={styles.doctorCard}>
+      {doctorReview?.hasReview ? (
+        <LinearGradient
+          colors={['#FFFFFF', '#F0FDFA']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.doctorCard}
+        >
           <View style={styles.doctorCardHeader}>
             <View style={styles.doctorBadge}>
-              <Ionicons name="shield-checkmark" size={16} color="#0D9488" />
-              <Text style={styles.doctorBadgeText}>{doctorReview.physicianName || 'Dr. Sharma, MD'}</Text>
+              <Ionicons name="shield-checkmark" size={15} color={Colors.primaryTeal} />
+              <Text style={styles.doctorBadgeText}>{doctorReview.physicianName || 'Attending Physician'}</Text>
             </View>
             <View style={styles.doctorStatusPill}>
               <Text style={styles.doctorStatusText}>{doctorReview.reviewStatus || 'Verified'}</Text>
@@ -459,7 +526,7 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
           </View>
 
           <Text style={styles.doctorCardTitle}>
-            {t.doctorAssessment || 'Attending Physician Assessment & Prescriptions'}
+            {t.doctorAssessment || 'Attending Physician Assessment & Directives'}
           </Text>
           {!!doctorReview.doctorNotes && (
             <Text style={styles.doctorCardNotes}>{doctorReview.doctorNotes}</Text>
@@ -474,7 +541,7 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
               <View style={styles.medsChipsRow}>
                 {doctorReview.prescriptions.map((med: string, idx: number) => (
                   <View key={idx} style={styles.medChip}>
-                    <Ionicons name="bandage-outline" size={12} color="#0D9488" />
+                    <Ionicons name="bandage-outline" size={12} color={Colors.primaryTeal} />
                     <Text style={styles.medChipText}>{med}</Text>
                   </View>
                 ))}
@@ -486,11 +553,11 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
           {doctorReview.precautions && doctorReview.precautions.length > 0 && (
             <View style={styles.doctorSection}>
               <Text style={styles.doctorSectionLabel}>
-                <Ionicons name="checkmark-done-circle-outline" size={13} color="#0D9488" /> {t.carePrecautions || 'Clinical Precautions & Care Plan'}
+                <Ionicons name="checkmark-done-circle-outline" size={13} color={Colors.primaryTeal} /> {t.carePrecautions || 'Clinical Precautions & Care Plan'}
               </Text>
               {doctorReview.precautions.map((prec: string, idx: number) => (
                 <View key={idx} style={styles.precRow}>
-                  <Ionicons name="checkmark-circle" size={14} color="#0D9488" style={{ marginTop: 2 }} />
+                  <Ionicons name="checkmark-circle" size={13} color={Colors.primaryTeal} style={{ marginTop: 2 }} />
                   <Text style={styles.precText}>{prec}</Text>
                 </View>
               ))}
@@ -506,7 +573,52 @@ export const ResultSummaryScreen = ({ route, navigation }: Props) => {
               </Text>
             </View>
           )}
-        </View>
+        </LinearGradient>
+      ) : (
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.triagePendingCard}
+        >
+          <View style={styles.triagePendingHeader}>
+            <View style={styles.triagePendingBadge}>
+              <View style={styles.pulseDotBlue} />
+              <Text style={styles.triagePendingBadgeText}>CLINICAL REVIEW QUEUE</Text>
+            </View>
+            <Text style={styles.triagePendingReportId}>
+              #{response?.reportNumber || (response?.assessmentId ? String(response.assessmentId).slice(0, 8).toUpperCase() : 'ACTIVE')}
+            </Text>
+          </View>
+
+          <Text style={styles.triagePendingTitle}>Awaiting Attending Physician Review</Text>
+          <Text style={styles.triagePendingDesc}>
+            Your automated SINBAD telemetry and wound scan are in the doctor triage queue. Your attending clinician will review this assessment and provide custom directives.
+          </Text>
+
+          <View style={styles.triagePendingTimeline}>
+            <View style={styles.triageTimelineStep}>
+              <View style={[styles.timelineIconCircle, styles.timelineIconDone]}>
+                <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+              </View>
+              <Text style={styles.timelineStepLabel}>Scan Processed</Text>
+            </View>
+            <View style={[styles.timelineConnector, styles.timelineConnectorActive]} />
+            <View style={styles.triageTimelineStep}>
+              <View style={[styles.timelineIconCircle, styles.timelineIconCurrent]}>
+                <Ionicons name="time-outline" size={12} color="#0284C7" />
+              </View>
+              <Text style={[styles.timelineStepLabel, { color: '#0284C7', fontWeight: '800' }]}>Doctor Review</Text>
+            </View>
+            <View style={styles.timelineConnector} />
+            <View style={styles.triageTimelineStep}>
+              <View style={[styles.timelineIconCircle, styles.timelineIconWaiting]}>
+                <Ionicons name="document-text-outline" size={12} color="#94A3B8" />
+              </View>
+              <Text style={styles.timelineStepLabel}>Directives</Text>
+            </View>
+          </View>
+        </LinearGradient>
       )}
 
       {/* Action Buttons */}
@@ -676,6 +788,17 @@ const styles = StyleSheet.create({
   },
   arucoText: { fontSize: 10, fontWeight: '700', color: Colors.success },
   image: { width: '100%', height: 230, borderRadius: 12, backgroundColor: '#EEF2F4' },
+  placeholderImage: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#F1F5F9',
+  },
+  placeholderImageText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
   stackedBar: {
     height: 14,
     borderRadius: 7,
@@ -974,16 +1097,15 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   doctorCard: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 14,
-    borderWidth: 1.5,
-    borderColor: '#86EFAC',
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: '#CCFBF1',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 3,
   },
   doctorCardHeader: {
@@ -996,52 +1118,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#F0FDFA',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#86EFAC',
+    borderColor: '#CCFBF1',
   },
   doctorBadgeText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#065F46',
+    color: '#0F766E',
   },
   doctorStatusPill: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0D9488',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   doctorStatusText: {
     fontSize: 10,
     fontWeight: '800',
     color: '#FFFFFF',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   doctorCardTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '900',
-    color: '#064E3B',
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
   doctorCardNotes: {
     fontSize: 12,
-    color: '#1F2937',
+    color: Colors.textSecondary,
     lineHeight: 18,
     marginBottom: 10,
   },
   doctorSection: {
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#BBF7D0',
+    borderTopColor: '#F1F5F9',
     paddingTop: 8,
   },
   doctorSectionLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    color: '#065F46',
+    color: '#0F766E',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -1060,12 +1183,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: '#E2E8F0',
   },
   medChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#065F46',
+    color: Colors.textPrimary,
   },
   precRow: {
     flexDirection: 'row',
@@ -1075,7 +1198,7 @@ const styles = StyleSheet.create({
   },
   precText: {
     fontSize: 11,
-    color: '#374151',
+    color: Colors.textSecondary,
     flex: 1,
     lineHeight: 16,
   },
@@ -1083,16 +1206,127 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: '#86EFAC',
+    borderColor: '#E2E8F0',
   },
   doctorFollowUpText: {
-    fontSize: 12,
-    color: '#065F46',
+    fontSize: 11.5,
+    color: Colors.textPrimary,
+  },
+
+  /* Triage Pending Card */
+  triagePendingCard: {
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  triagePendingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  triagePendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  pulseDotBlue: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#0284C7',
+  },
+  triagePendingBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#0369A1',
+    letterSpacing: 0.4,
+  },
+  triagePendingReportId: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  triagePendingTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    marginBottom: 3,
+  },
+  triagePendingDesc: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  triagePendingTimeline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  triageTimelineStep: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  timelineIconCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timelineIconDone: {
+    backgroundColor: '#10B981',
+  },
+  timelineIconCurrent: {
+    backgroundColor: '#E0F2FE',
+    borderWidth: 1.5,
+    borderColor: '#0284C7',
+  },
+  timelineIconWaiting: {
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  timelineStepLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  timelineConnector: {
+    flex: 1,
+    height: 1.5,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 6,
+    marginBottom: 14,
+  },
+  timelineConnectorActive: {
+    backgroundColor: '#BAE6FD',
   },
 });

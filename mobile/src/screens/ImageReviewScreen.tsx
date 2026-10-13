@@ -13,9 +13,12 @@ type Props = NativeStackScreenProps<ScanStackParamList, 'ImageReview'>;
 
 export const ImageReviewScreen = ({ route, navigation }: Props) => {
   const insets = useSafeAreaInsets();
-  const { imageUri } = route.params;
+  const { imageUri, originalUri } = route.params;
   const { language } = useApp();
   const t = getDictionary(language);
+
+  const [activeMode, setActiveMode] = useState<'proper' | 'full'>('proper');
+  const activeUri = activeMode === 'proper' ? imageUri : (originalUri || imageUri);
 
   // Pre-confirmed by default to enable smooth, unblocked clinical intake
   const [blurConfirmed, setBlurConfirmed] = useState(true);
@@ -36,16 +39,59 @@ export const ImageReviewScreen = ({ route, navigation }: Props) => {
       >
         <Text style={styles.title}>{t.reviewFootPhoto || 'Review Foot Photograph'}</Text>
         <Text style={styles.subtitle}>
-          {t.confirmQualitySubtitle || 'Confirm image quality before proceeding to clinical intake.'}
+          {t.confirmQualitySubtitle || 'Confirm image quality and proper framing before proceeding to clinical intake.'}
         </Text>
+
+        {/* View Mode Toggle (Proper Photo Part vs Full Capture) */}
+        {originalUri && originalUri !== imageUri && (
+          <View style={styles.modeToggleContainer}>
+            <TouchableOpacity
+              style={[styles.modeToggleBtn, activeMode === 'proper' && styles.modeToggleBtnActive]}
+              onPress={() => setActiveMode('proper')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="crop"
+                size={14}
+                color={activeMode === 'proper' ? Colors.white : Colors.textSecondary}
+              />
+              <Text style={[styles.modeToggleText, activeMode === 'proper' && styles.modeToggleTextActive]}>
+                Proper Photo Part (Framed)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modeToggleBtn, activeMode === 'full' && styles.modeToggleBtnActive]}
+              onPress={() => setActiveMode('full')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="scan-outline"
+                size={14}
+                color={activeMode === 'full' ? Colors.white : Colors.textSecondary}
+              />
+              <Text style={[styles.modeToggleText, activeMode === 'full' && styles.modeToggleTextActive]}>
+                Full Sensor Capture
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Image Preview with Calibration Badge */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
+          {activeUri && activeUri.trim().length > 0 ? (
+            <Image source={{ uri: activeUri }} style={styles.previewImage} resizeMode="contain" />
+          ) : (
+            <View style={[styles.previewImage, { alignItems: 'center', justifyContent: 'center' }]}>
+              <Ionicons name="image-outline" size={48} color={Colors.textSecondary} />
+            </View>
+          )}
           <View style={styles.aspectBadge}>
             <Ionicons name="checkmark-circle" size={14} color="#0D9488" />
             <Text style={styles.aspectBadgeText}>
-              {t.calibratedBadge || 'Standard 4:3 · Calibrated'}
+              {activeMode === 'proper'
+                ? (t.calibratedBadge || 'Framed 3:4 Wound Area · Calibrated')
+                : 'Full Sensor Frame'}
             </Text>
           </View>
         </View>
@@ -100,7 +146,7 @@ export const ImageReviewScreen = ({ route, navigation }: Props) => {
             title={t.usePhoto || 'Use Photo'}
             variant="primary"
             disabled={!canProceed}
-            onPress={() => navigation.navigate(ROUTES.CLINICAL_INTAKE, { imageUri })}
+            onPress={() => navigation.navigate(ROUTES.CLINICAL_INTAKE, { imageUri: activeUri, originalUri })}
             style={{ flex: 1, marginLeft: 8 }}
           />
         </View>
@@ -114,14 +160,47 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   title: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary },
   subtitle: { fontSize: 13, color: Colors.textSecondary, marginBottom: 16, marginTop: 2 },
+  modeToggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 12,
+  },
+  modeToggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  modeToggleBtnActive: {
+    backgroundColor: Colors.primaryTeal,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  modeToggleText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  modeToggleTextActive: {
+    color: Colors.white,
+  },
   imageContainer: {
     width: '100%',
-    height: 320,
+    height: 340,
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#0F172A',
     marginBottom: 16,
     position: 'relative',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   previewImage: { width: '100%', height: '100%' },
   aspectBadge: {

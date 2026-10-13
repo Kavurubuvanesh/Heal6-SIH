@@ -85,42 +85,112 @@ CREATE TABLE IF NOT EXISTS doctor_reviews (
 );
 '''
 
+import time
+
 @contextmanager
 def connect():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=60.0)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=NORMAL;")
+        conn.execute("PRAGMA busy_timeout=60000;")
+    except Exception:
+        pass
     try:
         yield conn
     finally:
         conn.close()
 
 def init_patient_db():
-    with connect() as conn:
-        conn.executescript(SCHEMA)
-        conn.commit()
+    for attempt in range(5):
+        try:
+            with connect() as conn:
+                conn.executescript(SCHEMA)
+                conn.commit()
+                break
+        except sqlite3.OperationalError as e:
+            if ("locked" in str(e).lower() or "busy" in str(e).lower()) and attempt < 4:
+                time.sleep(0.2 * (attempt + 1))
+                continue
+            raise
 
 def execute(sql: str, params: tuple = ()) -> int:
-    with connect() as conn:
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        conn.commit()
-        return cur.lastrowid or 0
+    last_err = None
+    for attempt in range(5):
+        try:
+            with connect() as conn:
+                cur = conn.cursor()
+                cur.execute(sql, params)
+                conn.commit()
+                return cur.lastrowid or 0
+        except sqlite3.OperationalError as e:
+            last_err = e
+            if ("locked" in str(e).lower() or "busy" in str(e).lower()) and attempt < 4:
+                time.sleep(0.2 * (attempt + 1))
+                continue
+            raise
+    if last_err:
+        raise last_err
+    return 0
 
 def fetchone(sql: str, params: tuple = ()) -> Optional[sqlite3.Row]:
-    with connect() as conn:
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        return cur.fetchone()
+    last_err = None
+    for attempt in range(5):
+        try:
+            with connect() as conn:
+                cur = conn.cursor()
+                cur.execute(sql, params)
+                return cur.fetchone()
+        except sqlite3.OperationalError as e:
+            last_err = e
+            if ("locked" in str(e).lower() or "busy" in str(e).lower()) and attempt < 4:
+                time.sleep(0.2 * (attempt + 1))
+                continue
+            raise
+    if last_err:
+        raise last_err
+    return None
 
 def fetchall(sql: str, params: tuple = ()) -> List[sqlite3.Row]:
-    with connect() as conn:
-        cur = conn.cursor()
-        cur.execute(sql, params)
-        return cur.fetchall()
+    last_err = None
+    for attempt in range(5):
+        try:
+            with connect() as conn:
+                cur = conn.cursor()
+                cur.execute(sql, params)
+                return cur.fetchall()
+        except sqlite3.OperationalError as e:
+            last_err = e
+            if ("locked" in str(e).lower() or "busy" in str(e).lower()) and attempt < 4:
+                time.sleep(0.2 * (attempt + 1))
+                continue
+            raise
+    if last_err:
+        raise last_err
+    return []
 
 def profile_dict(user_id: int) -> Optional[Dict[str, Any]]:
     row = fetchone('SELECT * FROM profiles WHERE user_id = ?', (user_id,))
     if not row:
+        user_row = fetchone('SELECT * FROM users WHERE id = ?', (user_id,))
+        if user_row:
+            return {
+                'name': user_row['name'] or '',
+                'age': '',
+                'gender': '',
+                'dateOfBirth': '',
+                'heightCm': '',
+                'weightKg': '',
+                'bloodGroup': '',
+                'diabetesType': 'type2',
+                'diabetesDurationYears': '',
+                'previousUlcer': False,
+                'symptoms': [],
+                'allergies': '',
+                'phone': '',
+                'emergencyContact': '',
+            }
         return None
     return {
         'name': row['name'],

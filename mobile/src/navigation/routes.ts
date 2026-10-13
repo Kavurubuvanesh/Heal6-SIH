@@ -37,8 +37,8 @@ export type MainTabParamList = {
 export type ScanStackParamList = {
   ScannerInstructions: undefined;
   CameraScan: undefined;
-  ImageReview: { imageUri: string };
-  ClinicalIntake: { imageUri: string };
+  ImageReview: { imageUri: string; originalUri?: string };
+  ClinicalIntake: { imageUri: string; originalUri?: string };
   AnalysisLoading: { imageUri: string; patientId: string; clinicalData: SinbadClinicalData };
   ResultSummary: { record: PatientRecord; response: SinbadResponse };
 };

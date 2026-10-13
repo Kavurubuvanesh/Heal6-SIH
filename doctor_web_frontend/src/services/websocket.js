@@ -4,9 +4,28 @@
  * and seamless fallback to Server-Sent Events (SSE) for strict hospital firewall environments.
  */
 
-const API_HOST = import.meta.env.VITE_API_HOST || '127.0.0.1:8000'
-const WS_URL = `ws://${API_HOST}/api/v1/stream/ws/triage`
-const SSE_URL = `http://${API_HOST}/api/v1/stream/events/triage`
+const getApiHost = () => {
+  // If running in browser and accessed via LAN IP or remote hostname, ALWAYS use that host for WebSocket
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const host = window.location.hostname
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `${host}:8000`
+    }
+  }
+  if (import.meta.env.VITE_API_HOST) return import.meta.env.VITE_API_HOST
+  if (import.meta.env.VITE_API_URL) {
+    try {
+      const u = new URL(import.meta.env.VITE_API_URL)
+      return u.host
+    } catch {}
+  }
+  return '127.0.0.1:8000'
+}
+
+const API_HOST = getApiHost()
+const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+const WS_URL = `${isSecure ? 'wss:' : 'ws:'}//${API_HOST}/api/v1/stream/ws/triage`
+const SSE_URL = `${isSecure ? 'https:' : 'http:'}//${API_HOST}/api/v1/stream/events/triage`
 
 class TriageStreamClient {
   constructor() {

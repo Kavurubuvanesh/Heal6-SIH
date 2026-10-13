@@ -3,13 +3,37 @@
  * Converts camera capture and clinical booleans + demographics to strict FormData contract
  * matching routes_screenings.py endpoint signature exactly.
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('127.0.0.1') && !import.meta.env.VITE_API_URL.includes('localhost')) {
+    return import.meta.env.VITE_API_URL
+  }
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:8000`
+  }
+  return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+}
 
-export const submitPatientDiagnostic = async (imageFile, clinicalData = {}) => {
+const API_BASE_URL = getApiBaseUrl()
+
+export const submitPatientDiagnostic = async (imageFileOrPayload, clinicalDataArg = {}) => {
+  let imageFile = imageFileOrPayload;
+  let clinicalData = clinicalDataArg;
+
+  // Support both (imageFile, clinicalData) and unified payload object ({ imageFile, ... })
+  if (imageFileOrPayload && !(imageFileOrPayload instanceof Blob) && !(imageFileOrPayload instanceof File)) {
+    imageFile = imageFileOrPayload.imageFile || imageFileOrPayload.imageBlob || imageFileOrPayload.file;
+    clinicalData = { ...imageFileOrPayload, ...clinicalDataArg };
+  }
+
   if (!imageFile) throw new Error("A wound capture image is required.");
 
   // Build clinical_data JSON object matching routes_screenings.py parser
   const clinicalJson = {
+    name: clinicalData.name || clinicalData.patientName,
+    age: clinicalData.age,
+    gender: clinicalData.gender,
+    diabetesType: clinicalData.diabetesType,
+    hba1c: clinicalData.hba1c,
     site: clinicalData.isHindfoot ? 'hindfoot' : 'forefoot',
     ischemia: clinicalData.hasIschemia ? 'reduced_or_absent' : 'intact',
     neuropathy: clinicalData.hasNeuropathy ? 'loss_of_sensation' : 'intact',
@@ -31,7 +55,7 @@ export const submitPatientDiagnostic = async (imageFile, clinicalData = {}) => {
   // image: UploadFile, patient_identifier: str, clinical_data: str (JSON), latitude, longitude
   const formData = new FormData();
   formData.append("image", imageFile);
-  formData.append("patient_identifier", String(clinicalData.id || `PAT-${Date.now().toString().slice(-6)}`));
+  formData.append("patient_identifier", String(clinicalData.id || clinicalData.patientId || `PAT-${Date.now().toString().slice(-6)}`));
   formData.append("clinical_data", JSON.stringify(clinicalJson));
   // Optional geo fields
   formData.append("latitude", "");

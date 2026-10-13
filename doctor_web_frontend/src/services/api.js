@@ -1,6 +1,16 @@
 // Heal6 Frontend API Client for FastAPI backend integration with graceful local fallback
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('127.0.0.1') && !import.meta.env.VITE_API_URL.includes('localhost')) {
+    return import.meta.env.VITE_API_URL
+  }
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:8000`
+  }
+  return import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 /**
  * Check if the Heal6 FastAPI backend is currently online and reachable
@@ -50,6 +60,24 @@ export async function fetchPatientQueue() {
       error: error.message,
       isLiveBackend: false
     }
+  }
+}
+
+/**
+ * Fetch clinic appointments for the physician optionally filtered by date
+ */
+export async function fetchDoctorAppointments(date = null) {
+  try {
+    const url = date ? `${API_BASE_URL}/api/v1/appointments/doctor?date=${encodeURIComponent(date)}` : `${API_BASE_URL}/api/v1/appointments/doctor`
+    const headers = {}
+    const token = getAuthToken()
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const response = await fetch(url, { headers })
+    if (!response.ok) return []
+    return await response.json()
+  } catch (err) {
+    console.warn('[Heal6 API] Could not fetch doctor appointments:', err)
+    return []
   }
 }
 

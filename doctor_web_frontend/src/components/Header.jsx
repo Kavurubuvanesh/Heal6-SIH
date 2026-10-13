@@ -62,10 +62,10 @@ export default function Header({
     <header className="px-4 sm:px-6 py-3.5 sticky top-0 z-20 transition-all duration-300 bg-[#f4f8f5]/90 dark:bg-[#0e120f]/90 backdrop-blur-xl border-b border-[#12464e]/10 dark:border-[#223229]">
       {/* Patient Header Card */}
       <div className="w-full rounded-2xl bg-white/90 dark:bg-[#141c17]/95 border border-slate-200/90 dark:border-[#223229] p-3.5 sm:p-4 shadow-sm flex flex-col gap-3">
-        
+
         {/* ROW 1: Identity & Status Up Top + Actions */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          
+
           {/* Left: Avatar + Identity + Status Badges */}
           <div className="flex items-center gap-3 flex-wrap min-w-0">
             {/* Avatar with Status Dot */}
@@ -90,11 +90,10 @@ export default function Header({
               </span>
 
               {/* Simulation / AI Status Badge */}
-              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-medium border shrink-0 ${
-                isLiveBackend
+              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-medium border shrink-0 ${isLiveBackend
                   ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/30 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
                   : 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/30 dark:border-amber-800/60 text-amber-700 dark:text-amber-300'
-              }`}>
+                }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${isLiveBackend ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-amber-500 dark:bg-amber-400'}`} />
                 <span>{isLiveBackend ? 'PyTorch AI active' : 'Offline simulation'}</span>
               </span>

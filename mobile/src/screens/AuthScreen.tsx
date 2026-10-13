@@ -44,21 +44,6 @@ export const AuthScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const handleJuryOverride = () => {
-    Alert.alert(
-      '🔐 SIH Jury & Clinical Override',
-      'Developer bypass authorized. Would you like to authenticate immediately as the Demo Patient without OTP verification?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Initiate Demo Session',
-          style: 'default',
-          onPress: () => handle1TapDemo(),
-        },
-      ]
-    );
-  };
-
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -137,7 +122,7 @@ export const AuthScreen = () => {
     setBusy(true);
     try {
       if (tab === 'signin') {
-        await AuthService.testLogin(email.trim(), password);
+        await AuthService.login(email.trim(), password);
       } else {
         await AuthService.register(email.trim(), password, name.trim());
       }
@@ -171,20 +156,6 @@ export const AuthScreen = () => {
     }
   };
 
-  const handle1TapDemo = async () => {
-    setBusy(true);
-    try {
-      await AuthService.testLogin('test@heal6.app', 'Heal6@123');
-      const profile = await AuthService.getProfile();
-      if (profile) await AppStorage.setProfile(profile);
-      navigation.replace(profile?.name ? ROUTES.MAIN_APP : ROUTES.PROFILE_SETUP);
-    } catch (error: any) {
-      Alert.alert('Demo Login Failed', error?.response?.data?.detail || 'Could not log in as demo patient.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.topGlow} />
@@ -199,7 +170,7 @@ export const AuthScreen = () => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-          <Heal6Logo onLongPress={handleJuryOverride} />
+          <Heal6Logo />
 
           {/* Toggle Tabs */}
           <View style={styles.tabContainer}>
@@ -456,23 +427,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   primaryText: { color: Colors.white, fontWeight: '800', fontSize: 15 },
-  demoButton: {
-    height: 48,
-    borderRadius: 13,
-    backgroundColor: '#E6FFFA',
-    borderWidth: 1.5,
-    borderColor: '#38B2AC',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 10,
-  },
-  demoText: {
-    color: '#0D9488',
-    fontWeight: '800',
-    fontSize: 14,
-  },
   or: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 14 },
   line: { flex: 1, height: 1, backgroundColor: Colors.border },
   orText: { color: Colors.textMuted, fontSize: 11, fontWeight: '700' },
@@ -488,17 +442,6 @@ const styles = StyleSheet.create({
   },
   googleG: { color: '#4285F4', fontWeight: '900', fontSize: 20, marginRight: 10 },
   googleText: { color: Colors.textPrimary, fontWeight: '700', fontSize: 14 },
-  testBox: {
-    backgroundColor: Colors.primaryLight,
-    borderRadius: 13,
-    padding: 12,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#CCFBF1',
-  },
-  testTitle: { color: Colors.primaryDark, fontSize: 12, fontWeight: '800' },
-  testText: { color: Colors.textPrimary, fontSize: 13, marginTop: 4, fontWeight: '800' },
-  testHint: { color: Colors.textSecondary, fontSize: 11, marginTop: 3, lineHeight: 15 },
   disclaimer: { color: Colors.textMuted, fontSize: 10, lineHeight: 14, textAlign: 'center', marginTop: 16 },
 });
 

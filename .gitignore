@@ -69,6 +69,15 @@ backend/storage/uploads/*
 # OS GENERATED FILES
 .DS_Store
 Thumbs.db
+desktop.ini
+.tmp.driveupload/
+
+# Scratch code export dumps
+heal6_*_code.txt
+heal6_part2_*.txt
+*.db-shm
+*.db-wal
+*.db-journal
 
 # Local environment overrides — never commit these
 .env.local

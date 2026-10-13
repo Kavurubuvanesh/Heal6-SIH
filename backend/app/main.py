@@ -14,7 +14,10 @@ if backend_dir not in sys.path:
 
 import torch
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from datetime import datetime
+import traceback
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Pre-warm ML Models at Application Startup
@@ -89,6 +92,23 @@ async def apm_latency_middleware(request, call_next):
     duration = time.time() - start_time
     clinical_telemetry.record_request(request.url.path, request.method, duration, response.status_code)
     return response
+
+# 1.6. Global Unhandled Exception Protection & Telemetry Logger
+@app.exception_handler(Exception)
+async def global_unhandled_exception_handler(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    print(f"🔥 [CRITICAL SERVER ERROR] {request.method} {request.url.path}: {exc}\n{tb}", file=sys.stderr)
+    try:
+        log_dir = os.path.join(backend_dir, "storage")
+        os.makedirs(log_dir, exist_ok=True)
+        with open(os.path.join(log_dir, "server_errors.log"), "a", encoding="utf-8") as f:
+            f.write(f"\n--- [{datetime.now().isoformat()}] {request.method} {request.url.path} ---\n{tb}\n")
+    except Exception:
+        pass
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}", "error_type": exc.__class__.__name__}
+    )
 
 # 2. Attach Modular Sub-Routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication & Access"])

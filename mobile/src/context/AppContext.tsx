@@ -58,6 +58,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const signOut = async () => {
     await AppStorage.clearAuth();
     setProfileState(null);
+    setSymptomFlagsState({
+      ulcer: false,
+      redness: false,
+      swelling: false,
+      warmth: false,
+      pain: false,
+      numbness: false,
+      tingling: false,
+    });
   };
 
   const toggleSymptomFlag = (key: string) => {

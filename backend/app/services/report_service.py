@@ -143,6 +143,12 @@ def build_pdf(output_path: str, report: dict, image_path: str | None):
     else:
         story += [Paragraph('Captured image could not be embedded.', styles['Small'])]
 
+    cropped_b64 = d.get('croppedImageBase64')
+    if cropped_b64:
+        c_im = _base64_img(cropped_b64, max_w=16*cm, max_h=8.5*cm)
+        if c_im:
+            story += [Paragraph('Focused Wound Region of Interest (High-Precision ROI)', styles['H6']), c_im, Spacer(1, 5)]
+
     tissue = d.get('tissueBreakdown') or {}
     if tissue:
         story += [
@@ -188,12 +194,49 @@ def build_pdf(output_path: str, report: dict, image_path: str | None):
         story.append(Paragraph('• ' + str(x), styles['BodyText']))
 
     protocol = report.get('clinicalProtocol') or {}
-    story += [
-        Paragraph('Recommended Care Protocol & Escalation', styles['H6']),
-        Paragraph(f"<b>Care Recommendation:</b> {protocol.get('recommendation', '—')}", styles['BodyText']),
-        Paragraph(f"<b>Clinical Deadline:</b> {protocol.get('actionDeadline', '—')}", styles['BodyText']),
-        Paragraph(f"<b>Physician Advisory:</b> {protocol.get('doctorFeedback', '')}", styles['BodyText'])
-    ]
+    rep_num = report.get('reportNumber')
+    pat_id = report.get('patientIdentifier')
+    doc_rev = None
+    try:
+        from app.db.patient_db import fetchone
+        import json
+        if rep_num or pat_id:
+            row = fetchone("SELECT * FROM doctor_reviews WHERE (report_number = ? OR patient_identifier = ?) ORDER BY id DESC LIMIT 1", (rep_num, pat_id))
+            if row and row['patient_identifier'] in ('P-TEST-9999', 'DFU-6092') and pat_id not in ('P-TEST-9999', 'DFU-6092'):
+                row = None
+            if row:
+                doc_rev = dict(row)
+                if doc_rev.get('prescriptions_json'):
+                    doc_rev['prescriptions'] = json.loads(doc_rev['prescriptions_json'])
+                if doc_rev.get('precautions_json'):
+                    doc_rev['precautions'] = json.loads(doc_rev['precautions_json'])
+    except Exception:
+        doc_rev = None
+
+    if doc_rev:
+        story += [
+            Paragraph('Attending Physician Clinical Directives & Prescriptions', styles['H6']),
+            Paragraph(f"<b>Attending Physician:</b> {doc_rev.get('physician_name', 'Attending Physician')} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Status:</b> {doc_rev.get('review_status', 'Verified')}", styles['BodyText']),
+            Paragraph(f"<b>Clinical Directives:</b> {doc_rev.get('doctor_notes', '—')}", styles['BodyText'])
+        ]
+        if doc_rev.get('prescriptions'):
+            story += [Paragraph(f"<b>Prescribed Regimen:</b> {', '.join(doc_rev['prescriptions'])}", styles['BodyText'])]
+        if doc_rev.get('precautions'):
+            story += [Paragraph(f"<b>Care Precautions:</b> {', '.join(doc_rev['precautions'])}", styles['BodyText'])]
+        if doc_rev.get('follow_up_date'):
+            story += [Paragraph(f"<b>Scheduled Follow-up:</b> {doc_rev['follow_up_date']}", styles['BodyText'])]
+        story += [Spacer(1, 6)]
+    else:
+        story += [
+            Paragraph('Physician Clinical Verification Status', styles['H6']),
+            Paragraph('<b>Status:</b> Awaiting Attending Specialist Sign-off (In Clinical Triage Queue)', styles['BodyText']),
+            Paragraph('<i>Official physician prescriptions and customized care directives will be appended once clinical verification is finalized by the attending healthcare team.</i>', styles['Small']),
+            Spacer(1, 4),
+            Paragraph('Preliminary AI Care Protocol & Escalation Advisory', styles['H6']),
+            Paragraph(f"<b>Care Recommendation:</b> {protocol.get('recommendation', '—')}", styles['BodyText']),
+            Paragraph(f"<b>Clinical Deadline:</b> {protocol.get('actionDeadline', '—')}", styles['BodyText']),
+            Paragraph(f"<b>AI Assistive Telemetry Advisory:</b> {protocol.get('doctorFeedback', '')}", styles['BodyText'])
+        ]
 
     loc = report.get('location') or {}
     story += [

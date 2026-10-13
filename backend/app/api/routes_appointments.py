@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends
@@ -38,3 +39,40 @@ async def list_appointments(user_id: int = Depends(get_current_patient_id)):
         }
         for r in rows
     ]
+
+@router.get('/doctor', summary="List Clinic Appointments by Date for Doctor")
+async def list_doctor_appointments(date: Optional[str] = None):
+    if date:
+        rows = fetchall('''
+            SELECT a.id, a.user_id, a.reason, a.preferred_date, a.notes, a.created_at,
+                   p.name, p.age, p.gender, p.diabetes_type, p.phone
+            FROM appointments a
+            LEFT JOIN profiles p ON a.user_id = p.user_id
+            WHERE a.preferred_date LIKE ? OR a.preferred_date = ?
+            ORDER BY a.id DESC
+        ''', (f"{date}%", date))
+    else:
+        rows = fetchall('''
+            SELECT a.id, a.user_id, a.reason, a.preferred_date, a.notes, a.created_at,
+                   p.name, p.age, p.gender, p.diabetes_type, p.phone
+            FROM appointments a
+            LEFT JOIN profiles p ON a.user_id = p.user_id
+            ORDER BY a.id DESC
+        ''')
+    return [
+        {
+            'id': r['id'],
+            'userId': r['user_id'],
+            'name': r['name'] or f"Patient #{r['user_id']}",
+            'age': r['age'] or 55,
+            'gender': r['gender'] or 'Unknown',
+            'diabetesType': r['diabetes_type'] or 'Type 2',
+            'phone': r['phone'] or '',
+            'reason': r['reason'],
+            'preferredDate': r['preferred_date'],
+            'notes': r['notes'],
+            'createdAt': r['created_at']
+        }
+        for r in rows
+    ]
+

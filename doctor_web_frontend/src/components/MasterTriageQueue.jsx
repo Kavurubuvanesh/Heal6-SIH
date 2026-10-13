@@ -19,7 +19,7 @@ import { SCHEDULE_DAYS } from '../data/scheduleData'
 
 export default function MasterTriageQueue({
   cases = [],
-  selectedDate = '2026-09-18',
+  selectedDate = 'ALL',
   onSelectDate,
   streamStatus,
   onSelectPatient,
@@ -84,42 +84,31 @@ export default function MasterTriageQueue({
           </span>
         </div>
 
-        {/* Schedule Ribbon Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-          <span className="text-xs sm:text-sm font-bold text-[#12464e] dark:text-[#aceba7] shrink-0 flex items-center gap-2">
+        {/* Schedule Ribbon Row - Stretched to fit width as per UI sketch */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 min-w-0 w-full px-4 py-2.5 rounded-2xl bg-slate-50/80 dark:bg-[#0e1612]/70 border border-[#12464e]/10 dark:border-white/10 shadow-xs">
+          <div className="text-xs sm:text-sm font-bold text-[#12464e] dark:text-[#aceba7] shrink-0 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-[#12464e] dark:text-[#aceba7]" />
-            <span>Clinical Schedule:</span>
-          </span>
-          <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-full">
-            {SCHEDULE_DAYS.map((item) => {
-              const isActive = selectedDate === item.dateKey
-              return (
-                <button
-                  key={item.dateKey}
-                  type="button"
-                  onClick={() => onSelectDate && onSelectDate(item.dateKey)}
-                  className={`px-3.5 py-1.5 rounded-xl border transition-all cursor-pointer flex items-center gap-2.5 shrink-0 ${
-                    isActive
-                      ? 'bg-[#12464e] text-white dark:bg-[#aceba7] dark:text-[#0e120f] border-[#aceba7]/40 shadow-xs scale-[1.02]'
-                      : 'bg-white/90 dark:bg-[#141c17] text-slate-700 dark:text-slate-300 border-[#12464e]/10 dark:border-[#223229] hover:border-[#aceba7]/50 hover:bg-slate-50 dark:hover:bg-[#18231c]'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-[9px] font-mono uppercase font-semibold opacity-75">{item.day}</span>
-                    <span className="text-xs font-bold leading-none">{item.date}</span>
-                  </div>
-                  <span
-                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                      isActive
-                        ? 'bg-white/20 dark:bg-black/20 text-current'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    {item.isToday ? 'Today • 6' : `${item.count} pts`}
-                  </span>
-                </button>
-              )
-            })}
+            <span className="whitespace-nowrap">clinical schedule:</span>
+          </div>
+          {/* Inner container wrapping the 7 day boxes stretched across the remaining width */}
+          <div className="flex-1 w-full grid grid-cols-7 gap-1.5 sm:gap-2 p-1.5 rounded-xl sm:rounded-2xl border border-slate-300/80 dark:border-slate-700/80 bg-white/90 dark:bg-[#121c16]/80">
+            {SCHEDULE_DAYS.map((item) => (
+              <div
+                key={item.dateKey}
+                className={`w-full py-1.5 sm:py-2 px-1 rounded-lg sm:rounded-xl border transition-all flex flex-col items-center justify-center text-center ${
+                  item.isToday
+                    ? 'bg-[#aceba7] text-[#0e120f] border-[#8ed988] shadow-xs font-bold'
+                    : 'bg-white dark:bg-[#18231c]/60 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-white/5'
+                }`}
+              >
+                <span className={`text-[9px] font-mono uppercase font-semibold ${item.isToday ? 'text-[#0e120f]/80' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {item.day}
+                </span>
+                <span className="text-xs sm:text-sm font-bold leading-tight mt-0.5">
+                  {item.date}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -268,7 +257,7 @@ export default function MasterTriageQueue({
           </div>
 
           <div className="text-[10.5px] font-mono text-center text-slate-400 border-t border-[#12464e]/8 dark:border-white/5 pt-2">
-            Limb Salvage Efficacy: <strong className="text-emerald-600 dark:text-[#aceba7]">98.2% Protocol Compliance</strong>
+            Limb Salvage Efficiency: <strong className="text-emerald-600 dark:text-[#aceba7]">98.2% Protocol Compliance</strong>
           </div>
         </div>
       </div>

@@ -67,6 +67,15 @@ export interface ScreeningDiagnostics {
   woundDetected: boolean;
   tissueBreakdown: { granulation: number; slough: number; necrotic: number };
   maskImageBase64: string;
+  croppedImageBase64?: string;
+  croppedMaskBase64?: string;
+  woundRoi?: {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    has_focused_roi?: boolean;
+  };
   volumetric?: {
     max_depth_mm?: number;
     mean_depth_mm?: number;

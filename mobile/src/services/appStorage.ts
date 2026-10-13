@@ -24,7 +24,7 @@ export const AppStorage = {
     return AsyncStorage.setItem(TOKEN_KEY, token);
   },
   async clearAuth() {
-    await AsyncStorage.multiRemove([TOKEN_KEY, PROFILE_KEY]);
+    await AsyncStorage.multiRemove([TOKEN_KEY, PROFILE_KEY, APPOINTMENT_KEY]);
   },
   async getProfile(): Promise<UserProfile | null> {
     const raw = await AsyncStorage.getItem(PROFILE_KEY);

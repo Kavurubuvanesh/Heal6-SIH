@@ -1,11 +1,11 @@
-import React from 'react'
 import {
   Stethoscope,
   Users,
   BarChart3,
   Layers,
   Activity,
-  LogOut
+  LogOut,
+  Sparkles
 } from 'lucide-react'
 import Heal6Logo from './Heal6Logo'
 
@@ -27,6 +27,12 @@ export default function Sidebar({
       label: 'Master Triage Queue',
       icon: Users,
       badge: cases.length > 0 ? `${cases.length} Active` : 'Clear'
+    },
+    {
+      id: 'rag_workspace',
+      label: 'Clinical RAG Copilot',
+      icon: Sparkles,
+      badge: 'IWGDF'
     },
     {
       id: 'command_center',

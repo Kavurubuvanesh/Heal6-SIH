@@ -52,9 +52,28 @@ async def login_doctor(payload: DoctorLoginRequest):
     email_clean = payload.email.strip().lower()
     
     if email_clean not in VERIFIED_STAFF_REGISTRY:
+        # Check registered mobile patient credentials
+        from app.db.patient_db import fetchone
+        p_row = fetchone('SELECT * FROM users WHERE email = ?', (email_clean,))
+        if p_row and p_row['password_hash'] and verify_password(payload.password, p_row['password_hash']):
+            p_token_data = {'sub': str(p_row['id']), 'email': p_row['email'], 'name': p_row['name'], 'role': 'patient'}
+            p_token = create_access_token(data=p_token_data, expires_delta=timedelta(hours=settings.JWT_EXPIRATION_HOURS))
+            return TokenResponse(
+                access_token=p_token,
+                token_type="bearer",
+                expires_in_hours=settings.JWT_EXPIRATION_HOURS,
+                doctor=DoctorProfile(
+                    name=p_row["name"],
+                    email=p_row["email"],
+                    role="patient",
+                    department=payload.department or "Patient Portal",
+                    license=None,
+                    facility="Heal6 Mobile"
+                )
+            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Physician credential not recognized in Heal6 hospital directory.",
+            detail="Invalid email or password. Please check your credentials or register a new account.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -154,9 +173,11 @@ async def get_staff_directory():
 
 # --- Mobile Patient Authentication Endpoints ---
 
-class TestLoginRequest(BaseModel):
+class PatientLoginRequest(BaseModel):
     email: str
     password: str
+
+TestLoginRequest = PatientLoginRequest
 
 class RegisterRequest(BaseModel):
     email: str
@@ -165,19 +186,6 @@ class RegisterRequest(BaseModel):
 
 class GoogleLoginRequest(BaseModel):
     id_token: str
-
-def _ensure_test_patient_account():
-    from app.db.patient_db import init_patient_db, execute, fetchone
-    from app.core.security import hash_password
-    init_patient_db()
-    row = fetchone('SELECT * FROM users WHERE email = ?', ('test@heal6.app',))
-    if not row:
-        now = datetime.now(timezone.utc).isoformat()
-        execute(
-            'INSERT INTO users(email, name, password_hash, auth_provider, created_at) VALUES(?, ?, ?, ?, ?)',
-            ('test@heal6.app', 'Test Patient', hash_password('Heal6@123'), 'test', now)
-        )
-    return fetchone('SELECT * FROM users WHERE email = ?', ('test@heal6.app',))
 
 @router.post('/register', summary="Mobile Patient Registration")
 async def register_patient(body: RegisterRequest):
@@ -198,6 +206,11 @@ async def register_patient(body: RegisterRequest):
         'INSERT INTO users(email, name, password_hash, auth_provider, created_at) VALUES(?, ?, ?, ?, ?)',
         (email_clean, name, hash_password(body.password), 'email', now)
     )
+    # Seed initial profile row
+    execute(
+        'INSERT OR IGNORE INTO profiles(user_id, name, updated_at) VALUES(?, ?, ?)',
+        (user_id, name, now)
+    )
     token_data = {'sub': str(user_id), 'email': email_clean, 'name': name, 'role': 'patient'}
     token = create_access_token(data=token_data)
     return {
@@ -210,10 +223,10 @@ async def register_patient(body: RegisterRequest):
         }
     }
 
-@router.post('/test-login', summary="Mobile Patient Quick/Test Login")
-async def test_login(body: TestLoginRequest):
+@router.post('/patient-login', summary="Mobile Patient Login")
+@router.post('/test-login', summary="Mobile Patient Login (Legacy Endpoint)", deprecated=True)
+async def patient_login(body: PatientLoginRequest):
     from app.db.patient_db import fetchone
-    _ensure_test_patient_account()
     email_clean = body.email.lower().strip()
     row = fetchone('SELECT * FROM users WHERE email = ?', (email_clean,))
     if not row or not row['password_hash'] or not verify_password(body.password, row['password_hash']):

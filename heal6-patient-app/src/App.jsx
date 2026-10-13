@@ -122,43 +122,13 @@ export default function App() {
       const file = e.target.files[0]
       setImageFile(file)
       setImagePreview(URL.createObjectURL(file))
+      e.target.value = ''
     }
   }
 
-  const handleLoadSampleScan = () => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 400
-    canvas.height = 400
-    const ctx = canvas.getContext('2d')
-    // Draw skin background
-    ctx.fillStyle = '#e8beac'
-    ctx.fillRect(0, 0, 400, 400)
-    // Draw outer wound margin
-    ctx.fillStyle = '#991b1b'
-    ctx.beginPath()
-    ctx.ellipse(200, 220, 65, 50, 0.2, 0, Math.PI * 2)
-    ctx.fill()
-    // Draw slough tissue center
-    ctx.fillStyle = '#eab308'
-    ctx.beginPath()
-    ctx.ellipse(190, 210, 32, 22, 0.1, 0, Math.PI * 2)
-    ctx.fill()
-    // Draw 25mm ArUco scale marker (DICT_4X4_50)
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(40, 40, 75, 75)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(52, 52, 51, 51)
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(62, 62, 31, 31)
-
-    canvas.toBlob((blob) => {
-      const file = new File([blob], 'carlos_mendez_clinical_scan.jpg', { type: 'image/jpeg' })
-      setImageFile(file)
-      setImagePreview(canvas.toDataURL('image/jpeg'))
-      if (!formData.name) {
-        setFormData(prev => ({ ...prev, name: 'Carlos Mendez', age: '64', isHindfoot: true, hasNeuropathy: true }))
-      }
-    }, 'image/jpeg')
+  const handleRemovePhoto = () => {
+    setImageFile(null)
+    setImagePreview(null)
   }
 
   const handleExportFhir = () => {
@@ -358,6 +328,11 @@ export default function App() {
             reviewStatus: review.reviewStatus || "Reviewed & Prescribed",
             followUpDate: review.followUpDate,
             precautions: review.precautions || [],
+            clinicalProtocol: {
+              ...(prev?.clinicalProtocol || {}),
+              doctorFeedback: review.doctorNotes || prev?.clinicalProtocol?.doctorFeedback || prev?.clinical_protocol?.doctor_feedback,
+              medications: (review.prescriptions && review.prescriptions.length > 0) ? review.prescriptions : (prev?.clinicalProtocol?.medications || prev?.clinical_protocol?.medications)
+            },
             clinical_protocol: {
               ...(prev?.clinical_protocol || {}),
               doctor_feedback: review.doctorNotes || prev?.clinical_protocol?.doctor_feedback,
@@ -392,26 +367,45 @@ export default function App() {
     isOfflineEdge: aiReport?.isOfflineEdge || false,
 
     aiMaskImage: (() => {
-      const rawMask = aiReport?.aiMaskImage || aiReport?.ai_diagnostics?.mask_image_base64 || aiReport?.patient_record?.maskImage || aiReport?.patient_record?.aiMaskImage;
+      const rawMask = aiReport?.aiMaskImage ||
+        aiReport?.aiDiagnostics?.maskImageBase64 ||
+        aiReport?.ai_diagnostics?.mask_image_base64 ||
+        aiReport?.patient_record?.maskImage ||
+        aiReport?.patient_record?.aiMaskImage;
       if (!rawMask) return null;
       if (rawMask.startsWith("data:")) return rawMask;
       return `data:image/png;base64,${rawMask}`;
     })(),
 
-    doctorFeedback: aiReport?.clinical_protocol?.doctor_feedback || (aiReport?.isOfflineEdge ? "On-device edge inference completed via ONNX Runtime WebGL. Preliminary triage recorded and queued for automatic hospital cloud synchronization." : "AI detects active ulceration with moderate tissue damage. Implement daily antimicrobial dressings and maintain strict glycemic control."),
-    actionDeadline: aiReport?.clinical_protocol?.action_deadline || (aiReport?.calculatedSinbad >= 4 ? "Seek Specialist Care within 24-48 Hours." : "Schedule Clinical Consultation within 7-14 Days."),
-    medications: aiReport?.clinical_protocol?.medications || ["Topical Silver Sulfadiazine", "Strict Glycemic Control Regime"],
-    reviewingPhysician: aiReport?.reviewingPhysician || (aiReport?.verifiedByDoctor ? "Dr. Sharma, MD (Verified)" : (aiReport?.isOfflineEdge ? "Heal6 Edge Diagnostic Agent (Pending Doctor Sign-off)" : "Dr. S. Sharma, MD (Lead Podiatrist)")),
+    doctorFeedback: aiReport?.clinicalProtocol?.doctorFeedback ||
+      aiReport?.clinical_protocol?.doctor_feedback ||
+      (aiReport?.isOfflineEdge
+        ? "On-device edge inference completed via ONNX Runtime WebGL. Preliminary triage recorded and queued for automatic hospital cloud synchronization."
+        : "AI detects active ulceration with moderate tissue damage. Implement daily antimicrobial dressings and maintain strict glycemic control."),
+    actionDeadline: aiReport?.clinicalProtocol?.actionDeadline ||
+      aiReport?.clinical_protocol?.action_deadline ||
+      ((aiReport?.calculatedSinbad ?? aiReport?.sinbadScore ?? 0) >= 4
+        ? "Seek Specialist Care within 24-48 Hours."
+        : "Schedule Clinical Consultation within 7-14 Days."),
+    medications: aiReport?.clinicalProtocol?.medications ||
+      aiReport?.clinical_protocol?.medications ||
+      ["Topical Silver Sulfadiazine", "Strict Glycemic Control Regime"],
+    reviewingPhysician: aiReport?.reviewingPhysician ||
+      (aiReport?.verifiedByDoctor
+        ? "Dr. Sharma, MD (Verified)"
+        : (aiReport?.isOfflineEdge
+            ? "Heal6 Edge Diagnostic Agent (Pending Doctor Sign-off)"
+            : "Dr. S. Sharma, MD (Lead Podiatrist)")),
 
-    ulcerationRisk: aiReport ? (aiReport.infectionRiskPercent ?? aiReport.ai_diagnostics?.infection_risk_percent ?? 78.4) : 78.4,
-    infectionSpread: aiReport ? (aiReport.tissue_slough_percent ?? aiReport.ai_diagnostics?.tissue_breakdown?.slough ?? 35.0) : 35.0,
-    tissueDamage: aiReport ? (aiReport.tissue_necrotic_percent ?? aiReport.ai_diagnostics?.tissue_breakdown?.necrotic ?? 20.0) : 20.0,
-    granulationTissue: aiReport ? (aiReport.tissue_granulation_percent ?? aiReport.ai_diagnostics?.tissue_breakdown?.granulation ?? 45.0) : 45.0,
+    ulcerationRisk: aiReport ? (aiReport.infectionRiskPercent ?? aiReport.aiDiagnostics?.infectionRiskPercent ?? aiReport.ai_diagnostics?.infection_risk_percent ?? 78.4) : 78.4,
+    infectionSpread: aiReport ? (aiReport.tissue_slough_percent ?? aiReport.aiDiagnostics?.tissueBreakdown?.slough ?? aiReport.ai_diagnostics?.tissue_breakdown?.slough ?? 35.0) : 35.0,
+    tissueDamage: aiReport ? (aiReport.tissue_necrotic_percent ?? aiReport.aiDiagnostics?.tissueBreakdown?.necrotic ?? aiReport.ai_diagnostics?.tissue_breakdown?.necrotic ?? 20.0) : 20.0,
+    granulationTissue: aiReport ? (aiReport.tissue_granulation_percent ?? aiReport.aiDiagnostics?.tissueBreakdown?.granulation ?? aiReport.ai_diagnostics?.tissue_breakdown?.granulation ?? 45.0) : 45.0,
     healingEstimate: aiReport ? (aiReport.healingEstimateWeeks ?? aiReport.healing_time ?? "8 - 12 Weeks") : "8 - 12 Weeks",
-    currentArea: aiReport ? (aiReport.woundAreaCm2 ?? aiReport.ai_diagnostics?.calculated_area_cm2 ?? 2.45) : 2.45,
-    currentPhase: aiReport ? (aiReport.triageLevel ?? aiReport.severity_tier ?? "Urgent Care") : "Urgent Care",
-    triageColor: aiReport ? (aiReport.triageColor ?? aiReport.triage_color ?? "#f59e0b") : "#f59e0b",
-    triageLabel: aiReport ? (aiReport.triageLevel ?? aiReport.triage_label ?? "URGENT TRIAGE") : "URGENT TRIAGE",
+    currentArea: aiReport ? (aiReport.woundAreaCm2 ?? aiReport.aiDiagnostics?.calculatedAreaCm2 ?? aiReport.ai_diagnostics?.calculated_area_cm2 ?? 2.45) : 2.45,
+    currentPhase: aiReport ? (aiReport.triageLevel ?? aiReport.triageCategory ?? aiReport.severity_tier ?? "Urgent Care") : "Urgent Care",
+    triageColor: aiReport ? (aiReport.triageColor ?? aiReport.triage_color ?? ((aiReport.calculatedSinbad ?? aiReport.sinbadScore ?? 0) >= 4 ? '#f43f5e' : (aiReport.calculatedSinbad ?? aiReport.sinbadScore ?? 0) >= 2 ? '#f59e0b' : '#10b981')) : "#f59e0b",
+    triageLabel: aiReport ? (aiReport.triageLevel ?? aiReport.triageCategory ?? aiReport.triage_label ?? "URGENT TRIAGE") : "URGENT TRIAGE",
 
     verificationStatus: aiReport?.verifiedByDoctor ? (aiReport.reviewStatus || "Verified by Physician") : (aiReport?.isOfflineEdge ? "Edge Calculated (Offline Queue)" : "Pending Physician Review"),
     followUpDate: aiReport?.followUpDate,
@@ -525,30 +519,57 @@ export default function App() {
                 <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">2. Clinical Diagnostics</h3>
 
                 {/* Image Upload Area */}
-                <div className="border-2 border-dashed border-slate-300 rounded-2xl p-2 bg-slate-50 relative overflow-hidden group cursor-pointer hover:bg-slate-100 hover:border-teal-400 transition-all h-40 flex items-center justify-center">
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
-                  ) : (
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-3 text-slate-400 group-hover:text-teal-500 transition-colors">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+                <div>
+                  <div className="relative border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50 overflow-hidden group hover:border-teal-500 hover:bg-slate-100/70 transition-all min-h-[170px] flex items-center justify-center">
+                    {imagePreview ? (
+                      <div className="relative w-full h-full min-h-[170px] p-2 flex flex-col items-center justify-center">
+                        <img src={imagePreview} alt="Ulcer preview" className="w-full max-h-52 object-contain rounded-xl shadow-xs" />
+                        <div className="absolute top-3 right-3 flex items-center gap-2">
+                          <label className="bg-white/95 backdrop-blur-md text-slate-700 hover:text-teal-700 hover:bg-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 transition-all cursor-pointer flex items-center gap-1.5">
+                            <span>Change Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              className="sr-only"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            className="bg-white/95 backdrop-blur-md text-rose-600 hover:text-rose-700 hover:bg-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 transition-all cursor-pointer flex items-center gap-1"
+                          >
+                            <span>✕ Remove</span>
+                          </button>
+                        </div>
+                        <div className="absolute bottom-3 left-3 bg-emerald-950/80 backdrop-blur-md text-emerald-300 text-[11px] font-bold px-3 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span>Clinical Photo Attached</span>
+                        </div>
                       </div>
-                      <div className="text-sm text-slate-700 font-bold">Upload Clinical Scan</div>
-                      <div className="text-[11px] text-slate-400 mt-1 font-medium">Ensure ArUco marker is visible</div>
-                    </div>
-                  )}
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"/>
-                </div>
-
-                {/* Quick Sample Loader Button */}
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleLoadSampleScan}
-                    className="text-xs font-bold text-teal-600 hover:text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg border border-teal-200 transition-colors cursor-pointer flex items-center gap-1.5"
-                  >
-                    <span>⚡ Load Calibrated Sample Scan (ArUco DICT_4X4_50)</span>
-                  </button>
+                    ) : (
+                      <label className="w-full h-full min-h-[170px] flex flex-col items-center justify-center p-6 text-center cursor-pointer">
+                        <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center mx-auto mb-3 text-slate-400 group-hover:text-teal-600 group-hover:border-teal-300 transition-all">
+                          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <div className="text-sm text-slate-800 font-bold group-hover:text-teal-700 transition-colors">
+                          Upload Clinical Foot / Wound Photo
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1 font-medium">
+                          Click to select image or drag & drop (JPG, PNG)
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="sr-only"
+                        />
+                      </label>
+                    )}
+                  </div>
                 </div>
 
                 {/* PREMIUM TOUCH CARDS FOR EXPERT TRIAGE */}

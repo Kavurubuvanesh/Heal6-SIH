@@ -7,6 +7,9 @@ from app.core.telemetry import clinical_telemetry
 
 def test_telemetry_recording_and_percentiles():
     """Verify request recording and p50/p95 latency calculation"""
+    clinical_telemetry.latency_samples.clear()
+    clinical_telemetry.request_counts.clear()
+    clinical_telemetry.error_counts.clear()
     clinical_telemetry.record_request("/api/v1/sinbad/analyze-wound", "POST", 0.185, 200)
     clinical_telemetry.record_request("/api/v1/sinbad/analyze-wound", "POST", 0.245, 200)
     clinical_telemetry.record_request("/api/v1/patients/queue", "GET", 0.015, 200)

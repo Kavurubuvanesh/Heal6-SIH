@@ -67,33 +67,42 @@ async def get_assessment_by_id(db: AsyncSession, assessment_id: str) -> Optional
 
 async def create_wound_assessment(db: AsyncSession, patient: Patient, data: dict) -> WoundAssessment:
     """Persist a newly computed clinical wound assessment entity."""
+    sinbad_val = data.get("sinbadScore")
+    if sinbad_val is None:
+        sinbad_val = data.get("calculatedSinbad", 0)
+
+    tissue_dict = data.get("tissueBreakdown") or {}
+    gran_pct = data.get("granulationPct") or data.get("tissueGranulation") or tissue_dict.get("granulation", 50.0)
+    slough_pct = data.get("sloughPct") or data.get("tissueSlough") or tissue_dict.get("slough", 30.0)
+    necrotic_pct = data.get("necroticPct") or data.get("tissueNecrotic") or tissue_dict.get("necrotic", 20.0)
+
     assessment = WoundAssessment(
         patient=patient,
-        location_label=data.get("locationLabel", "Right Plantar Hindfoot / Heel"),
+        location_label=data.get("locationLabel") or data.get("location_label", "Right Plantar Hindfoot / Heel"),
         site_score=data.get("siteScore", 0),
         ischemia_score=data.get("ischemiaScore", 0),
         neuropathy_score=data.get("neuropathyScore", 0),
         bacterial_score=data.get("bacterialScore", 0),
         area_score=data.get("areaScore", 0),
         depth_score=data.get("depthScore", 0),
-        sinbad_score=data.get("calculatedSinbad", 0),
-        wound_area_cm2=data.get("woundAreaCm2", 0.0),
-        aruco_calibration=data.get("arucoCalibration", 42.0),
-        aruco_detected=data.get("arucoDetected", True),
-        infection_risk_percent=data.get("infectionRiskPercent", 0.0),
-        convnext_confidence=data.get("convnextConfidence", 0.0),
-        tissue_granulation_percent=data.get("tissueBreakdown", {}).get("granulation", 50.0),
-        tissue_slough_percent=data.get("tissueBreakdown", {}).get("slough", 30.0),
-        tissue_necrotic_percent=data.get("tissueBreakdown", {}).get("necrotic", 20.0),
-        original_image=data.get("originalImage"),
-        mask_image=data.get("aiMaskImage") or data.get("maskImage"),
+        sinbad_score=int(sinbad_val),
+        wound_area_cm2=float(data.get("woundAreaCm2", 0.0) or 0.0),
+        aruco_calibration=float(data.get("arucoCalibration", 42.0) or 42.0),
+        aruco_detected=bool(data.get("arucoDetected", True)),
+        infection_risk_percent=float(data.get("infectionRiskPercent", 0.0) or 0.0),
+        convnext_confidence=float(data.get("convnextConfidence") or data.get("confidenceScore", 0.0) or 0.0),
+        tissue_granulation_percent=float(gran_pct or 0.0),
+        tissue_slough_percent=float(slough_pct or 0.0),
+        tissue_necrotic_percent=float(necrotic_pct or 0.0),
+        original_image=data.get("image") or data.get("originalImage"),
+        mask_image=data.get("maskImage") or data.get("aiMaskImage"),
         healing_estimate_weeks=data.get("healingEstimateWeeks", "8 - 12 Weeks"),
-        triage_level=data.get("triageLevel", "MODERATE RISK"),
+        triage_level=data.get("urgencyLevel") or data.get("riskCategory") or data.get("triageLevel", "MODERATE RISK"),
         triage_color=data.get("triageColor", "#f59e0b"),
         triage_bg=data.get("triageBg", "#fffbeb"),
         radar_data=data.get("radarData"),
         trajectory_data=data.get("trajectoryData"),
-        action_plan=data.get("actionPlan")
+        action_plan=data.get("aiAnalysis") or data.get("actionPlan")
     )
     db.add(assessment)
     await db.flush()
@@ -124,19 +133,36 @@ async def verify_patient_assessment(
     assessment.final_verified_score = final_score
 
     # Insert or update PhysicianValidation record
-    validation = PhysicianValidation(
-        assessment=assessment,
-        physician_name=physician_name or "Dr. Sharma, MD",
-        verified_ischemia=verified_ischemia,
-        verified_depth=verified_depth,
-        final_verified_score=final_score,
-        doctor_notes=doctor_notes,
-        review_status=review_status or "Reviewed & Prescribed",
-        prescriptions=prescriptions or [],
-        precautions=precautions or [],
-        follow_up_date=follow_up_date,
-        call_back_days=call_back_days
-    )
-    db.add(validation)
+    existing_stmt = select(PhysicianValidation).where(PhysicianValidation.assessment_id == assessment.id)
+    existing_res = await db.execute(existing_stmt)
+    validation = existing_res.scalar_one_or_none()
+
+    if validation:
+        validation.physician_name = physician_name or "Dr. Sharma, MD"
+        validation.verified_ischemia = verified_ischemia
+        validation.verified_depth = verified_depth
+        validation.final_verified_score = final_score
+        validation.doctor_notes = doctor_notes
+        validation.review_status = review_status or "Reviewed & Prescribed"
+        validation.prescriptions = prescriptions or []
+        validation.precautions = precautions or []
+        validation.follow_up_date = follow_up_date
+        validation.call_back_days = call_back_days
+    else:
+        validation = PhysicianValidation(
+            assessment=assessment,
+            physician_name=physician_name or "Dr. Sharma, MD",
+            verified_ischemia=verified_ischemia,
+            verified_depth=verified_depth,
+            final_verified_score=final_score,
+            doctor_notes=doctor_notes,
+            review_status=review_status or "Reviewed & Prescribed",
+            prescriptions=prescriptions or [],
+            precautions=precautions or [],
+            follow_up_date=follow_up_date,
+            call_back_days=call_back_days
+        )
+        db.add(validation)
+
     await db.flush()
     return assessment

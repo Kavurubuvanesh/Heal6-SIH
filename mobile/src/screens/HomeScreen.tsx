@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   Dimensions,
   Modal,
   RefreshControl,
@@ -24,6 +25,7 @@ const SYMPTOM_DESC: Record<string, string> = {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/routes';
@@ -64,9 +66,13 @@ export const HomeScreen = ({ navigation }: Props) => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [alertsRead, setAlertsRead] = useState(false);
+  const healthPulseAnim = useRef(new Animated.Value(1)).current;
 
   const [doctorReview, setDoctorReview] = useState<{
     hasReview: boolean;
+    status?: string;
+    reportNumber?: string;
+    patientIdentifier?: string;
     physicianName?: string;
     doctorNotes?: string;
     reviewStatus?: string;
@@ -80,19 +86,47 @@ export const HomeScreen = ({ navigation }: Props) => {
   const rootNavigation = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
 
   const load = useCallback(async () => {
-    const all = await OfflineStorage.getAllAssessments();
-    setRecords(all);
-    const appt = await AppStorage.getLastAppointment();
-    setLastAppointment(appt);
+    const userIdentifier = profile?.email || null;
+    const local = await OfflineStorage.getAllAssessments(userIdentifier);
+    let doctorRev = null;
     try {
-      const rev = await ScreeningService.getLatestDoctorReview();
-      if (rev?.hasReview) {
-        setDoctorReview(rev);
+      const [remoteReports, rev] = await Promise.all([
+        ScreeningService.listReports(),
+        ScreeningService.getLatestDoctorReview(),
+      ]);
+      doctorRev = rev;
+      if (Array.isArray(remoteReports)) {
+        if (remoteReports.length > 0) {
+          const mapped: PatientRecord[] = remoteReports.map((r: any) => ({
+            id: r.assessmentId,
+            reportNumber: r.reportNumber,
+            patientIdentifier: r.patientIdentifier || userIdentifier || '',
+            timestamp: r.generatedAt,
+            imageUri: r.imageUri || '',
+            clinicalData: r.clinicalData || {},
+            screeningResult: r,
+            triageStatus: r.triageCategory,
+            location: { latitude: r.latitude, longitude: r.longitude },
+            syncStatus: 'synced',
+          }));
+          setRecords(mapped);
+          for (const rec of mapped) {
+            await OfflineStorage.saveAssessment(rec, userIdentifier);
+          }
+        } else {
+          setRecords([]);
+        }
+      } else {
+        setRecords(local);
       }
     } catch {
-      // offline or backend unreachable
+      // Backend unreachable / offline fallback
+      setRecords(local);
     }
-  }, []);
+    setDoctorReview(doctorRev);
+    const appt = await AppStorage.getLastAppointment();
+    setLastAppointment(appt);
+  }, [profile?.email]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
@@ -104,18 +138,57 @@ export const HomeScreen = ({ navigation }: Props) => {
     AppStorage.getTutorialComplete().then((done) => setShowTutorial(!done));
   }, []);
 
+  // Pulse animation for health ring
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(healthPulseAnim, { toValue: 1.04, duration: 1400, useNativeDriver: true }),
+        Animated.timing(healthPulseAnim, { toValue: 1.0, duration: 1400, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
   const selectedCount = Object.values(symptomFlags).filter(Boolean).length;
 
   const latest = records[0];
-  const category = latest?.triageStatus || 'LOW_CONCERN';
-  const sinbadScore = latest?.screeningResult?.sinbadBreakdown?.totalScore ?? 0;
-  const riskLabel = category === 'LOW_CONCERN' ? t.lowRisk : category === 'ATTENTION_RECOMMENDED' ? t.moderateRisk : t.highRisk;
-  const riskColor = category === 'LOW_CONCERN' ? Colors.success : category === 'ATTENTION_RECOMMENDED' ? Colors.warning : Colors.danger;
-  const riskBg = category === 'LOW_CONCERN' ? '#E7F7EE' : category === 'ATTENTION_RECOMMENDED' ? '#FFF5DE' : '#FDEAEA';
-  const riskMessage = category === 'LOW_CONCERN' ? t.keepRoutine : category === 'ATTENTION_RECOMMENDED' ? t.moderateRiskDesc : t.urgentRiskDesc;
 
-  // Needle angle: -60deg (Low/0), 0deg (Moderate/2-3), +60deg (Critical/4-6)
-  const needleAngle = category === 'LOW_CONCERN' ? '-60deg' : category === 'ATTENTION_RECOMMENDED' ? '0deg' : '60deg';
+  const category = latest?.triageStatus || 'LOW_CONCERN';
+  const sinbadScore = latest ? (latest?.screeningResult?.sinbadBreakdown?.totalScore ?? 0) : null;
+  const riskLabel = latest
+    ? (category === 'LOW_CONCERN' ? t.lowRisk : category === 'ATTENTION_RECOMMENDED' ? t.moderateRisk : t.highRisk)
+    : 'Awaiting Initial Scan';
+  const riskColor = !latest
+    ? '#64748B'
+    : category === 'LOW_CONCERN' ? '#0D9488' : category === 'ATTENTION_RECOMMENDED' ? '#D97706' : '#DC2626';
+  const riskBg = !latest
+    ? '#F8FAFC'
+    : category === 'LOW_CONCERN' ? '#F0FDFA' : category === 'ATTENTION_RECOMMENDED' ? '#FFFBEB' : '#FEF2F2';
+  const riskBorder = !latest
+    ? '#E2E8F0'
+    : category === 'LOW_CONCERN' ? '#CCFBF1' : category === 'ATTENTION_RECOMMENDED' ? '#FDE68A' : '#FECACA';
+  const riskMessage = !latest
+    ? 'Capture your first calibrated foot scan to compute SINBAD triage assessment.'
+    : category === 'LOW_CONCERN' ? t.keepRoutine : category === 'ATTENTION_RECOMMENDED' ? t.moderateRiskDesc : t.urgentRiskDesc;
+
+  const diag = latest?.screeningResult?.aiDiagnostics;
+  const isWoundDetected = Boolean(diag?.woundDetected);
+  const calculatedArea = diag?.calculatedAreaCm2 ?? 0;
+  const infectionRisk = diag?.infectionRiskPercent ?? 0;
+  const tissueBreakdown = latest
+    ? { granulation: diag?.tissueBreakdown?.granulation ?? 80, slough: diag?.tissueBreakdown?.slough ?? 20, necrotic: diag?.tissueBreakdown?.necrotic ?? 0 }
+    : { granulation: 0, slough: 0, necrotic: 0 };
+
+  // ── Foot Health DNA Score: Inverse of pathology ──────────────────────
+  const dnaScore = latest
+    ? Math.max(0, 100 - Math.round(((sinbadScore ?? 0) / 6) * 60 + (infectionRisk / 100) * 40))
+    : null;
+  const dnaRing = dnaScore !== null ? dnaScore / 100 : 0;
+  const dnaColor = dnaScore === null ? '#64748B' : dnaScore >= 75 ? '#10B981' : dnaScore >= 45 ? '#F59E0B' : '#EF4444';
+  const dnaLabel = dnaScore === null ? 'Awaiting Scan' : dnaScore >= 75 ? 'Excellent' : dnaScore >= 45 ? 'At Risk' : 'Critical';
+
+  const scanTimeFormatted = latest
+    ? new Date(latest.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    : null;
 
   return (
     <View style={styles.container}>
@@ -156,53 +229,181 @@ export const HomeScreen = ({ navigation }: Props) => {
           </View>
         </View>
 
-        {/* Symmetric Height Health Status & Gauge Cards */}
-        <View style={styles.healthRow}>
-          <View style={styles.healthCard}>
-            <View style={styles.cardHeaderArea}>
-              <View style={styles.footIcon}>
-                <Ionicons name="footsteps" size={38} color={Colors.primaryTeal} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.cardHeading}>{t.yourFootHealth}</Text>
-                {/* Fixed Non-Wrapping Risk Badge */}
-                <View style={[styles.riskPill, { backgroundColor: riskBg }]}>
-                  <Ionicons
-                    name={category === 'LOW_CONCERN' ? 'checkmark-circle' : category === 'ATTENTION_RECOMMENDED' ? 'alert-circle' : 'warning'}
-                    size={16}
-                    color={riskColor}
-                  />
-                  <Text style={[styles.riskPillText, { color: riskColor }]} numberOfLines={1}>
-                    {riskLabel}
+        {/* ════════════════════════════════════════════════════════════════
+            PILLAR 1 — FOOT HEALTH DNA ENGINE
+            Dark glassmorphic immersive card: physical tissue integrity
+            Radial health score ring + tissue composition bars
+        ════════════════════════════════════════════════════════════════ */}
+        <TouchableOpacity
+          activeOpacity={0.95}
+          onPress={() => navigation.navigate(ROUTES.HISTORY)}
+        >
+          <LinearGradient
+            colors={['#0F172A', '#1E293B', '#0F172A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.dnaCard}
+          >
+            {/* Header */}
+            <View style={styles.dnaCardHeader}>
+              <View style={styles.dnaHeaderLeft}>
+                <View style={styles.dnaIconBadge}>
+                  <Ionicons name="pulse" size={14} color="#38BDF8" />
+                </View>
+                <View>
+                  <Text style={styles.dnaCategory}>FOOT HEALTH DNA</Text>
+                  <Text style={styles.dnaScanDate}>
+                    {latest ? `Last scan ${scanTimeFormatted}` : 'Awaiting first scan'}
                   </Text>
                 </View>
               </View>
+              <View style={[styles.dnaStatusPill, { borderColor: dnaColor + '55', backgroundColor: dnaColor + '18' }]}>
+                <View style={[styles.dnaStatusDot, { backgroundColor: dnaColor }]} />
+                <Text style={[styles.dnaStatusText, { color: dnaColor }]}>{dnaLabel}</Text>
+              </View>
             </View>
-            <Text style={styles.cardSub}>
-              {latest ? `${new Date(latest.timestamp).toLocaleDateString()} · SINBAD ${sinbadScore}/6` : t.noConcerning}
-            </Text>
+
+            {/* Central Score Ring + Metrics */}
+            <View style={styles.dnaMainRow}>
+              {/* Radial Health Score */}
+              <Animated.View style={[styles.dnaRingWrap, { transform: [{ scale: healthPulseAnim }] }]}>
+                <View style={[styles.dnaRingOuter, { borderColor: dnaColor }]}>
+                  <View style={[styles.dnaRingInner, { borderColor: dnaColor + '44' }]}>
+                    <Text style={[styles.dnaScoreVal, { color: dnaColor }]}>
+                      {dnaScore !== null ? dnaScore : '—'}
+                    </Text>
+                    <Text style={styles.dnaScoreUnit}>/100</Text>
+                  </View>
+                </View>
+                <Text style={styles.dnaRingLabel}>Health Score</Text>
+              </Animated.View>
+
+              {/* Tissue Composition Breakdown */}
+              <View style={styles.dnaTissueWrap}>
+                <Text style={styles.dnaTissueTitle}>TISSUE COMPOSITION</Text>
+                {[
+                  { label: 'Granulation', value: tissueBreakdown.granulation, color: '#10B981' },
+                  { label: 'Slough', value: tissueBreakdown.slough, color: '#F59E0B' },
+                  { label: 'Necrotic', value: tissueBreakdown.necrotic, color: '#EF4444' },
+                ].map((row) => (
+                  <View key={row.label} style={styles.tissueRow}>
+                    <Text style={styles.tissueRowLabel}>{row.label}</Text>
+                    <View style={styles.tissueTrack}>
+                      <View style={[styles.tissueFill, { width: `${row.value}%` as any, backgroundColor: row.color }]} />
+                    </View>
+                    <Text style={[styles.tissueRowVal, { color: row.color }]}>{row.value}%</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Bottom Metrics Row */}
+            <View style={styles.dnaBottomRow}>
+              <View style={styles.dnaMetric}>
+                <Text style={styles.dnaMetricLabel}>Wound Area</Text>
+                <Text style={[styles.dnaMetricVal, { color: isWoundDetected ? '#F87171' : '#34D399' }]}>
+                  {latest ? (isWoundDetected ? `${calculatedArea.toFixed(1)} cm²` : '0.0 cm²') : '—'}
+                </Text>
+              </View>
+              <View style={styles.dnaMetricDivider} />
+              <View style={styles.dnaMetric}>
+                <Text style={styles.dnaMetricLabel}>Infection Risk</Text>
+                <Text style={[styles.dnaMetricVal, { color: infectionRisk > 40 ? '#F87171' : infectionRisk > 20 ? '#FBBF24' : '#34D399' }]}>
+                  {latest ? `${infectionRisk}%` : '—'}
+                </Text>
+              </View>
+              <View style={styles.dnaMetricDivider} />
+              <View style={styles.dnaMetric}>
+                <Text style={styles.dnaMetricLabel}>Dermal Status</Text>
+                <Text style={[styles.dnaMetricVal, { color: isWoundDetected ? '#F87171' : '#34D399' }]}>
+                  {latest ? (isWoundDetected ? 'Compromised' : 'Intact') : 'Awaiting Scan'}
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* ════════════════════════════════════════════════════════════════
+            PILLAR 2 — CLINICAL RISK ENGINE
+            Bright clean card: SINBAD score pillar breakdown + triage
+            Completely different visual language from DNA card above
+        ════════════════════════════════════════════════════════════════ */}
+        <View style={[styles.riskEngineCard, { borderColor: riskBorder }]}>
+          {/* Category Label */}
+          <View style={styles.riskEngineHeader}>
+            <View style={[styles.riskEngineTitleBadge, { backgroundColor: riskBg, borderColor: riskBorder }]}>
+              <Ionicons
+                name={category === 'LOW_CONCERN' ? 'checkmark-circle' : category === 'ATTENTION_RECOMMENDED' ? 'alert-circle' : 'warning'}
+                size={13}
+                color={riskColor}
+              />
+              <Text style={[styles.riskEngineTitleText, { color: riskColor }]}>CLINICAL RISK ENGINE</Text>
+            </View>
+            <Text style={styles.riskEngineProtocol}>SINBAD Protocol v2.1</Text>
           </View>
 
-          <View style={styles.gaugeCard}>
-            <Text style={styles.cardHeading}>{t.riskLevelTitle}</Text>
-            <View style={styles.gauge}>
-              <View style={[styles.gaugeBase, { borderColor: riskColor }]} />
-              <View style={[styles.gaugeNeedle, { transform: [{ rotate: needleAngle }], backgroundColor: riskColor }]} />
+          {/* Big Score + Urgency */}
+          <View style={styles.riskScoreRow}>
+            <View>
+              <Text style={[styles.riskBigScore, { color: riskColor }]}>{sinbadScore !== null ? sinbadScore : '—'}</Text>
+              <Text style={styles.riskBigScoreSub}>{sinbadScore !== null ? 'out of 6 points' : 'No scan recorded'}</Text>
             </View>
-            <Text style={[styles.gaugeLabel, { color: riskColor }]}>{riskLabel}</Text>
-            <Text style={styles.gaugeSub} numberOfLines={2}>
-              {riskMessage}
-            </Text>
+            <View style={{ flex: 1, paddingLeft: 16 }}>
+              <Text style={[styles.riskUrgencyLabel, { color: riskColor }]}>
+                {riskLabel}
+              </Text>
+              <Text style={styles.riskUrgencyDesc}>
+                {!latest ? 'No active screening on file. Capture a calibrated foot scan to determine objective SINBAD risk staging.' :
+                 sinbadScore === 0 ? 'Routine surveillance. Continue daily foot care protocol.' :
+                 (sinbadScore ?? 0) <= 2 ? 'Elevated markers detected. Physician monitoring advised.' :
+                 'Urgent clinical review required. Escalate immediately.'}
+              </Text>
+            </View>
+          </View>
+
+          {/* SINBAD Pillar Breakdown — Fire-bar style */}
+          <View style={styles.sinbadPillarBlock}>
+            {['S','I','N','B','A','D'].map((letter, idx) => {
+              const labels = ['Site', 'Ischaemia', 'Neuropathy', 'Bacterial Inf.', 'Area', 'Depth'];
+              const filled = sinbadScore !== null && idx < sinbadScore;
+              const pillarColor = !filled ? '#CBD5E1' :
+                idx < 2 ? '#10B981' :
+                idx < 4 ? '#F59E0B' : '#EF4444';
+              return (
+                <View key={letter} style={styles.sinbadPillar}>
+                  <View style={[styles.sinbadPillarBar, { backgroundColor: filled ? pillarColor : '#F1F5F9', shadowColor: pillarColor, shadowOpacity: filled ? 0.35 : 0, shadowRadius: 4 }]}>
+                    <Text style={[styles.sinbadPillarLetter, { color: filled ? Colors.white : '#94A3B8' }]}>{letter}</Text>
+                  </View>
+                  <Text style={[styles.sinbadPillarSubLabel, { color: filled ? pillarColor : '#94A3B8' }]} numberOfLines={2}>
+                    {labels[idx]}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Progress Track */}
+          <View style={styles.riskProgressTrack}>
+            <View style={[styles.riskProgressFill, { width: `${sinbadScore !== null ? ((sinbadScore / 6) * 100) : 0}%` as any, backgroundColor: riskColor }]} />
+          </View>
+          <View style={styles.riskProgressLabels}>
+            <Text style={styles.riskProgressLabelText}>Low Risk</Text>
+            <Text style={styles.riskProgressLabelText}>High Risk</Text>
           </View>
         </View>
 
-        {/* Doctor Clinical Assessment & Prescriptions Card */}
+        {/* Doctor Clinical Assessment & Prescriptions (ONLY when verified review exists) */}
         {doctorReview?.hasReview && (
-          <View style={styles.doctorReviewCard}>
+          <LinearGradient
+            colors={['#FFFFFF', '#F0FDFA']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.doctorReviewCard}
+          >
             <View style={styles.doctorCardHeader}>
               <View style={styles.doctorBadge}>
-                <Ionicons name="shield-checkmark" size={15} color="#0D9488" />
-                <Text style={styles.doctorBadgeText}>{doctorReview.physicianName || 'Dr. Sharma, MD'}</Text>
+                <Ionicons name="shield-checkmark" size={15} color={Colors.primaryTeal} />
+                <Text style={styles.doctorBadgeText}>{doctorReview.physicianName || 'Attending Physician'}</Text>
               </View>
               <View style={styles.doctorStatusPill}>
                 <Text style={styles.doctorStatusText}>{doctorReview.reviewStatus || 'Verified'}</Text>
@@ -225,7 +426,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                 <View style={styles.medsChipsRow}>
                   {doctorReview.prescriptions.map((med, idx) => (
                     <View key={idx} style={styles.medChip}>
-                      <Ionicons name="bandage-outline" size={12} color="#0D9488" />
+                      <Ionicons name="bandage-outline" size={12} color={Colors.primaryTeal} />
                       <Text style={styles.medChipText}>{med}</Text>
                     </View>
                   ))}
@@ -237,11 +438,11 @@ export const HomeScreen = ({ navigation }: Props) => {
             {doctorReview.precautions && doctorReview.precautions.length > 0 && (
               <View style={styles.doctorSection}>
                 <Text style={styles.doctorSectionLabel}>
-                  <Ionicons name="checkmark-done-circle-outline" size={13} color="#0D9488" /> {t.carePrecautions || 'Clinical Precautions & Care Plan'}
+                  <Ionicons name="checkmark-done-circle-outline" size={13} color={Colors.primaryTeal} /> {t.carePrecautions || 'Clinical Precautions & Care Plan'}
                 </Text>
                 {doctorReview.precautions.map((prec, idx) => (
                   <View key={idx} style={styles.precRow}>
-                    <Ionicons name="checkmark-circle" size={13} color="#0D9488" style={{ marginTop: 2 }} />
+                    <Ionicons name="checkmark-circle" size={13} color={Colors.primaryTeal} style={{ marginTop: 2 }} />
                     <Text style={styles.precText}>{prec}</Text>
                   </View>
                 ))}
@@ -257,7 +458,66 @@ export const HomeScreen = ({ navigation }: Props) => {
                 </Text>
               </View>
             )}
-          </View>
+          </LinearGradient>
+        )}
+
+        {/* Clinical Triage & Specialist Queue Status (When awaiting physician review) */}
+        {!doctorReview?.hasReview && latest && (
+          <LinearGradient
+            colors={['#FFFFFF', '#F8FAFC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.triageQueueCard}
+          >
+            <View style={styles.triageQueueHeader}>
+              <View style={styles.triageQueuePulseWrap}>
+                <View style={styles.triageQueuePulseDot} />
+                <Text style={styles.triageQueueBadgeText}>IN CLINICAL TRIAGE QUEUE</Text>
+              </View>
+              <Text style={styles.triageQueueReportId}>
+                #{latest.reportNumber || (latest.id ? String(latest.id).slice(0, 8).toUpperCase() : 'SCAN')}
+              </Text>
+            </View>
+
+            <Text style={styles.triageQueueTitle}>Awaiting Specialist Sign-off</Text>
+            <Text style={styles.triageQueueDesc}>
+              Your foot scan & SINBAD telemetry have been forwarded to the hospital clinical queue. An attending physician will review your biomarkers and issue verified directives.
+            </Text>
+
+            {/* 3-Step Milestone Tracker */}
+            <View style={styles.queueTimelineRow}>
+              <View style={styles.queueStep}>
+                <View style={[styles.queueStepCircle, styles.queueStepComplete]}>
+                  <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                </View>
+                <Text style={styles.queueStepLabel}>AI Triage</Text>
+              </View>
+              <View style={[styles.queueStepLine, styles.queueStepLineActive]} />
+              <View style={styles.queueStep}>
+                <View style={[styles.queueStepCircle, styles.queueStepActive]}>
+                  <Ionicons name="hourglass-outline" size={12} color="#0D9488" />
+                </View>
+                <Text style={[styles.queueStepLabel, { color: '#0D9488', fontWeight: '800' }]}>Doctor Review</Text>
+              </View>
+              <View style={styles.queueStepLine} />
+              <View style={styles.queueStep}>
+                <View style={[styles.queueStepCircle, styles.queueStepPending]}>
+                  <Ionicons name="document-text-outline" size={12} color="#94A3B8" />
+                </View>
+                <Text style={styles.queueStepLabel}>Prescription</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.queueConsultBtn}
+              onPress={() => rootNavigation?.navigate(ROUTES.APPOINTMENT as any)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="calendar-outline" size={15} color={Colors.primaryTeal} />
+              <Text style={styles.queueConsultBtnText}>Request Priority Consultation</Text>
+              <Ionicons name="chevron-forward" size={14} color={Colors.primaryTeal} />
+            </TouchableOpacity>
+          </LinearGradient>
         )}
 
         {/* Main Screening Banner */}
@@ -630,79 +890,283 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: Colors.accentCoral,
   },
-  healthRow: { flexDirection: 'row', gap: 10, alignItems: 'stretch' },
-  healthCard: {
-    flex: 1.15,
-    backgroundColor: Colors.white,
-    borderRadius: 16,
+  // ── Foot Health DNA Card ───────────────────────────────────────
+  dnaCard: {
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  dnaCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  dnaHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dnaIconBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+  },
+  dnaCategory: { fontSize: 9.5, fontWeight: '800', color: '#94A3B8', letterSpacing: 1.5 },
+  dnaScanDate: { fontSize: 11, fontWeight: '600', color: '#475569', marginTop: 1 },
+  dnaStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  dnaStatusDot: { width: 6, height: 6, borderRadius: 3 },
+  dnaStatusText: { fontSize: 11, fontWeight: '800' },
+  dnaMainRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16 },
+  dnaRingWrap: { alignItems: 'center', gap: 6 },
+  dnaRingOuter: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  dnaRingInner: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  dnaScoreVal: { fontSize: 28, fontWeight: '900', lineHeight: 30 },
+  dnaScoreUnit: { fontSize: 10, color: '#64748B', fontWeight: '700' },
+  dnaRingLabel: { fontSize: 9.5, fontWeight: '700', color: '#94A3B8', letterSpacing: 0.3 },
+  dnaTissueWrap: { flex: 1, gap: 7 },
+  dnaTissueTitle: { fontSize: 8.5, fontWeight: '800', color: '#64748B', letterSpacing: 1, marginBottom: 2 },
+  tissueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tissueRowLabel: { width: 76, fontSize: 10, fontWeight: '700', color: '#94A3B8' },
+  tissueTrack: { flex: 1, height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
+  tissueFill: { height: 6, borderRadius: 3 },
+  tissueRowVal: { width: 32, fontSize: 10, fontWeight: '900', textAlign: 'right' },
+  dnaBottomRow: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  dnaMetric: { flex: 1, alignItems: 'center' },
+  dnaMetricDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.08)' },
+  dnaMetricLabel: { fontSize: 9, fontWeight: '800', color: '#475569', letterSpacing: 0.5, marginBottom: 4 },
+  dnaMetricVal: { fontSize: 13, fontWeight: '900' },
+  // ── Clinical Risk Engine Card ─────────────────────────────────
+  riskEngineCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1.5,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  riskEngineHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  riskEngineTitleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  riskEngineTitleText: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
+  riskEngineProtocol: { fontSize: 9.5, fontWeight: '700', color: '#94A3B8' },
+  riskScoreRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  riskBigScore: { fontSize: 52, fontWeight: '900', lineHeight: 52 },
+  riskBigScoreSub: { fontSize: 10, color: '#94A3B8', fontWeight: '600', marginTop: 2 },
+  riskUrgencyLabel: { fontSize: 16, fontWeight: '900', marginBottom: 4 },
+  riskUrgencyDesc: { fontSize: 11, color: '#64748B', lineHeight: 16, fontWeight: '500' },
+  sinbadPillarBlock: { flexDirection: 'row', gap: 6, marginBottom: 14 },
+  sinbadPillar: { flex: 1, alignItems: 'center', gap: 4 },
+  sinbadPillarBar: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 2 },
+  },
+  sinbadPillarLetter: { fontSize: 14, fontWeight: '900' },
+  sinbadPillarSubLabel: { fontSize: 8, fontWeight: '700', textAlign: 'center', letterSpacing: -0.2 },
+  riskProgressTrack: {
+    height: 6,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 5,
+  },
+  riskProgressFill: { height: 6, borderRadius: 3 },
+  riskProgressLabels: { flexDirection: 'row', justifyContent: 'space-between' },
+  riskProgressLabelText: { fontSize: 9, fontWeight: '700', color: '#94A3B8' },
+  // ── (Legacy telemetry styles retained for other components) ────
+  telemetryRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'stretch',
+    marginBottom: 14,
+  },
+  telemetryCard: {
+    flex: 1,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     padding: 14,
     justifyContent: 'space-between',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  cardHeaderArea: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  footIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: Colors.primaryLight,
+  cardHeaderArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  cardHeaderIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardHeading: { fontSize: 14, fontWeight: '800', color: Colors.textPrimary },
-  riskPill: {
+  telemetryCategoryLabel: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: Colors.textMuted,
+    letterSpacing: 0.6,
+  },
+  telemetryPrimaryVal: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    marginTop: 1,
+  },
+  tissueMetricGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 8,
+  },
+  tissueMetricCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  tissueMetricDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: '#E2E8F0',
+  },
+  tissueMetricLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    marginBottom: 2,
+  },
+  tissueMetricVal: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+  },
+  telemetryFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 2,
+  },
+  statusPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  telemetryFooterText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  sinbadPillarWrap: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 8,
+  },
+  sinbadBarRow: {
+    flexDirection: 'row',
+    gap: 4,
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  sinbadSegment: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+  },
+  sinbadSegmentMuted: {
+    backgroundColor: '#E2E8F0',
+  },
+  sinbadLabelsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  sinbadLetter: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: Colors.textMuted,
+    width: 14,
+    textAlign: 'center',
+  },
+  triageUrgencyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: '#E7F7EE',
-    borderRadius: 9999,
+    borderRadius: 8,
     paddingVertical: 4,
-    paddingHorizontal: 8,
-    marginTop: 6,
-    flexShrink: 0,
-  },
-  riskPillText: {
-    color: Colors.success,
-    fontWeight: '800',
-    fontSize: 12,
-  },
-  cardSub: {
-    color: Colors.textSecondary,
-    lineHeight: 16,
-    fontSize: 11,
-    marginTop: 8,
-  },
-  gaugeCard: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 16,
+    paddingHorizontal: 7,
     borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 14,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
   },
-  gauge: { width: 108, height: 64, overflow: 'hidden', alignItems: 'center', marginTop: 2 },
-  gaugeBase: {
-    width: 108,
-    height: 108,
-    borderRadius: 54,
-    borderWidth: 13,
-    borderColor: '#E2A33B',
-    position: 'absolute',
-    top: 0,
+  triageUrgencyText: {
+    fontSize: 10.5,
+    fontWeight: '800',
   },
-  gaugeNeedle: {
-    position: 'absolute',
-    top: 25,
-    width: 3,
-    height: 38,
-    borderRadius: 2,
-    backgroundColor: Colors.primaryTeal,
-  },
-  gaugeLabel: { fontWeight: '900', fontSize: 14, marginTop: -4 },
-  gaugeSub: { color: Colors.textSecondary, fontSize: 10, textAlign: 'center', marginTop: 2, lineHeight: 13 },
   scanBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -945,16 +1409,15 @@ const styles = StyleSheet.create({
   dismissBtn: { height: 48, borderRadius: 12, backgroundColor: Colors.primaryTeal, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   dismissBtnText: { color: Colors.white, fontWeight: '800', fontSize: 14 },
   doctorReviewCard: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: '#86EFAC',
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: '#CCFBF1',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 3,
   },
   doctorCardHeader: {
@@ -967,52 +1430,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#F0FDFA',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#86EFAC',
+    borderColor: '#CCFBF1',
   },
   doctorBadgeText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#065F46',
+    color: '#0F766E',
   },
   doctorStatusPill: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0D9488',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   doctorStatusText: {
     fontSize: 10,
     fontWeight: '800',
     color: '#FFFFFF',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   doctorCardTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '900',
-    color: '#064E3B',
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
   doctorCardNotes: {
     fontSize: 12,
-    color: '#1F2937',
+    color: Colors.textSecondary,
     lineHeight: 18,
     marginBottom: 10,
   },
   doctorSection: {
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#BBF7D0',
+    borderTopColor: '#F1F5F9',
     paddingTop: 8,
   },
   doctorSectionLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    color: '#065F46',
+    color: '#0F766E',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -1031,12 +1495,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: '#E2E8F0',
   },
   medChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#065F46',
+    color: Colors.textPrimary,
   },
   precRow: {
     flexDirection: 'row',
@@ -1046,7 +1510,7 @@ const styles = StyleSheet.create({
   },
   precText: {
     fontSize: 11,
-    color: '#374151',
+    color: Colors.textSecondary,
     flex: 1,
     lineHeight: 16,
   },
@@ -1054,16 +1518,146 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: '#86EFAC',
+    borderColor: '#E2E8F0',
   },
   doctorFollowUpText: {
-    fontSize: 12,
-    color: '#065F46',
+    fontSize: 11.5,
+    color: Colors.textPrimary,
+  },
+
+  /* Clinical Triage Queue Card Styles */
+  triageQueueCard: {
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  triageQueueHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  triageQueuePulseWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  triageQueuePulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#0284C7',
+  },
+  triageQueueBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#0369A1',
+    letterSpacing: 0.4,
+  },
+  triageQueueReportId: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.textMuted,
+    letterSpacing: 0.5,
+  },
+  triageQueueTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: Colors.textPrimary,
+    marginBottom: 3,
+  },
+  triageQueueDesc: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  queueTimelineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 12,
+  },
+  queueStep: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  queueStepCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  queueStepComplete: {
+    backgroundColor: '#10B981',
+  },
+  queueStepActive: {
+    backgroundColor: '#E0F2FE',
+    borderWidth: 1.5,
+    borderColor: '#0284C7',
+  },
+  queueStepPending: {
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  queueStepLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  queueStepLine: {
+    flex: 1,
+    height: 1.5,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 6,
+    marginBottom: 14,
+  },
+  queueStepLineActive: {
+    backgroundColor: '#BAE6FD',
+  },
+  queueConsultBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F0FDFA',
+    borderWidth: 1,
+    borderColor: '#CCFBF1',
+    borderRadius: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+  },
+  queueConsultBtnText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: Colors.primaryTeal,
+    flex: 1,
+    marginLeft: 6,
   },
 });

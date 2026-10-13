@@ -1,6 +1,8 @@
 import io
 import json
 import os
+import re
+import sys
 import secrets
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -14,7 +16,7 @@ import numpy as np
 import base64
 
 from app.db.patient_db import execute, fetchall, fetchone, profile_dict, init_patient_db
-from app.core.patient_auth import get_current_patient_id
+from app.core.patient_auth import get_current_patient_id, get_optional_patient_id
 from app.ml_engine.inference import predict_wound
 from app.ml_engine.segmentation_inference import predict_wound_mask
 from app.ml_engine.calibration import detect_marker_and_calculate_ratio, calculate_real_world_area, get_fallback_pixels_per_cm
@@ -53,7 +55,8 @@ async def create_screening(
     clinical_data: str = Form(..., description="JSON-encoded clinical observation checklist"),
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
-    user_id: int = Depends(get_current_patient_id)
+    crop_data: Optional[str] = Form(None, description="Optional JSON-encoded reticle crop window {x, y, width, height}"),
+    user_id: Optional[int] = Depends(get_optional_patient_id)
 ):
     try:
         clinical = json.loads(clinical_data)
@@ -69,11 +72,29 @@ async def create_screening(
     except Exception:
         raise HTTPException(status_code=400, detail="Uploaded file is not a valid image")
 
+    # If client passed crop window instructions, crop to the framed proper photo part
+    if crop_data:
+        try:
+            cd = json.loads(crop_data)
+            cx = max(0, int(cd.get('x', 0)))
+            cy = max(0, int(cd.get('y', 0)))
+            cw = int(cd.get('width', 0))
+            ch = int(cd.get('height', 0))
+            if cw > 20 and ch > 20:
+                cx2 = min(pil.width, cx + cw)
+                cy2 = min(pil.height, cy + ch)
+                if cx2 > cx and cy2 > cy:
+                    pil = pil.crop((cx, cy, cx2, cy2))
+        except Exception as crop_err:
+            print(f"⚠️ [CROP DATA WARNING] {crop_err}")
+
     now = datetime.now(timezone.utc)
     report_number = f"H6-{now.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
     assessment_id = f"ASMT-{uuid.uuid4().hex[:10].upper()}"
 
-    user_dir = UPLOAD_ROOT / str(user_id)
+    effective_user_id = user_id or 1
+    safe_identifier = re.sub(r'[^\w\-]', '_', str(user_id or patient_identifier or "web_intake")).strip('_') or "web_intake"
+    user_dir = UPLOAD_ROOT / safe_identifier
     user_dir.mkdir(parents=True, exist_ok=True)
     image_path = user_dir / f"{report_number}.jpg"
     pil.save(image_path, format='JPEG', quality=90)
@@ -82,7 +103,13 @@ async def create_screening(
     warnings = []
 
     # 1. ArUco Metric Spatial Calibration
-    pixels_per_cm, _, marker_info = detect_marker_and_calculate_ratio(open_cv)
+    try:
+        pixels_per_cm, _, marker_info = detect_marker_and_calculate_ratio(open_cv)
+    except Exception as aruco_err:
+        print(f"⚠️ [ARUCO WARNING] Marker detection error: {aruco_err}")
+        pixels_per_cm, marker_info = None, None
+        warnings.append(f"ArUco marker detection note: {aruco_err}")
+
     aruco_detected = bool(pixels_per_cm and pixels_per_cm > 0)
     if not aruco_detected:
         h_img, w_img = open_cv.shape[:2]
@@ -138,13 +165,17 @@ async def create_screening(
     # Multi-gate false-positive rejection: rough/dusty/bare feet → Normal (Healthy Skin)
     is_classified_ulcer = bool(task1.get('is_ulcer', False)) or pred_label == 'Abnormal (Ulcer)'
 
-    is_authentic, auth_reason = verify_ulcer_authenticity(
-        seg=seg,
-        convnext_is_ulcer=is_classified_ulcer,
-        open_cv_bgr=open_cv,
-        mask_array=None,  # full mask array not exposed; gates 1/3/4 cover mobile cases
-        has_ulcer_clinical_override=has_ulcer_override,
-    )
+    try:
+        is_authentic, auth_reason = verify_ulcer_authenticity(
+            seg=seg,
+            convnext_is_ulcer=is_classified_ulcer,
+            open_cv_bgr=open_cv,
+            mask_array=None,  # full mask array not exposed; gates 1/3/4 cover mobile cases
+            has_ulcer_clinical_override=has_ulcer_override,
+        )
+    except Exception as auth_err:
+        print(f"⚠️ [AUTHENTICITY ENGINE WARNING] Veto check error: {auth_err}")
+        is_authentic, auth_reason = True, "engine_fallback"
 
     if not is_authentic:
         # ── REJECTED: rough/dusty/bare skin or background clutter ──────────────
@@ -165,7 +196,13 @@ async def create_screening(
         }
     else:
         # ── AUTHENTIC: real ulcer confirmed by all gates ─────────────────────
-        area = calculate_real_world_area(int(seg.get('mask_pixel_count', 0)), float(pixels_per_cm)) if seg.get('mask_pixel_count', 0) > 0 else 0.0
+        calib_factor = max(float(pixels_per_cm or 0.0), 1.0)
+        try:
+            area = calculate_real_world_area(int(seg.get('mask_pixel_count', 0)), calib_factor) if seg.get('mask_pixel_count', 0) > 0 else 0.0
+        except Exception as area_err:
+            print(f"⚠️ [AREA CALCULATION WARNING] {area_err}")
+            area = 0.0
+
         wound_detected = bool(seg.get('is_wound_detected', False) and area > 0)
         tissue_breakdown = seg.get('tissue_breakdown', {})
         if not wound_detected:
@@ -195,8 +232,10 @@ async def create_screening(
                 }
 
     try:
-        gradcam_results = generate_explainability_report(open_cv, conf)
-    except Exception:
+        target_idx = 0 if is_classified_ulcer else 1
+        gradcam_results = generate_explainability_report(pil, target_class_idx=target_idx)
+    except Exception as grad_err:
+        print(f"⚠️ [GRADCAM WARNING] Explainability generation note: {grad_err}")
         gradcam_results = {}
 
     necrotic_pct = float(tissue_breakdown.get('necrotic', 0.0))
@@ -254,7 +293,7 @@ async def create_screening(
         'medications': ['Hydrofiber silver antimicrobial dressing', 'Offloading footwear / padding'] if (wound_detected or score >= 2) else ['Daily skin moisturizing (avoid between toes)']
     }
 
-    profile = profile_dict(user_id) or {}
+    profile = (profile_dict(user_id) if user_id else {}) or {}
 
     payload = {
         'assessmentId': assessment_id,
@@ -289,6 +328,9 @@ async def create_screening(
             'woundDetected': wound_detected,
             'tissueBreakdown': tissue_breakdown,
             'maskImageBase64': seg.get('mask_image_base64', '') if wound_detected else '',
+            'woundRoi': seg.get('wound_roi', {}),
+            'croppedImageBase64': seg.get('cropped_image_base64', '') if wound_detected else '',
+            'croppedMaskBase64': seg.get('cropped_mask_base64', '') if wound_detected else '',
             'volumetric': volumetric_results,
             'gradcam': gradcam_results,
             'modelWarnings': warnings
@@ -308,13 +350,16 @@ async def create_screening(
     payload['pdfUrl'] = f"{base_url}/api/v1/reports/{report_number}/pdf"
 
     # 7. Store in SQLite Database
-    execute(
-        '''INSERT INTO mobile_reports(user_id, report_number, assessment_id, patient_identifier,
-                                     generated_at, image_path, latitude, longitude, payload_json)
-           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        (user_id, report_number, assessment_id, patient_identifier, now.isoformat(),
-         str(image_path), latitude, longitude, json.dumps(payload))
-    )
+    try:
+        execute(
+            '''INSERT INTO mobile_reports(user_id, report_number, assessment_id, patient_identifier,
+                                         generated_at, image_path, latitude, longitude, payload_json)
+               VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (effective_user_id, report_number, assessment_id, patient_identifier, now.isoformat(),
+             str(image_path), latitude, longitude, json.dumps(payload))
+        )
+    except Exception as db_err:
+        print(f"⚠️ [DATABASE WARNING] Could not persist mobile_reports record: {db_err}")
 
     # 8. Real-time Hospital Doctor Queue Ingestion & Event Bus Broadcast
     try:
@@ -323,14 +368,23 @@ async def create_screening(
         mask_b64 = seg.get('mask_image_base64', '')
         mask_data_url = f"data:image/png;base64,{mask_b64}" if mask_b64 and not mask_b64.startswith("data:") else mask_b64
 
+        patient_name = clinical.get('name') or profile.get('name') or f"Patient {patient_identifier}"
+        try:
+            patient_age = int(clinical.get('age') or profile.get('age') or 55)
+        except Exception:
+            patient_age = 55
+        patient_gender = clinical.get('gender') or profile.get('gender') or "Unknown"
+        patient_diabetes = clinical.get('diabetesType') or profile.get('diabetesType') or "Type 2"
+        patient_hba1c = clinical.get('hba1c') or profile.get('hba1c') or "7.5%"
+
         patient_record_dict = {
             "id": patient_identifier,
-            "name": profile.get('name') or f"Patient {patient_identifier}",
-            "age": int(profile.get('age', 55)) if str(profile.get('age', '')).isdigit() else 55,
-            "gender": profile.get('gender') or "Unknown",
-            "diabetesType": profile.get('diabetesType') or "Type 2",
-            "hba1c": profile.get('hba1c') or "8.2%",
-            "locationLabel": clinical.get('site') or ("Right Plantar Hindfoot / Heel" if site_pt == 1 else "Forefoot Metatarsal"),
+            "name": patient_name,
+            "age": patient_age,
+            "gender": patient_gender,
+            "diabetesType": patient_diabetes,
+            "hba1c": patient_hba1c,
+            "locationLabel": clinical.get('locationLabel') or clinical.get('site') or ("Right Plantar Hindfoot / Heel" if site_pt == 1 else "Forefoot Metatarsal"),
             "siteScore": site_pt,
             "ischemiaScore": ischemia_pt,
             "neuropathyScore": neuropathy_pt,
@@ -350,6 +404,9 @@ async def create_screening(
             "originalImage": orig_img_data_url,
             "aiMaskImage": mask_data_url,
             "maskImage": mask_data_url,
+            "croppedImage": f"data:image/jpeg;base64,{seg.get('cropped_image_base64', '')}" if seg.get('cropped_image_base64') else orig_img_data_url,
+            "croppedMaskImage": f"data:image/png;base64,{seg.get('cropped_mask_base64', '')}" if seg.get('cropped_mask_base64') else mask_data_url,
+            "woundRoi": seg.get('wound_roi', {}),
             "healingEstimateWeeks": "20 - 28 Weeks" if score >= 4 else ("8 - 12 Weeks" if score >= 2 else "3 - 4 Weeks"),
             "generatedAt": now.isoformat(),
             "status": "Awaiting Doctor Review",
@@ -440,26 +497,27 @@ async def get_pdf_link(report_number: str, request: Request, user_id: int = Depe
 @router.get('/screenings/latest-review', summary="Get Latest Physician Review for Authenticated Patient")
 async def get_latest_doctor_review(user_id: int = Depends(get_current_patient_id)):
     # Find patient_identifier or latest report for this user
-    report = fetchone("SELECT patient_identifier, report_number FROM mobile_reports WHERE user_id = ? ORDER BY id DESC LIMIT 1", (user_id,))
+    report = fetchone("SELECT patient_identifier, report_number, generated_at FROM mobile_reports WHERE user_id = ? ORDER BY id DESC LIMIT 1", (user_id,))
     if not report:
-        return {"hasReview": False, "message": "No active screening found."}
+        return {"hasReview": False, "status": "NO_SCREENING", "message": "No active screening found."}
 
     pid = report["patient_identifier"]
     rep_num = report["report_number"]
 
-    # Check doctor_reviews for either patient_identifier or report_number
+    # Check doctor_reviews for either patient_identifier or report_number specifically for this patient
     review = fetchone(
-        "SELECT * FROM doctor_reviews WHERE patient_identifier = ? OR report_number = ? ORDER BY id DESC LIMIT 1",
+        "SELECT * FROM doctor_reviews WHERE (patient_identifier = ? OR report_number = ?) ORDER BY id DESC LIMIT 1",
         (pid, rep_num)
     )
 
-    if not review:
-        # Fallback to check if any review exists in the system
-        review = fetchone("SELECT * FROM doctor_reviews ORDER BY id DESC LIMIT 1")
+    # Protect against any dummy/seed review cross-contamination if patient is distinct
+    if review and review["patient_identifier"] in ('P-TEST-9999', 'DFU-6092') and pid not in ('P-TEST-9999', 'DFU-6092'):
+        review = None
 
     if review:
         return {
             "hasReview": True,
+            "status": "REVIEWED",
             "patientIdentifier": pid,
             "reportNumber": rep_num,
             "physicianName": review["physician_name"],
@@ -472,5 +530,12 @@ async def get_latest_doctor_review(user_id: int = Depends(get_current_patient_id
             "verifiedAt": review["created_at"]
         }
 
-    return {"hasReview": False, "message": "Physician review pending."}
+    return {
+        "hasReview": False,
+        "status": "AWAITING_REVIEW",
+        "patientIdentifier": pid,
+        "reportNumber": rep_num,
+        "generatedAt": report["generated_at"],
+        "message": "AI Screening submitted. In clinical triage queue awaiting attending physician review."
+    }
 

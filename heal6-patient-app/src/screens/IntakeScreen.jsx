@@ -4,6 +4,11 @@ export default function IntakeScreen({ onSubmit, isAnalyzing }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [clinicalData, setClinicalData] = useState({
+    name: '',
+    age: '55',
+    gender: 'Male',
+    diabetesType: 'Type 2 DM',
+    hba1c: '7.5%',
     isHindfoot: false,
     hasIschemia: false,
     hasNeuropathy: false,
@@ -18,6 +23,11 @@ export default function IntakeScreen({ onSubmit, isAnalyzing }) {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setClinicalData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleCheckboxChange = (e) => {
     setClinicalData({ ...clinicalData, [e.target.name]: e.target.checked });
   };
@@ -28,7 +38,6 @@ export default function IntakeScreen({ onSubmit, isAnalyzing }) {
       alert("A clinical image capture is required.");
       return;
     }
-    // Pass the payload up to the parent router
     onSubmit(imageFile, clinicalData);
   };
 
@@ -48,6 +57,57 @@ export default function IntakeScreen({ onSubmit, isAnalyzing }) {
         <h2 className="text-2xl font-bold text-slate-800 mb-6 text-center">Clinical Intake Portal</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Patient Demographics */}
+          <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="col-span-2">
+              <label className="block text-xs font-bold text-slate-600 mb-1">Patient Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={clinicalData.name}
+                onChange={handleInputChange}
+                placeholder="e.g. Anand Mahindra"
+                className="w-full text-sm bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Age</label>
+              <input
+                type="number"
+                name="age"
+                value={clinicalData.age}
+                onChange={handleInputChange}
+                className="w-full text-sm bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1">Gender</label>
+              <select
+                name="gender"
+                value={clinicalData.gender}
+                onChange={handleInputChange}
+                className="w-full text-sm bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-bold text-slate-600 mb-1">Diabetes Diagnosis</label>
+              <select
+                name="diabetesType"
+                value={clinicalData.diabetesType}
+                onChange={handleInputChange}
+                className="w-full text-sm bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="Type 2 DM">Type 2 DM</option>
+                <option value="Type 1 DM">Type 1 DM</option>
+                <option value="Gestational DM">Gestational DM</option>
+              </select>
+            </div>
+          </div>
+
           <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors">
             {imagePreview ? (
               <img src={imagePreview} alt="Preview" className="mx-auto max-h-48 rounded-lg mb-4 shadow-md" />

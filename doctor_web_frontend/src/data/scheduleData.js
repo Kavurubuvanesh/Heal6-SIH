@@ -1056,30 +1056,54 @@ export const SCHEDULE_CASES_BY_DATE = {
   ]
 }
 
-// Static schedule days for ribbon display
-export const SCHEDULE_DAYS = [
-  { dateKey: '2026-09-14', day: 'MON', date: '14', count: 4, isToday: false },
-  { dateKey: '2026-09-15', day: 'TUE', date: '15', count: 6, isToday: false },
-  { dateKey: '2026-09-16', day: 'WED', date: '16', count: 5, isToday: false },
-  { dateKey: '2026-09-17', day: 'THU', date: '17', count: 4, isToday: false },
-  { dateKey: '2026-09-18', day: 'FRI', date: '18', count: 6, isToday: true, label: 'Today • 6' },
-  { dateKey: '2026-09-19', day: 'SAT', date: '19', count: 6, isToday: false },
-  { dateKey: '2026-09-20', day: 'SUN', date: '20', count: 4, isToday: false }
-]
+/**
+ * Dynamically computes the 7 days (Monday - Sunday) of the week containing the current live date.
+ * (e.g. today is Sep 23, 2026 -> Mon 21, Tue 22, Wed 23 [Today], Thu 24, Fri 25, Sat 26, Sun 27).
+ * Removes all fake/dummy patient counts ("X pts") and displays clean live dates.
+ */
+export function getLiveScheduleDays(refDate = new Date()) {
+  const current = new Date(refDate)
+  const day = current.getDay() // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const distanceToMonday = day === 0 ? -6 : 1 - day
+
+  const monday = new Date(current)
+  monday.setDate(current.getDate() + distanceToMonday)
+
+  const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+  const pad = (n) => String(n).padStart(2, '0')
+  const todayKey = `${current.getFullYear()}-${pad(current.getMonth() + 1)}-${pad(current.getDate())}`
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    const dateKey = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    const isToday = dateKey === todayKey
+
+    return {
+      dateKey,
+      day: dayNames[i],
+      date: String(d.getDate()),
+      month: d.toLocaleString('en-US', { month: 'short' }),
+      isToday
+    }
+  })
+}
+
+// Live schedule days for ribbon display (dynamically computed from current date)
+export const SCHEDULE_DAYS = getLiveScheduleDays()
 
 // Helper to get patient cases for a given date
 export function getCasesForDate(dateKey) {
   if (SCHEDULE_CASES_BY_DATE[dateKey]) {
     return SCHEDULE_CASES_BY_DATE[dateKey]
   }
-  // Default to today (Sep 18) or first key
-  return SCHEDULE_CASES_BY_DATE['2026-09-18'] || Object.values(SCHEDULE_CASES_BY_DATE)[0]
+  const todayKey = new Date().toISOString().slice(0, 10)
+  return SCHEDULE_CASES_BY_DATE[todayKey] || Object.values(SCHEDULE_CASES_BY_DATE)[0] || []
 }
 
 // Helper to get all wound registry records or records filtered by date
 export function getWoundsForDate(dateKey) {
   if (!dateKey || dateKey === 'all') {
-    // Return all wounds across all scheduled days
     return Object.values(SCHEDULE_CASES_BY_DATE).flat()
   }
   return getCasesForDate(dateKey)

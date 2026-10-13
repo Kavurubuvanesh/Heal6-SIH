@@ -103,7 +103,15 @@ export const AnalysisLoadingScreen = ({ route, navigation }: Props) => {
       console.log('✅ [SCREENING] Live ML pipeline result received:', result.reportNumber, result.aiDiagnostics?.task1Classification);
       setStep(3);
     } catch (err: any) {
-      console.warn('⚠️ [SCREENING WARNING] Live backend call failed, initiating offline fallback:', err?.message || err);
+      const serverDetail =
+        err?.response?.data?.detail ||
+        (typeof err?.response?.data === 'string' ? err.response.data : null) ||
+        err?.message ||
+        String(err);
+      console.warn('⚠️ [SCREENING WARNING] Live backend call failed, initiating offline fallback:', serverDetail);
+      if (__DEV__ && err?.response?.data) {
+        console.warn('⚠️ [SCREENING ERROR PAYLOAD]:', JSON.stringify(err.response.data));
+      }
       result = localFallback();
       syncStatus = 'pending_upload';
     }
@@ -119,7 +127,7 @@ export const AnalysisLoadingScreen = ({ route, navigation }: Props) => {
       location,
       syncStatus,
     };
-    await OfflineStorage.saveAssessment(record);
+    await OfflineStorage.saveAssessment(record, patientId);
     setTimeout(() => navigation.replace(ROUTES.RESULT_SUMMARY, { record, response: result }), 600);
   };
 

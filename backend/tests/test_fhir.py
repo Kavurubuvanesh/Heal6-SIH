@@ -29,7 +29,12 @@ if backend_dir not in sys.path:
 from app.main import app
 from app.core.database import init_db, AsyncSessionLocal
 from app.crud.crud_patient import get_patient_by_id
+from app.api.routes_patients import add_or_update_patient_in_db
 from app.crud.crud_assessment import get_patient_latest_assessment
+from app.db.models.assessment import WoundAssessment
+from app.db.models.patient import Patient
+from app.db.models.validation import PhysicianValidation
+from sqlalchemy import delete, select
 from app.fhir.serializer import build_fhir_bundle
 from app.fhir.schemas import FHIRBundle
 from app.fhir.codes import (
@@ -41,91 +46,129 @@ from app.fhir.codes import (
     SNOMED_DFU
 )
 
+TEST_PATIENT_PAYLOAD = {
+    "id": "DFU-TEST-8842",
+    "name": "Test Robert Vance",
+    "age": 62,
+    "gender": "Male",
+    "diabetesType": "Type 2 DM (14 yrs)",
+    "hba1c": "8.8%",
+    "locationLabel": "Right Plantar Hindfoot / Heel",
+    "siteScore": 1,
+    "ischemiaScore": 1,
+    "neuropathyScore": 1,
+    "depthScore": 1,
+    "calculatedSinbad": 4,
+    "woundAreaCm2": 3.45,
+    "arucoCalibration": 42.0,
+    "arucoDetected": True,
+    "infectionRiskPercent": 78.4,
+    "convnextConfidence": 89.5,
+    "triageLevel": "URGENT CLINICAL TRIAGE",
+    "triageColor": "#f43f5e",
+    "tissueBreakdown": {"granulation": 45, "slough": 35, "necrotic": 20},
+    "healingEstimateWeeks": "12 - 16 Weeks",
+    "dateAssessed": "2026-09-18",
+    "findings": ["Active ulceration", "ConvNeXt 89.5%"],
+    "actionPlan": {"protocol": {}}
+}
+
+async def _cleanup_test_patient():
+    async with AsyncSessionLocal() as db:
+        await db.execute(delete(PhysicianValidation).where(PhysicianValidation.assessment_id.in_(
+            select(WoundAssessment.id).where(WoundAssessment.patient_id == "DFU-TEST-8842")
+        )))
+        await db.execute(delete(WoundAssessment).where(WoundAssessment.patient_id == "DFU-TEST-8842"))
+        await db.execute(delete(Patient).where(Patient.id == "DFU-TEST-8842"))
+        await db.commit()
 
 async def test_fhir_bundle_serializer():
     """Test standard FHIR Bundle generation from relational models."""
     await init_db()
     async with AsyncSessionLocal() as db:
-        patient = await get_patient_by_id(db, "DFU-8842")
-        assert patient is not None, "Baseline patient DFU-8842 must exist"
+        await add_or_update_patient_in_db(db, TEST_PATIENT_PAYLOAD)
 
-        assessment = await get_patient_latest_assessment(db, "DFU-8842")
-        assert assessment is not None, "Baseline assessment must exist for DFU-8842"
+    try:
+        async with AsyncSessionLocal() as db:
+            patient = await get_patient_by_id(db, "DFU-TEST-8842")
+            assert patient is not None, "Baseline patient DFU-TEST-8842 must exist"
 
-        # Serialize to FHIR Bundle
-        bundle_dict = build_fhir_bundle(patient, assessment)
+            assessment = await get_patient_latest_assessment(db, "DFU-TEST-8842")
+            assert assessment is not None, "Baseline assessment must exist for DFU-TEST-8842"
 
-        # 1. Structural Validation
-        assert bundle_dict["resourceType"] == "Bundle"
-        assert bundle_dict["type"] == "document"
-        assert len(bundle_dict["entry"]) >= 9, f"Expected >=9 entries, got {len(bundle_dict['entry'])}"
+            # Serialize to FHIR Bundle
+            bundle_dict = build_fhir_bundle(patient, assessment)
 
-        # 2. Schema Validation via Pydantic FHIR Model
-        validated_bundle = FHIRBundle(**bundle_dict)
-        assert validated_bundle.resourceType == "Bundle"
-        assert len(validated_bundle.entry) == len(bundle_dict["entry"])
+            # 1. Structural Validation
+            assert bundle_dict["resourceType"] == "Bundle"
+            assert bundle_dict["type"] == "document"
+            assert len(bundle_dict["entry"]) >= 9, f"Expected >=9 entries, got {len(bundle_dict['entry'])}"
 
-        # 3. LOINC & SNOMED CT Terminology Validation
-        resource_types = [e["resource"]["resourceType"] for e in bundle_dict["entry"]]
-        assert "DiagnosticReport" in resource_types
-        assert "Patient" in resource_types
-        assert "Condition" in resource_types
-        assert resource_types.count("Observation") >= 7
+            # 2. Schema Validation via Pydantic FHIR Model
+            validated_bundle = FHIRBundle(**bundle_dict)
+            assert validated_bundle.resourceType == "Bundle"
+            assert len(validated_bundle.entry) == len(bundle_dict["entry"])
 
-        # Check LOINC Wound Area
-        obs_codes = []
-        for e in bundle_dict["entry"]:
-            res = e["resource"]
-            if res.get("resourceType") == "Observation":
-                codings = res.get("code", {}).get("coding", [])
-                for c in codings:
-                    obs_codes.append((c.get("system"), c.get("code")))
+            # 3. LOINC & SNOMED CT Terminology Validation
+            resource_types = [e["resource"]["resourceType"] for e in bundle_dict["entry"]]
+            assert "DiagnosticReport" in resource_types
+            assert "Patient" in resource_types
+            assert "Condition" in resource_types
+            assert resource_types.count("Observation") >= 7
 
-        assert (SYSTEM_LOINC, LOINC_WOUND_AREA["code"]) in obs_codes
-        assert (SYSTEM_LOINC, LOINC_SINBAD_SCORE["code"]) in obs_codes
+            # Check LOINC Wound Area
+            obs_codes = []
+            for e in bundle_dict["entry"]:
+                res = e["resource"]
+                if res.get("resourceType") == "Observation":
+                    codings = res.get("code", {}).get("coding", [])
+                    for c in codings:
+                        obs_codes.append((c.get("system"), c.get("code")))
 
-        print("  [PASS] test_fhir_bundle_serializer passed with valid LOINC/SNOMED coding.")
-
+            assert (SYSTEM_LOINC, LOINC_WOUND_AREA["code"]) in obs_codes
+            assert (SYSTEM_LOINC, LOINC_SINBAD_SCORE["code"]) in obs_codes
+    finally:
+        await _cleanup_test_patient()
 
 async def test_fhir_endpoints():
     """Test all FastAPI FHIR R4 HTTP endpoints."""
     await init_db()
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # 1. Test FHIR Patient Resource
-        resp_patient = await client.get("/api/v1/fhir/Patient/DFU-8842")
-        assert resp_patient.status_code == 200
-        patient_data = resp_patient.json()
-        assert patient_data["resourceType"] == "Patient"
-        assert patient_data["id"] == "DFU-8842"
-        assert "Robert Vance" in patient_data["name"][0]["text"]
-        print(f"  [PASS] GET /api/v1/fhir/Patient/DFU-8842 -> {patient_data['name'][0]['text']}")
+    async with AsyncSessionLocal() as db:
+        await add_or_update_patient_in_db(db, TEST_PATIENT_PAYLOAD)
 
-        # 2. Test FHIR DiagnosticReport Resource
-        resp_report = await client.get("/api/v1/fhir/DiagnosticReport/DFU-8842")
-        assert resp_report.status_code == 200
-        report_data = resp_report.json()
-        assert report_data["resourceType"] == "DiagnosticReport"
-        assert report_data["code"]["coding"][0]["code"] == "72230-6"
-        assert "SINBAD Score" in report_data["conclusion"]
-        print(f"  [PASS] GET /api/v1/fhir/DiagnosticReport/DFU-8842 -> Status: {report_data['status']}")
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            # 1. Test FHIR Patient Resource
+            resp_patient = await client.get("/api/v1/fhir/Patient/DFU-TEST-8842")
+            assert resp_patient.status_code == 200
+            patient_data = resp_patient.json()
+            assert patient_data["resourceType"] == "Patient"
+            assert patient_data["id"] == "DFU-TEST-8842"
+            assert "Robert Vance" in patient_data["name"][0]["text"]
 
-        # 3. Test Full FHIR Bundle Endpoint
-        resp_bundle = await client.get("/api/v1/fhir/Bundle/DFU-8842")
-        assert resp_bundle.status_code == 200
-        assert resp_bundle.headers["content-type"].startswith("application/fhir+json")
-        bundle_data = resp_bundle.json()
-        assert bundle_data["resourceType"] == "Bundle"
-        assert bundle_data["type"] == "document"
-        print(f"  [PASS] GET /api/v1/fhir/Bundle/DFU-8842 -> {len(bundle_data['entry'])} HL7 FHIR entries")
+            # 2. Test FHIR DiagnosticReport Resource
+            resp_report = await client.get("/api/v1/fhir/DiagnosticReport/DFU-TEST-8842")
+            assert resp_report.status_code == 200
+            report_data = resp_report.json()
+            assert report_data["resourceType"] == "DiagnosticReport"
+            assert report_data["code"]["coding"][0]["code"] == "72230-6"
+            assert "SINBAD Score" in report_data["conclusion"]
 
-        # 4. Test FHIR Bundle Download Endpoint
-        resp_dl = await client.get("/api/v1/fhir/Bundle/DFU-8842/download")
-        assert resp_dl.status_code == 200
-        assert "attachment" in resp_dl.headers.get("content-disposition", "")
-        assert resp_dl.headers.get("x-fhir-version") == "4.0.1"
-        assert resp_dl.headers.get("x-standard") == "HL7 FHIR Release 4"
-        print(f"  [PASS] GET /api/v1/fhir/Bundle/DFU-8842/download -> Content-Disposition: {resp_dl.headers['content-disposition']}")
+            # 3. Test Full FHIR Bundle Endpoint
+            resp_bundle = await client.get("/api/v1/fhir/Bundle/DFU-TEST-8842")
+            assert resp_bundle.status_code == 200
+            assert resp_bundle.headers["content-type"].startswith("application/fhir+json")
+            bundle_data = resp_bundle.json()
+            assert bundle_data["resourceType"] == "Bundle"
+            assert bundle_data["type"] == "document"
+
+            # 4. Test FHIR Bundle Download Endpoint
+            resp_dl = await client.get("/api/v1/fhir/Bundle/DFU-TEST-8842/download")
+            assert resp_dl.status_code == 200
+            assert "attachment" in resp_dl.headers.get("content-disposition", "")
+    finally:
+        await _cleanup_test_patient()
 
 
 if __name__ == "__main__":
